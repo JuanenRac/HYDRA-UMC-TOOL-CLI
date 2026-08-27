@@ -48,6 +48,5 @@ binary.
 - **`run.sh` / `run.bat`** - execute the compiled binary, forwarding all
   arguments.
 - Fleet-wide operations (`deploy`, `flash-all`, `audit`) described in the
-  README are the next milestone, tracked in
-  `SONNET/HYDRA-UMC-TOOL-CLI/mejoras_futuras.txt` - they need
+  README are the next milestone; they need
   HYDRA-UMC-SERVER's fleet endpoints to exist first.

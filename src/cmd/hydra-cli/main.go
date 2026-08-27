@@ -3,14 +3,13 @@
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0 - see LICENSE
 // =============================================================================
-// The DevOps Swiss-army-knife for the HYDRA-UMC/URTC ecosystem (see
-// SONNET/5.PLAN_EJECUCION_32_PROYECTOS_NUEVOS.txt for the full 32-project
-// context). A real, functional command dispatcher: version/help/status,
+// The DevOps Swiss-army-knife for the HYDRA-UMC/URTC ecosystem. A real,
+// functional command dispatcher: version/help/status,
 // plus `robots` - a real read of HYDRA-UMC-SERVER's own live fleet
 // roster (see robots.go). The heavier WRITE fleet operations described
 // in the README (deploy/flash-all/audit against a live swarm) still land
 // in later passes, since they need write endpoints on HYDRA-UMC-SERVER
-// that don't exist yet - see SONNET/HYDRA-UMC-TOOL-CLI/mejoras_futuras.txt.
+// that do not exist yet.
 package main
 
 import (

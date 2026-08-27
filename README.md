@@ -56,7 +56,7 @@ flowchart LR
 
 ## 📂 DIRECTORY STRUCTURE
 
-Pure-software CLI — no hardware/firmware/os of its own, pruned from the template (see `SONNET/5.PLAN_EJECUCION_32_PROYECTOS_NUEVOS.txt` for the ecosystem-wide pruning rule).
+Pure-software CLI — no hardware, firmware or OS of its own; those folders are omitted by repository structure policy.
 
 ```text
 HYDRA-UMC-TOOL-CLI/
@@ -182,3 +182,14 @@ This project is part of a larger robotics ecosystem by the same author (JuanenRa
 
 ## 📜 LICENSE
 GPL-3.0 - See LICENSE for details.
+
+## 🛠️ BUILD & RUN
+
+Use the non-versioning build check before a release build:
+
+| Action | Windows | Linux / macOS |
+|---|---|---|
+| Build check (no version or CHANGELOG change) | `build-test.bat` | `./build-test.sh` |
+| Run / development (when provided) | `run*.bat` or `dev*.bat` | `./run*.sh` or `./dev*.sh` |
+
+`build-test.bat` and `build-test.sh` compile or validate the project stack without incrementing `hydra-umc.project.json` or modifying `CHANGELOG.md`. They may create normal compiler output only. Existing `build*.bat`, `build*.sh`, `run*` and `dev*` scripts retain their project-specific, versioned or runtime behavior; use them when that behavior is required.

@@ -61,8 +61,7 @@ flowchart LR
 
 ## 📂 目录结构
 
-纯软件 CLI——没有自己的硬件/固件/操作系统，已从模板中省略（生态系统
-统一的省略规则参见 `SONNET/5.PLAN_EJECUCION_32_PROYECTOS_NUEVOS.txt`）。
+纯软件 CLI——没有自己的硬件、固件或操作系统；这些目录按照仓库结构策略予以省略。
 
 ```text
 HYDRA-UMC-TOOL-CLI/
@@ -194,3 +193,14 @@ run.bat robots --server http://localhost:3000
 
 ## 📜 许可证
 GPL-3.0 —— 详见 LICENSE。
+
+## 🛠️ BUILD & RUN
+
+请在发布构建前使用不改动版本的构建检查：
+
+| 操作 | Windows | Linux / macOS |
+|---|---|---|
+| 构建检查（不修改版本或 CHANGELOG） | `build-test.bat` | `./build-test.sh` |
+| 运行 / 开发（如提供） | `run*.bat` 或 `dev*.bat` | `./run*.sh` 或 `./dev*.sh` |
+
+`build-test.bat` 和 `build-test.sh` 会编译或验证项目技术栈，但不会递增 `hydra-umc.project.json`，也不会修改 `CHANGELOG.md`。它们仅可能生成正常的编译器输出。现有的 `build*.bat`、`build*.sh`、`run*` 和 `dev*` 脚本保留各自的版本化或运行时行为；需要该行为时请使用它们。
