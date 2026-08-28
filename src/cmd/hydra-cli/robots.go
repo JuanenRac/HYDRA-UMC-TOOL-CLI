@@ -71,22 +71,22 @@ func cmdRobots(w io.Writer, args []string) error {
 	client := http.Client{Timeout: 5 * time.Second}
 	resp, err := client.Get(server + "/api/settings")
 	if err != nil {
-		return fmt.Errorf("could not reach %s: %w", server, err)
+		return newCliError(ExitNetworkError, fmt.Errorf("could not reach %s: %w", server, err))
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("reading response from %s: %w", server, err)
+		return newCliError(ExitNetworkError, fmt.Errorf("reading response from %s: %w", server, err))
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("%s replied with HTTP %d: %s", server, resp.StatusCode, string(body))
+		return newCliError(ExitServerError, fmt.Errorf("%s replied with HTTP %d: %s", server, resp.StatusCode, string(body)))
 	}
 
 	var settings settingsResponse
 	if err := json.Unmarshal(body, &settings); err != nil {
-		return fmt.Errorf("unexpected response from %s: %w", server, err)
+		return newCliError(ExitServerError, fmt.Errorf("unexpected response from %s: %w", server, err))
 	}
 
 	printRobotRoster(w, server, settings)

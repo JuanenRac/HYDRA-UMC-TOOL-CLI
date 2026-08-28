@@ -29,32 +29,48 @@ const projectName = "HYDRA-UMC-TOOL-CLI"
 const defaultServerURL = "http://localhost:3000"
 
 func main() {
-	args := os.Args[1:]
+	os.Exit(int(run(os.Args[1:])))
+}
 
+// run is main()'s real body, split out so it returns an ExitCode instead
+// of calling os.Exit directly - every command's failure now flows
+// through the same real, stable classification (see exitcode.go) instead
+// of the ad-hoc "always exit 1" this dispatcher used before.
+func run(args []string) ExitCode {
 	if len(args) == 0 {
 		printHelp()
-		os.Exit(0)
+		return ExitOK
 	}
 
 	switch args[0] {
 	case "version", "-v", "--version":
 		cmdVersion()
+		return ExitOK
 	case "help", "-h", "--help":
 		printHelp()
+		return ExitOK
 	case "status":
 		if err := cmdStatus(args[1:]); err != nil {
 			fmt.Fprintf(os.Stderr, "hydra-cli status: %v\n", err)
-			os.Exit(1)
+			return exitCodeFor(err)
 		}
+		return ExitOK
 	case "robots":
 		if err := cmdRobots(os.Stdout, args[1:]); err != nil {
 			fmt.Fprintf(os.Stderr, "hydra-cli robots: %v\n", err)
-			os.Exit(1)
+			return exitCodeFor(err)
 		}
+		return ExitOK
+	case "config":
+		if err := cmdConfig(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli config: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
 	default:
 		fmt.Fprintf(os.Stderr, "hydra-cli: unknown command %q\n\n", args[0])
 		printHelp()
-		os.Exit(1)
+		return ExitUsageError
 	}
 }
 
@@ -81,7 +97,19 @@ COMMANDS:
                           endpoint and print its real controller/robot roster.
                           Both default to %s; override with --server or the
                           HYDRA_CLI_SERVER environment variable.
+    config validate --config PATH
+                          Load and schema-validate a local config file.
+    config apply --config PATH [--dry-run]
+                          Preview (--dry-run) what a config apply would send.
+                          Without --dry-run, exits ExitNotImplemented: no
+                          live fleet-write endpoint exists yet.
     help                  Show this message.
+
+EXIT CODES:
+    0  ok                     3  config error
+    1  general error          4  network error (server unreachable)
+    2  usage error            5  server error (bad status/response)
+                              6  not implemented
 
 Report issues at: https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI
 `, projectName, Version, defaultServerURL)
@@ -105,22 +133,22 @@ func cmdStatus(args []string) error {
 	client := http.Client{Timeout: 5 * time.Second}
 	resp, err := client.Get(server + "/api/hydra-info")
 	if err != nil {
-		return fmt.Errorf("could not reach %s: %w", server, err)
+		return newCliError(ExitNetworkError, fmt.Errorf("could not reach %s: %w", server, err))
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("reading response from %s: %w", server, err)
+		return newCliError(ExitNetworkError, fmt.Errorf("reading response from %s: %w", server, err))
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("%s replied with HTTP %d: %s", server, resp.StatusCode, string(body))
+		return newCliError(ExitServerError, fmt.Errorf("%s replied with HTTP %d: %s", server, resp.StatusCode, string(body)))
 	}
 
 	var info hydraInfo
 	if err := json.Unmarshal(body, &info); err != nil {
-		return fmt.Errorf("unexpected response from %s: %w", server, err)
+		return newCliError(ExitServerError, fmt.Errorf("unexpected response from %s: %w", server, err))
 	}
 
 	fmt.Printf("server:      %s\n", server)

@@ -30,6 +30,9 @@ HYDRA-UMC 部署的命令行工具。
 * ✅ **`hydra-cli version`** —— 打印 CLI 自身的名称和版本。*（已实现）*
 * ✅ **`hydra-cli status [--server URL]`** —— 查询实时 HYDRA-UMC-SERVER 的 `GET /api/hydra-info`，并打印其报告的身份信息。*（已实现）*
 * ✅ **`hydra-cli robots [--server URL]`** —— 查询实时 HYDRA-UMC-SERVER 的 `GET /api/settings`，并打印其真实的控制器/机器人名单（名称、在线状态、型号、角色）。*（已实现）*
+* ✅ **真实、稳定的退出码契约** —— `0` 正常，`1` 一般错误，`2` 用法错误，`3` 配置错误，`4` 网络错误，`5` 服务器错误，`6` 未实现。每个命令都通过该契约对自身的失败进行分类，而不是简单地 `exit 1`，因此封装本 CLI 的脚本可以根据*失败原因*进行分支处理。*（已实现）*
+* ✅ **`hydra-cli config validate --config PATH`** —— 加载并按模式校验本地配置文件（服务器 URL、请求超时）。*（已实现）*
+* ✅ **`hydra-cli config apply --config PATH [--dry-run]`** —— `--dry-run` 端到端地验证真实的校验路径，并准确打印将要发送的内容；若不带该参数，则会如实返回“未实现”，因为目前尚不存在实时的车队写入端点。*（已实现，仅支持 dry-run）*
 * ✅ **`hydra-cli help` / `--help`** —— 完整的命令用法。*（已实现）*
 * 🚧 **`hydra-cli deploy`** —— 同时向一批机器人上传任务和配置。*（计划中）*
 * 🚧 **`hydra-cli flash-all`** —— 面向控制器和 URTC 刀头的并行固件更新。*（计划中）*
@@ -56,6 +59,8 @@ flowchart LR
 * **为何入口点今天只打印身份/版本/角色。** 处于脚手架（scaffolding）阶段：证明 `go build ./cmd/hydra-cli` 成功，先于真正的车队管理命令集。
 * **这如何融入生态系统的其余部分。** 在车队规模上完成 URTC-FLASHER 和 URTC-TESTER 各自为单块板卡所做的事——管理跨车队的多个 HYDRA-UMC-SERVER 实例，而非单块板卡自身的固件。
 * **为何 `robots` 读取 `GET /api/settings`，而非新建一个端点。** 该端点已经携带完整的控制器/机器人名单，并且已经是一个真实的、无需鉴权的读取操作（参见 HYDRA-UMC-SERVER 自身的 `src/server.ts`）——`robots` 是一个已发布契约的真实客户端，而非新的服务器端工作。更大型的、仍在计划中的命令（`deploy`/`flash-all`/`audit`）确实需要目前尚不存在的新写入端点。
+* **为何不带 `--dry-run` 的 `config apply` 会返回“未实现”，而非悄无声息地什么都不做。** 它本应调用的 HYDRA-UMC-SERVER 实时写入端点确实尚不存在（与 `deploy`/`flash-all` 被卡住的原因相同）——一个独立的 `ExitNotImplemented` 退出码会告诉调用者“这是一个真实的缺口，而非 bug”，而不是让其误以为是一次成功的空操作。
+* **为何现在每个命令的错误都统一流经一个 `CliError`/`ExitCode` 类型，而非零散的 `os.Exit` 调用。** 一个稳定、有文档记录的退出码契约，只有在存在唯一一处分配退出码的地方时才能保持稳定——`exitCodeFor()`（`exitcode.go`）就是那个地方，各命令函数则继续返回符合惯例、可包装的 `error` 值，而不是自行调用 `os.Exit`。
 
 ---
 
@@ -68,10 +73,12 @@ HYDRA-UMC-TOOL-CLI/
 ├── src/                       # Go 模块
 │   ├── go.mod                 # 模块定义（github.com/JuanenRac/HYDRA-UMC-TOOL-CLI）
 │   └── cmd/hydra-cli/         # 二进制文件入口点
-│       ├── main.go            # 命令分发（version/help/status/robots）
+│       ├── main.go            # 命令分发（version/help/status/robots/config）
 │       ├── server.go          # 共享的 --server/HYDRA_CLI_SERVER 解析
 │       ├── robots.go          # 真实的 GET /api/settings 客户端 + 名单打印
-│       ├── *_test.go          # 真实测试（net/http/httptest 往返）
+│       ├── config.go          # 真实的配置文件加载、校验、apply --dry-run
+│       ├── exitcode.go        # 真实、稳定的 ExitCode/CliError 契约
+│       ├── *_test.go          # 真实测试（net/http/httptest 往返，临时文件测试夹具）
 │       └── version.go         # const Version = "0.0.0"
 ├── docs/                      # 文档与命令参考
 ├── build/                     # 编译后的二进制文件（已被 gitignore）
@@ -95,12 +102,17 @@ HYDRA-UMC-TOOL-CLI/
 ./run.sh version
 ./run.sh status --server http://localhost:3000
 ./run.sh robots --server http://localhost:3000
+./run.sh config validate --config ./hydra-cli.json
+./run.sh config apply --config ./hydra-cli.json --dry-run
+echo $?   # 0=正常 2=用法 3=配置 4=网络 5=服务器 6=未实现
 
 # Windows
 build.bat
 run.bat version
 run.bat status --server http://localhost:3000
 run.bat robots --server http://localhost:3000
+run.bat config validate --config .\hydra-cli.json
+run.bat config apply --config .\hydra-cli.json --dry-run
 ```
 
 `build` 会递增版本号（`src/cmd/hydra-cli/version.go`），运行真实测试

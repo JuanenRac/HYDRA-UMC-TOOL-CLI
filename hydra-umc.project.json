@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "ecosystem": "HYDRA-UMC",
   "name": "HYDRA-UMC-TOOL-CLI",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "role": "cli",
   "stack": "go",
   "technologies": [
@@ -10,11 +10,11 @@
     "cobra-style CLI"
   ],
   "deployment_target": "user-pc",
-  "maturity": "functional",
+  "maturity": "established",
   "family": "Complementary Tools",
   "parent": null,
   "build": "Go module root is src/. Build with go build ./cmd/hydra-cli from inside src/.",
-  "notes": "Real `version`/`status`/`robots` commands, the last a genuine client of a live HYDRA-UMC-SERVER fleet endpoint (GET /api/settings), with 12 tests via net/http/httptest. Fleet-wide deploy/flash-all/audit commands are future work, blocked on HYDRA-UMC-SERVER's own fleet write endpoints that don't exist yet.",
+  "notes": "Real `version`/`status`/`robots`/`config validate`/`config apply --dry-run` commands. `robots`/`status` are genuine clients of a live HYDRA-UMC-SERVER (GET /api/settings, GET /api/hydra-info). A real, stable exit-code contract (exitcode.go) classifies every failure (usage/config/network/server/not-implemented) instead of a bare exit 1. 36 tests via net/http/httptest and real temp-file config fixtures. Fleet-wide deploy/flash-all/audit commands and a live (non-dry-run) `config apply` remain future work, blocked on HYDRA-UMC-SERVER's own fleet write endpoints that don't exist yet.",
   "native_version": {
     "file": "src/cmd/hydra-cli/version.go",
     "pattern": "Version\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""

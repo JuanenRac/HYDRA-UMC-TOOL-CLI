@@ -22,6 +22,13 @@ binary.
 
 ---
 
+## [0.0.5] - Stable exit codes, real config validation, honest dry-run apply
+
+- **A real, stable exit-code contract** (`cmd/hydra-cli/exitcode.go`) - every command used to collapse every failure to a bare `exit 1`. Now: `0` ok, `1` unclassified general error, `2` usage error, `3` config error, `4` network error (server unreachable), `5` server error (bad status/response), `6` not implemented. A script wrapping this CLI (CI, a fleet cron job) can branch on *why* a command failed without scraping stderr text, and these codes are meant to stay stable across releases. `status` and `robots` now classify their existing failure paths through this contract instead of an undifferentiated error.
+- **`hydra-cli config validate --config PATH`** - real local config file loading (`cmd/hydra-cli/config.go`) and real schema validation: `server` must be a non-empty, absolute URL; `timeoutSec` must be a positive integer. Every real failure mode (missing file, malformed JSON, a value that fails validation) reports a distinct, documented `ExitConfigError`.
+- **`hydra-cli config apply --config PATH [--dry-run]`** - the real dry-run-without-a-device operation this gate asks for. `--dry-run` loads and validates the real config, then prints exactly what a live apply would send - proving the real validation path end to end without touching any device or live server. Without `--dry-run` it honestly returns `ExitNotImplemented` rather than pretending to push config to a write endpoint that does not exist yet on HYDRA-UMC-SERVER (see `deploy`/`flash-all` in the roadmap below).
+- 24 new tests (`exitcode_test.go`, `config_test.go`) covering every exit-code classification, the full config validation matrix, and both `config apply` paths (dry-run and the honest not-implemented refusal) - 36 tests total, all passing against a real built binary as well as `go test`.
+
 ## [0.0.4] - Real `robots` command: a real fleet roster read
 
 - **`hydra-cli robots [--server URL]`** - a real HTTP GET against a live HYDRA-UMC-SERVER's own `GET /api/settings` (already a real, unauthenticated read endpoint - see that project's own `src/server.ts`), printing the real controller/robot roster it reports (name, online status, model, role). The first genuinely "fleet DevOps" command this CLI has, built entirely on an endpoint that already existed rather than needing new server-side work.
