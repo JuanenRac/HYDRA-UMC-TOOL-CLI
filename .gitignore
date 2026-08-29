@@ -1,11 +1,13 @@
 build/
 *.exe
 *.test
+
 # HYDRA-UMC shared secret protection
 .env
 .env.*
 !.env.example
 
-# Python bytecode (generated locally; never source)
+# Python bytecode (bump_manifest_version.py/bump_version.py are real
+# Python tooling alongside this repo's Go core; generated locally, never source)
 __pycache__/
 *.py[cod]
