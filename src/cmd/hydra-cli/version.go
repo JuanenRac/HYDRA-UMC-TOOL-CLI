@@ -11,4 +11,4 @@
 package main
 
 // Version is the current release of HYDRA-UMC-TOOL-CLI.
-const Version = "0.0.5"
+const Version = "0.0.6"

@@ -61,6 +61,12 @@ func run(args []string) ExitCode {
 			return exitCodeFor(err)
 		}
 		return ExitOK
+	case "doctor":
+		if err := cmdDoctor(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli doctor: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
 	case "config":
 		if err := cmdConfig(os.Stdout, args[1:]); err != nil {
 			fmt.Fprintf(os.Stderr, "hydra-cli config: %v\n", err)
@@ -97,6 +103,9 @@ COMMANDS:
                           endpoint and print its real controller/robot roster.
                           Both default to %s; override with --server or the
                           HYDRA_CLI_SERVER environment variable.
+	doctor [--server URL] Read-only diagnostic: validates /api/hydra-info and
+	                      /api/settings, then verifies their controller/robot
+	                      counts agree. It never sends commands or probes hardware.
     config validate --config PATH
                           Load and schema-validate a local config file.
     config apply --config PATH [--dry-run]
@@ -119,8 +128,11 @@ Report issues at: https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI
 // response this CLI actually reads. Unknown fields are ignored, so this
 // stays forward-compatible with a server that adds fields later.
 type hydraInfo struct {
-	AppVersion string `json:"appVersion"`
-	Status     string `json:"status"`
+	AppVersion       string `json:"appVersion"`
+	Status           string `json:"status"`
+	Product          string `json:"product"`
+	Hostname         string `json:"hostname"`
+	RemoteAPIVersion int    `json:"remoteApiVersion"`
 }
 
 // cmdStatus implements `hydra-cli status` - a real HTTP client call
@@ -152,7 +164,20 @@ func cmdStatus(args []string) error {
 	}
 
 	fmt.Printf("server:      %s\n", server)
+	if info.Product != "" {
+		fmt.Printf("product:     %s\n", info.Product)
+	}
+	if info.Hostname != "" {
+		fmt.Printf("hostname:    %s\n", info.Hostname)
+	}
 	fmt.Printf("appVersion:  %s\n", info.AppVersion)
-	fmt.Printf("status:      %s\n", info.Status)
+	if info.RemoteAPIVersion != 0 {
+		fmt.Printf("remoteApiVersion: %d\n", info.RemoteAPIVersion)
+	}
+	if info.Status == "" {
+		fmt.Println("status:      not reported")
+	} else {
+		fmt.Printf("status:      %s\n", info.Status)
+	}
 	return nil
 }

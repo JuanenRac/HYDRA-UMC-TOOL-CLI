@@ -26,6 +26,7 @@ El objetivo a largo plazo son despliegues masivos de misiones, actualizaciones d
 * ✅ **`hydra-cli version`** — imprime el nombre y la versión del propio CLI. *(implementado)*
 * ✅ **`hydra-cli status [--server URL]`** — consulta el `GET /api/hydra-info` de una instancia real de HYDRA-UMC-SERVER e imprime su identidad reportada. *(implementado)*
 * ✅ **`hydra-cli robots [--server URL]`** — consulta el `GET /api/settings` de una instancia real de HYDRA-UMC-SERVER e imprime su listado real de controladores/robots (nombre, estado en linea, modelo, rol). *(implementado)*
+* ✅ **`hydra-cli doctor [--server URL]`** — diagnóstico de contrato del servidor en solo lectura: valida `/api/hydra-info` y `/api/settings` y comprueba que los totales publicados de controladores/robots coinciden con el listado. No envía comandos ni sondea hardware. *(implementado)*
 * ✅ **Un contrato de códigos de salida real y estable** — `0` ok, `1` error general, `2` error de uso, `3` error de configuración, `4` error de red, `5` error de servidor, `6` no implementado. Cada comando clasifica sus propios fallos a través de este contrato en lugar de un simple `exit 1`, de modo que los scripts que envuelven esta CLI puedan ramificarse según *por qué* falló. *(implementado)*
 * ✅ **`hydra-cli config validate --config PATH`** — carga y valida contra el esquema un archivo de configuración local (URL del servidor, timeout de las peticiones). *(implementado)*
 * ✅ **`hydra-cli config apply --config PATH [--dry-run]`** — `--dry-run` demuestra el camino real de validación de principio a fin e imprime exactamente lo que enviaría; sin él, devuelve honestamente "no implementado" ya que aún no existe un endpoint de escritura de flota en vivo. *(implementado, solo dry-run)*
@@ -54,7 +55,8 @@ flowchart LR
 * **Por qué una CLI, y no simplemente scriptear directamente la propia API REST de HYDRA-UMC-SERVER.** Las operaciones a escala de flota (instalar/actualizar en muchas CM5, no solo una) necesitan orquestación real - reintentos, paralelismo, una UX consistente - que un script curl improvisado no ofrece, el mismo motivo que HYDRA-UMC-UPDATER aplica después a nivel de todo el checkout del ecosistema.
 * **Por qué el punto de entrada solo imprime identidad/versión/rol hoy.** Etapa de andamiaje: probar que `go build ./cmd/hydra-cli` tiene éxito precede al conjunto real de comandos de gestión de flota.
 * **Cómo encaja en el resto del ecosistema.** Hace a escala de flota lo que URTC-FLASHER y URTC-TESTER hacen cada uno para una sola placa - gestiona instancias de HYDRA-UMC-SERVER a través de una flota en vez del propio firmware de una sola placa.
-* **Por qué `robots` lee `GET /api/settings` en vez de un endpoint nuevo.** Ese endpoint ya lleva el listado completo de controladores/robots y ya es una lectura real, sin autenticación (ver el propio `src/server.ts` de HYDRA-UMC-SERVER) - `robots` es un cliente real de un contrato que ya se publica, no trabajo nuevo del lado del servidor. Los comandos mas grandes, todavia planeados (`deploy`/`flash-all`/`audit`), si necesitan de verdad endpoints de escritura nuevos que aun no existen.
+* **Por qué `robots` lee `GET /api/settings` en vez de un endpoint nuevo.** Ese endpoint ya lleva el listado completo de controladores/robots y ya es una lectura real, sin autenticación (ver el propio `src/server.ts` de HYDRA-UMC-SERVER) - `robots` es un cliente real de un contrato que ya se publica, no trabajo nuevo del lado del servidor. `doctor` utiliza esa misma lectura junto a `/api/hydra-info` para detectar totales públicos incompatibles sin añadir un endpoint. Los comandos mas grandes, todavia planeados (`deploy`/`flash-all`/`audit` orientado a hardware), si necesitan de verdad endpoints de escritura nuevos que aun no existen.
+* **Por qué `doctor` es explícitamente de solo lectura.** Una comprobación de contratos es útil antes de disponer de hardware y segura para CI. Solo informa coherencia HTTP/JSON/contadores; no ordena equipos ni afirma salud de CAN, actuadores, sensores, cámaras, Hailo, CM5 o seguridad.
 * **Por qué `config apply` sin `--dry-run` devuelve "no implementado" en lugar de no hacer nada silenciosamente.** El endpoint de escritura en vivo de HYDRA-UMC-SERVER que esto llamaría de verdad todavía no existe (la misma carencia que bloquea a `deploy`/`flash-all`) - un código de salida distinto, `ExitNotImplemented`, le indica a quien llama "esto es una carencia real, no un bug", en vez de un no-op engañosamente exitoso.
 * **Por qué los errores de cada comando ahora fluyen a través de un único tipo `CliError`/`ExitCode` en vez de llamadas ad-hoc a `os.Exit`.** Un contrato de códigos de salida estable y documentado solo se mantiene estable si hay un único lugar que asigna los códigos - `exitCodeFor()` (`exitcode.go`) es ese lugar, y las funciones de los comandos siguen devolviendo valores `error` idiomáticos y encadenables en vez de llamar ellas mismas a `os.Exit`.
 
@@ -69,14 +71,15 @@ HYDRA-UMC-TOOL-CLI/
 ├── src/                       # Módulo Go
 │   ├── go.mod                 # Definición del módulo (github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)
 │   └── cmd/hydra-cli/         # Punto de entrada del binario
-│       ├── main.go            # Despacho de comandos (version/help/status/robots/config)
+│       ├── main.go            # Despacho de comandos (version/help/status/robots/doctor/config)
 │       ├── server.go          # Resolución compartida de --server/HYDRA_CLI_SERVER
 │       ├── robots.go          # Cliente real de GET /api/settings + impresion del listado
+│       ├── doctor.go          # Diagnóstico de contrato de dos endpoints, solo lectura
 │       ├── config.go          # Carga real de archivo de configuración, validación, apply --dry-run
 │       ├── exitcode.go        # Contrato real y estable ExitCode/CliError
 │       ├── *_test.go          # Tests reales (round-trips net/http/httptest, fixtures de archivos temporales)
 │       └── version.go         # const Version = "0.0.0"
-├── docs/                      # Documentación y referencia de comandos
+├── docs/                      # Documentación: CLI_REFERENCE.md y DOCTOR.md
 ├── build/                     # Binarios compilados (ignorado por git)
 ├── images/                    # Medios y diagramas
 ├── scripts/                   # Scripts de utilidad
@@ -98,6 +101,7 @@ Requiere Go >= 1.21.
 ./run.sh version
 ./run.sh status --server http://localhost:3000
 ./run.sh robots --server http://localhost:3000
+./run.sh doctor --server http://localhost:3000
 ./run.sh config validate --config ./hydra-cli.json
 ./run.sh config apply --config ./hydra-cli.json --dry-run
 echo $?   # 0=ok 2=uso 3=config 4=red 5=servidor 6=no-implementado
@@ -107,11 +111,12 @@ build.bat
 run.bat version
 run.bat status --server http://localhost:3000
 run.bat robots --server http://localhost:3000
+run.bat doctor --server http://localhost:3000
 run.bat config validate --config .\hydra-cli.json
 run.bat config apply --config .\hydra-cli.json --dry-run
 ```
 
-`build` incrementa la versión (`src/cmd/hydra-cli/version.go`), corre la suite de tests real (`go vet` + `go test`), compila el módulo Go en `src/` a `build/hydra-cli(.exe)`, y ejecuta `version` una vez para verificar. `run` vuelve a ejecutar el binario compilado, reenviando todos los argumentos — prueba `run status` o `run robots` contra una instancia de `HYDRA-UMC-SERVER` en marcha.
+`build` incrementa la versión (`src/cmd/hydra-cli/version.go`), corre la suite de tests real (`go vet` + `go test`), compila el módulo Go en `src/` a `build/hydra-cli(.exe)`, y ejecuta `version` una vez para verificar. `run` vuelve a ejecutar el binario compilado, reenviando todos los argumentos — prueba `run doctor` contra una instancia de `HYDRA-UMC-SERVER` en marcha. Doctor es una comprobación segura y de solo lectura de contratos de endpoints; consulta [docs/DOCTOR.md](docs/DOCTOR.md).
 
 ---
 

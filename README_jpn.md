@@ -33,6 +33,7 @@
 * ✅ **`hydra-cli version`** — CLI 自身の名前とバージョンを表示します。*（実装済み）*
 * ✅ **`hydra-cli status [--server URL]`** — 実行中の HYDRA-UMC-SERVER の `GET /api/hydra-info` を照会し、報告されたアイデンティティを表示します。*（実装済み）*
 * ✅ **`hydra-cli robots [--server URL]`** — 実行中の HYDRA-UMC-SERVER の `GET /api/settings` を照会し、実際のコントローラー/ロボット一覧（名前、オンライン状態、モデル、役割）を表示します。*（実装済み）*
+* ✅ **`hydra-cli doctor [--server URL]`** — 読み取り専用のサーバー契約診断：`/api/hydra-info` と `/api/settings` を検証し、公開されたコントローラー/ロボット数を一覧と照合します。コマンド送信やハードウェアの検査は行いません。*（実装済み）*
 * ✅ **実際に安定した終了コード契約** — `0` 正常、`1` 一般エラー、`2` 使用方法エラー、`3` 設定エラー、`4` ネットワークエラー、`5` サーバーエラー、`6` 未実装。各コマンドは単なる `exit 1` の代わりにこの契約を通じて自身の失敗を分類するため、この CLI をラップするスクリプトは*失敗の理由*に応じて分岐できます。*（実装済み）*
 * ✅ **`hydra-cli config validate --config PATH`** — ローカルの設定ファイル（サーバー URL、リクエストタイムアウト）を読み込み、スキーマ検証します。*（実装済み）*
 * ✅ **`hydra-cli config apply --config PATH [--dry-run]`** — `--dry-run` は実際の検証パスをエンドツーエンドで証明し、送信される内容を正確に表示します。指定しない場合は、実際にはまだライブのフリート書き込みエンドポイントが存在しないため、正直に「未実装」を返します。*（実装済み、dry-run のみ）*
@@ -61,7 +62,8 @@ flowchart LR
 * **HYDRA-UMC-SERVER 自身の REST API に直接スクリプトを書くのではなく、CLI を採用した理由。** フリート規模の操作（1 台だけでなく多数の CM5 にわたるインストール/更新）には、リトライ、並列性、一貫した UX といった、その場しのぎの curl スクリプトでは提供できない真のオーケストレーションが必要です。これは、後に HYDRA-UMC-UPDATER がエコシステムチェックアウトのレベルで適用するのと同じ理由です。
 * **エントリポイントが今日は身元/バージョン/役割のみを表示する理由。** 足場（アンダミアヘ、スキャフォールディング）段階にあります：`go build ./cmd/hydra-cli` が成功することを証明することが、実際のフリート管理コマンドセットに先立ちます。
 * **エコシステムの他の部分との関係。** URTC-FLASHER と URTC-TESTER がそれぞれ 1 枚の基板に対して行っていることを、フリート規模で行います——単一基板自身のファームウェアではなく、フリート全体にわたる複数の HYDRA-UMC-SERVER インスタンスを管理します。
-* **`robots` が新しいエンドポイントではなく `GET /api/settings` を読み取る理由。** そのエンドポイントはすでにコントローラー/ロボットの完全な一覧を持っており、すでに実際の、認証不要の読み取り操作です（HYDRA-UMC-SERVER 自身の `src/server.ts` を参照）——`robots` はすでに提供されている契約に対する実際のクライアントであり、新たなサーバー側の作業ではありません。より大規模な、まだ計画段階のコマンド（`deploy`/`flash-all`/`audit`）は、まだ存在しない新しい書き込みエンドポイントを本当に必要とします。
+* **`robots` が新しいエンドポイントではなく `GET /api/settings` を読み取る理由。** そのエンドポイントはすでにコントローラー/ロボットの完全な一覧を持っており、すでに実際の、認証不要の読み取り操作です（HYDRA-UMC-SERVER 自身の `src/server.ts` を参照）——`robots` はすでに提供されている契約に対する実際のクライアントであり、新たなサーバー側の作業ではありません。`doctor` は同じ読み取りを `/api/hydra-info` と組み合わせ、新しいエンドポイントを追加せずに不整合な公開フリート数を検出します。より大規模な、まだ計画段階のコマンド（`deploy`/`flash-all`/ハードウェア向け `audit`）は、まだ存在しない新しい書き込みエンドポイントを本当に必要とします。
+* **`doctor` が明示的に読み取り専用である理由。** 契約チェックはハードウェアがない段階でも有用で、CI でも安全です。報告するのは HTTP/JSON/数の整合性だけであり、機器を操作したり、CAN、アクチュエータ、センサー、カメラ、Hailo、CM5、安全性の健全性を主張したりしません。
 * **`--dry-run` を指定しない `config apply` が、黙って何もしない代わりに「未実装」を返す理由。** これが呼び出すはずの HYDRA-UMC-SERVER 上のライブ書き込みエンドポイントは、実際にはまだ存在しません（`deploy`/`flash-all` が塞き止められているのと同じギャップです）——専用の `ExitNotImplemented` 終了コードは、呼び出し元に「これは本物のギャップであり、バグではない」ことを伝えます。誤解を招くような、成功したように見える無操作にはしません。
 * **すべてのコマンドのエラーが、場当たり的な `os.Exit` 呼び出しではなく、単一の `CliError`/`ExitCode` 型を通じて流れるようになった理由。** 安定した、文書化された終了コード契約は、コードを割り当てる場所が一つしかない場合にのみ安定を保てます——`exitCodeFor()`（`exitcode.go`）がその場所であり、各コマンド関数は自ら `os.Exit` を呼び出す代わりに、慣用的でラップ可能な `error` 値を返し続けます。
 
@@ -77,14 +79,15 @@ HYDRA-UMC-TOOL-CLI/
 ├── src/                       # Go モジュール
 │   ├── go.mod                 # モジュール定義（github.com/JuanenRac/HYDRA-UMC-TOOL-CLI）
 │   └── cmd/hydra-cli/         # バイナリのエントリポイント
-│       ├── main.go            # コマンドディスパッチ（version/help/status/robots/config）
+│       ├── main.go            # コマンドディスパッチ（version/help/status/robots/doctor/config）
 │       ├── server.go          # --server/HYDRA_CLI_SERVER の共有解決処理
 │       ├── robots.go          # 実際の GET /api/settings クライアント + 一覧表示
+│       ├── doctor.go          # 読み取り専用の二つのエンドポイント契約診断
 │       ├── config.go          # 実際の設定ファイルの読み込み、検証、apply --dry-run
 │       ├── exitcode.go        # 実際の、安定した ExitCode/CliError 契約
 │       ├── *_test.go          # 実際のテスト（net/http/httptest ラウンドトリップ、一時ファイルのフィクスチャ）
 │       └── version.go         # const Version = "0.0.0"
-├── docs/                      # ドキュメントとコマンドリファレンス
+├── docs/                      # ドキュメント：CLI_REFERENCE.md と DOCTOR.md
 ├── build/                     # コンパイル済みバイナリ（gitignore 対象）
 ├── images/                    # メディアと図表
 ├── scripts/                   # ユーティリティスクリプト
@@ -106,6 +109,7 @@ Go >= 1.21 が必要です。
 ./run.sh version
 ./run.sh status --server http://localhost:3000
 ./run.sh robots --server http://localhost:3000
+./run.sh doctor --server http://localhost:3000
 ./run.sh config validate --config ./hydra-cli.json
 ./run.sh config apply --config ./hydra-cli.json --dry-run
 echo $?   # 0=正常 2=使用方法 3=設定 4=ネットワーク 5=サーバー 6=未実装
@@ -115,6 +119,7 @@ build.bat
 run.bat version
 run.bat status --server http://localhost:3000
 run.bat robots --server http://localhost:3000
+run.bat doctor --server http://localhost:3000
 run.bat config validate --config .\hydra-cli.json
 run.bat config apply --config .\hydra-cli.json --dry-run
 ```
@@ -124,7 +129,7 @@ run.bat config apply --config .\hydra-cli.json --dry-run
 モジュールを `build/hydra-cli(.exe)` としてコンパイルし、検証のために
 一度 `version` を実行します。`run` はコンパイル済みバイナリを再度実行
 し、すべての引数を転送します——実行中の `HYDRA-UMC-SERVER` インスタンス
-に対して `run status` または `run robots` を試してみてください。
+に対して `run doctor` を試してみてください。Doctor は安全な読み取り専用のエンドポイント契約チェックです。詳細は [docs/DOCTOR.md](docs/DOCTOR.md) を参照してください。
 
 ---
 

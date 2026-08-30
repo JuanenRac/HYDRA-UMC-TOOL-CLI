@@ -22,6 +22,10 @@ binary.
 
 ---
 
+## [0.0.6]
+
+- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
+
 ## [0.0.5] - Stable exit codes, real config validation, honest dry-run apply
 
 - **A real, stable exit-code contract** (`cmd/hydra-cli/exitcode.go`) - every command used to collapse every failure to a bare `exit 1`. Now: `0` ok, `1` unclassified general error, `2` usage error, `3` config error, `4` network error (server unreachable), `5` server error (bad status/response), `6` not implemented. A script wrapping this CLI (CI, a fleet cron job) can branch on *why* a command failed without scraping stderr text, and these codes are meant to stay stable across releases. `status` and `robots` now classify their existing failure paths through this contract instead of an undifferentiated error.

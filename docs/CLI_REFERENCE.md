@@ -15,7 +15,7 @@ the same usage summary shown by `help` below.
 
 ## Server resolution
 
-`status`, `robots`, and `config apply` (once live writes exist) all
+`status`, `robots`, `doctor`, and `config apply` (once live writes exist) all
 target a HYDRA-UMC-SERVER instance. The target is resolved in this order:
 
 1. `--server URL` on the command line
@@ -78,13 +78,18 @@ Report issues at: https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI
 ### `status [--server URL]`
 
 Real `GET /api/hydra-info` against a live HYDRA-UMC-SERVER. Prints the
-server's reported app version and status.
+server's reported identity and version. Current Servers do not publish a
+`status` field; the CLI says `not reported` honestly rather than printing an
+empty value.
 
 ```
 $ hydra-cli status
 server:      http://localhost:3000
-appVersion:  0.2.1
-status:
+product:     HYDRA-UMC TEST
+hostname:    JUANEN
+appVersion:  0.2.4
+remoteApiVersion: 2
+status:      not reported
 ```
 
 Unreachable server (real network error, exit code 4):
@@ -114,6 +119,26 @@ HYDRA-UMC Master Robot A8             no       Faze4 (6-DOF)            Idle
 
 If the server reports zero robots, `robots` prints
 `no robots reported by <server>` instead of an empty table.
+
+### `doctor [--server URL]`
+
+Performs a read-only contract diagnosis against the same two public Server
+endpoints used by this CLI: `GET /api/hydra-info` and `GET /api/settings`.
+It confirms that both responses are valid and, when the Server reports fleet
+counts, that its published controller and robot totals match the roster in
+`/api/settings`.
+
+```text
+$ hydra-cli doctor
+DOCTOR=PASS server=http://localhost:3000 appVersion=0.2.4 schema=1.0 remoteApiVersion=2 controllers=1 robots=8 countCrossCheck=pass
+```
+
+This is not a physical health test: it never sends a command and does not
+probe CAN, cameras, sensors, motion, or safety hardware. A mismatch, invalid
+JSON, or non-200 response is a server error (exit code `5`); an unreachable
+Server is a network error (exit code `4`). Older Servers which do not publish
+the two count fields remain supported but report `countCrossCheck=not-reported`
+instead of a false pass.
 
 ### `config validate --config PATH`
 
