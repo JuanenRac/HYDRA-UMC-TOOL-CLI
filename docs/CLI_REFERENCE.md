@@ -184,6 +184,33 @@ $ hydra-cli config apply --config hydra-cli.json
 hydra-cli config: live config apply needs a real fleet-write endpoint on HYDRA-UMC-SERVER, which does not exist yet - rerun with --dry-run
 ```
 
+### `shell [--server URL]`
+
+An interactive REPL: run any command above repeatedly against the same
+server without restarting the process. Dispatches every line through the
+exact same command table one-shot invocations use, so shell and one-shot
+behavior never drift apart. `--server`, if given, sets `HYDRA_CLI_SERVER`
+for the rest of the session — the same environment variable a one-shot
+invocation already honors — so lines typed afterward don't need their own
+`--server` unless they want to target something else for that one line.
+
+Lines are tokenized the way an operator expects: `'...'`/`"..."` group
+their own contents (including embedded spaces) into a single argument, real
+for a `--config` path with a space in it. `exit`, `quit`, or Ctrl-D (EOF)
+leaves the shell; a blank line is ignored.
+
+```
+$ hydra-cli shell --server http://192.168.1.50:3000
+HYDRA-UMC-TOOL-CLI vX.Y.Z interactive shell - target http://192.168.1.50:3000
+Type a command (version, status, robots, doctor, config ...), or exit/quit to leave.
+hydra-cli> status
+server:      http://192.168.1.50:3000
+appVersion:  0.2.4
+hydra-cli> doctor
+DOCTOR: OK - controllerCount and robotCount agree with the real roster (1/2)
+hydra-cli> exit
+```
+
 ## Exit codes
 
 | Code | Meaning |

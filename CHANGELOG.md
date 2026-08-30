@@ -22,6 +22,25 @@ binary.
 
 ---
 
+## [0.0.7] - Interactive shell mode
+
+- **`hydra-cli shell [--server URL]`** (`shell.go`, new) - a real REPL:
+  reads one command per line and dispatches it through the exact same
+  `run()` one-shot invocations use, so shell and one-shot behavior can
+  never drift apart. `--server`, if given, sets `HYDRA_CLI_SERVER` for
+  the session, reusing the existing environment-variable precedence
+  `resolveServer()` already had rather than adding a new one. Real
+  quote-aware tokenization (`'...'`/`"..."` group embedded spaces into
+  one argument); `exit`/`quit`/Ctrl-D leaves cleanly; nesting a second
+  `shell` inside the shell is refused rather than silently recursing.
+- 8 new tests covering tokenization, dispatch, EOF handling, the session
+  server flag, and the nested-shell refusal - all against a fake
+  dispatcher, no real network dependency.
+- All 7 READMEs updated.
+
+Verified: `go build`/`go vet`/`go test ./...` all clean, real end-to-end
+smoke test of the built binary.
+
 ## [0.0.6]
 
 - Build version synchronized with `hydra-umc.project.json` and the repository-native version source.

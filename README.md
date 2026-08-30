@@ -30,6 +30,7 @@ The long-term goal is massive deployments of missions, parallel firmware updates
 * ✅ **A real, stable exit-code contract** — `0` ok, `1` general error, `2` usage error, `3` config error, `4` network error, `5` server error, `6` not implemented. Every command classifies its own failures through this contract instead of a bare `exit 1`, so scripts wrapping this CLI can branch on *why* it failed. *(implemented)*
 * ✅ **`hydra-cli config validate --config PATH`** — loads and schema-validates a local config file (server URL, request timeout). *(implemented)*
 * ✅ **`hydra-cli config apply --config PATH [--dry-run]`** — `--dry-run` proves the real validation path end to end and prints exactly what it would send; without it, honestly returns "not implemented" since no live fleet-write endpoint exists yet. *(implemented, dry-run only)*
+* ✅ **`hydra-cli shell [--server URL]`** — an interactive REPL: run any command above repeatedly against the same server without restarting the process. Dispatches through the exact same command table one-shot invocations use, so shell and one-shot behavior never drift apart. `exit`/`quit`/Ctrl-D to leave. *(implemented)*
 * ✅ **`hydra-cli help` / `--help`** — full command usage. *(implemented)*
 * 🚧 **`hydra-cli deploy`** — upload missions and configurations to a fleet of robots simultaneously. *(planned)*
 * 🚧 **`hydra-cli flash-all`** — parallel firmware updates for controllers and URTC heads. *(planned)*

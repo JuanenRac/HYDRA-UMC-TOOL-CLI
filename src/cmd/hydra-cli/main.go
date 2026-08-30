@@ -73,6 +73,12 @@ func run(args []string) ExitCode {
 			return exitCodeFor(err)
 		}
 		return ExitOK
+	case "shell":
+		if err := cmdShell(os.Stdout, os.Stdin, args[1:], run); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli shell: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
 	default:
 		fmt.Fprintf(os.Stderr, "hydra-cli: unknown command %q\n\n", args[0])
 		printHelp()
@@ -112,6 +118,10 @@ COMMANDS:
                           Preview (--dry-run) what a config apply would send.
                           Without --dry-run, exits ExitNotImplemented: no
                           live fleet-write endpoint exists yet.
+    shell [--server URL]  Interactive REPL - run any command above
+                          repeatedly against the same server without
+                          restarting the process. exit/quit or Ctrl-D
+                          to leave.
     help                  Show this message.
 
 EXIT CODES:
