@@ -127,8 +127,8 @@ This project is part of a larger robotics ecosystem by the same author (JuanenRa
 ### Directly Related
 
 - **[HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER)** — the backend this CLI manages at fleet scale.
-- **[URTC-FLASHER](https://github.com/JuanenRac/URTC-FLASHER)** — does at fleet scale what this tool does for one board.
-- **[URTC-TESTER](https://github.com/JuanenRac/URTC-TESTER)** — does at fleet scale what this tool does for one board.
+- **[URTC-FLASHER](https://github.com/JuanenRac/URTC-FLASHER)** — this tool's planned fleet-scale CAN-OTA deploy does for many boards what URTC-FLASHER does for one.
+- **[URTC-TESTER](https://github.com/JuanenRac/URTC-TESTER)** — this tool's planned fleet-scale diagnostics do for many boards what URTC-TESTER does for one.
 
 ### Rest of the Ecosystem
 
