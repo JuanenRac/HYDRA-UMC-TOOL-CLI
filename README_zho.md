@@ -82,12 +82,12 @@ HYDRA-UMC-TOOL-CLI/
 │       ├── config.go          # 真实的配置文件加载、校验、apply --dry-run
 │       ├── exitcode.go        # 真实、稳定的 ExitCode/CliError 契约
 │       ├── *_test.go          # 真实测试（net/http/httptest 往返，临时文件测试夹具）
-│       └── version.go         # const Version = "0.0.0"
+│       └── version.go         # const Version —— 里程表式递增，与清单保持同步
 ├── docs/                      # 文档：CLI_REFERENCE.md 和 DOCTOR.md
 ├── build/                     # 编译后的二进制文件（已被 gitignore）
 ├── images/                    # 媒体与图表
-├── scripts/                   # 实用脚本
-├── bump_version.py            # 里程表式版本递增（由构建运行）
+├── bump_version.py            # 原生版本的里程表式递增（由构建运行）
+├── bump_manifest_version.py   # 将 hydra-umc.project.json 的版本与原生版本同步(--sync)
 ├── build.sh / build.bat       # 真实构建：版本递增 + 真实测试套件 + go build + 冒烟测试
 ├── run.sh / run.bat           # 真实运行：执行编译后的二进制文件
 └── README.md

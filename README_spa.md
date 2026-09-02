@@ -78,12 +78,12 @@ HYDRA-UMC-TOOL-CLI/
 │       ├── config.go          # Carga real de archivo de configuración, validación, apply --dry-run
 │       ├── exitcode.go        # Contrato real y estable ExitCode/CliError
 │       ├── *_test.go          # Tests reales (round-trips net/http/httptest, fixtures de archivos temporales)
-│       └── version.go         # const Version = "0.0.0"
+│       └── version.go         # const Version - incremento cuentakilómetros, sincronizado con el manifiesto
 ├── docs/                      # Documentación: CLI_REFERENCE.md y DOCTOR.md
 ├── build/                     # Binarios compilados (ignorado por git)
 ├── images/                    # Medios y diagramas
-├── scripts/                   # Scripts de utilidad
-├── bump_version.py            # Incremento de versión estilo cuentakilómetros (ejecutado por build)
+├── bump_version.py            # Incremento de versión nativa estilo cuentakilómetros (ejecutado por build)
+├── bump_manifest_version.py   # Sincroniza la versión de hydra-umc.project.json con la nativa (--sync)
 ├── build.sh / build.bat       # Build real: incremento + suite de tests real + go build + prueba de humo
 ├── run.sh / run.bat           # Ejecución real: lanza el binario compilado
 └── README.md

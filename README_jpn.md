@@ -86,12 +86,12 @@ HYDRA-UMC-TOOL-CLI/
 │       ├── config.go          # 実際の設定ファイルの読み込み、検証、apply --dry-run
 │       ├── exitcode.go        # 実際の、安定した ExitCode/CliError 契約
 │       ├── *_test.go          # 実際のテスト（net/http/httptest ラウンドトリップ、一時ファイルのフィクスチャ）
-│       └── version.go         # const Version = "0.0.0"
+│       └── version.go         # const Version - オドメーター式インクリメント、マニフェストと同期
 ├── docs/                      # ドキュメント：CLI_REFERENCE.md と DOCTOR.md
 ├── build/                     # コンパイル済みバイナリ（gitignore 対象）
 ├── images/                    # メディアと図表
-├── scripts/                   # ユーティリティスクリプト
-├── bump_version.py            # オドメーター式バージョンインクリメント（ビルドが実行）
+├── bump_version.py            # ネイティブバージョンのオドメーター式インクリメント（ビルドが実行）
+├── bump_manifest_version.py   # hydra-umc.project.json のバージョンをネイティブ版と同期(--sync)
 ├── build.sh / build.bat       # 実際のビルド：バージョンインクリメント + 実際のテストスイート + go build + スモークテスト
 ├── run.sh / run.bat           # 実際の実行：コンパイル済みバイナリを実行
 └── README.md

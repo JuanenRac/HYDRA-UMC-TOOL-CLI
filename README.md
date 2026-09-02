@@ -78,12 +78,12 @@ HYDRA-UMC-TOOL-CLI/
 │       ├── config.go          # Real config file loading, validation, apply --dry-run
 │       ├── exitcode.go        # Real, stable ExitCode/CliError contract
 │       ├── *_test.go          # Real tests (net/http/httptest round-trips, temp-file fixtures)
-│       └── version.go         # const Version = "0.0.0"
+│       └── version.go         # const Version - odometer-bumped, kept in sync with the manifest
 ├── docs/                      # Documentation: CLI_REFERENCE.md and DOCTOR.md
 ├── build/                     # Compiled binaries (gitignored)
 ├── images/                    # Media and diagrams
-├── scripts/                   # Utility scripts
-├── bump_version.py            # Odometer-style version bump (run by build)
+├── bump_version.py            # Odometer-style native version bump (run by build)
+├── bump_manifest_version.py   # Syncs hydra-umc.project.json's version to the native one (--sync)
 ├── build.sh / build.bat       # Real build: bump + real test suite + go build + smoke test
 ├── run.sh / run.bat           # Real run: executes the compiled binary
 └── README.md
