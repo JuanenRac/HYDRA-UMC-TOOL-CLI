@@ -58,7 +58,6 @@ flowchart LR
 
 * **为何 `src/` 包含一个 `cmd/hydra-cli/` 子路径，而非扁平布局。** 遵循标准的 Go CLI 惯例（一个 `cmd/<binary-name>/` 入口点，并为随着 CLI 超出单一命令规模而增加的未来 `internal/`/`pkg/` 包留出空间）——这并非本生态系统自身的发明，而是更广泛 Go 社区针对多命令 CLI 的自有惯例。
 * **为何采用 CLI，而非直接编写脚本调用 HYDRA-UMC-SERVER 自身的 REST API。** 车队规模的操作（跨多个 CM5 进行安装/更新，而非仅一个）需要真正的编排——重试、并行性、一致的用户体验——这些是一次性 curl 脚本无法提供的，HYDRA-UMC-UPDATER 后来在生态系统检出层面应用的正是同样的理由。
-* **为何入口点今天只打印身份/版本/角色。** 处于脚手架（scaffolding）阶段：证明 `go build ./cmd/hydra-cli` 成功，先于真正的车队管理命令集。
 * **这如何融入生态系统的其余部分。** 在车队规模上完成 URTC-FLASHER 和 URTC-TESTER 各自为单块板卡所做的事——管理跨车队的多个 HYDRA-UMC-SERVER 实例，而非单块板卡自身的固件。
 * **为何 `robots` 读取 `GET /api/settings`，而非新建一个端点。** 该端点已经携带完整的控制器/机器人名单，并且已经是一个真实的、无需鉴权的读取操作（参见 HYDRA-UMC-SERVER 自身的 `src/server.ts`）——`robots` 是一个已发布契约的真实客户端，而非新的服务器端工作。`doctor` 将同一读取与 `/api/hydra-info` 组合，在不添加端点的情况下发现不兼容的公开车队总数。更大型的、仍在计划中的命令（`deploy`/`flash-all`/面向硬件的 `audit`）确实需要目前尚不存在的新写入端点。
 * **为何 `doctor` 明确为只读。** 契约检查在硬件到位前很有用，也适合在 CI 中安全运行。它只报告 HTTP/JSON/计数一致性；不会控制设备，也不会声明 CAN、执行器、传感器、摄像头、Hailo、CM5 或安全状态的健康性。
