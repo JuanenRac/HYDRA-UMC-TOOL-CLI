@@ -10,7 +10,8 @@
 // `config apply` without --dry-run is a real, deliberate
 // ExitNotImplemented rather than silently doing nothing or pretending
 // to succeed - the write endpoint it would call genuinely does not
-// exist yet (see mejoras_futuras.txt's own `deploy`/`flash-all` entries).
+// exist yet (same gap the README's own `deploy`/`flash-all` roadmap
+// entries are blocked on).
 package main
 
 import (

@@ -6,8 +6,8 @@
 // The real fleet roster read, the first genuinely "fleet DevOps" command
 // this CLI has (the README's own bigger promises - deploy/flash-all/
 // audit - still need real write endpoints on HYDRA-UMC-SERVER that don't
-// exist yet, see mejoras_futuras.txt). GET /api/settings already carries
-// the full controller/robot roster and is a real, unauthenticated read
+// exist yet). GET /api/settings already carries the full
+// controller/robot roster and is a real, unauthenticated read
 // (see HYDRA-UMC-SERVER/src/server.ts's own `app.get("/api/settings", ...)`
 // route) - this command is a real client of that real, already-shipping
 // contract, not new server-side work.
