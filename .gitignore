@@ -1,6 +1,8 @@
 build/
 *.exe
 *.test
+/src/hydra-cli
+/src/cmd/hydra-cli/hydra-cli
 
 # HYDRA-UMC shared secret protection
 .env

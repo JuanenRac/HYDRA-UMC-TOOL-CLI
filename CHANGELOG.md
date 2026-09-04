@@ -22,6 +22,15 @@ binary.
 
 ---
 
+## Unreleased
+
+- **`src/hydra-cli`** - untracked a stale, orphaned 8.6 MB compiled Linux
+  binary that had been committed directly (no `.exe` suffix, so it slipped
+  past `.gitignore`'s existing `*.exe` rule). `.gitignore` now also covers
+  `src/hydra-cli` and `src/cmd/hydra-cli/hydra-cli` explicitly. `git rm
+  --cached` only, no `-f` - the physical file was left untouched on disk.
+  Repo-hygiene fix, no runtime code changed, no version bump.
+
 ## [0.0.7] - Interactive shell mode
 
 - **`hydra-cli shell [--server URL]`** (`shell.go`, new) - a real REPL:
