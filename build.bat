@@ -80,15 +80,66 @@ popd
 echo       Done. Binary: build\hydra-cli.exe
 echo.
 
-echo [4/4] Verifying the binary runs...
+echo [4/5] Verifying the binary runs...
 build\hydra-cli.exe version
 if errorlevel 1 goto :error
 echo.
 
+REM C12: real cross-platform release packaging - GOOS/GOARCH env vars,
+REM no separate toolchain needed. linux/arm64 is the CM5's own real
+REM architecture; the rest cover an operator's own workstation.
+echo [5/5] Packaging cross-platform release binaries...
+set "RELEASE_DIR=build\release"
+if exist "%RELEASE_DIR%" rmdir /s /q "%RELEASE_DIR%"
+mkdir "%RELEASE_DIR%"
+
+call :build_target linux amd64 hydra-cli
+if errorlevel 1 goto :error
+call :build_target linux arm64 hydra-cli
+if errorlevel 1 goto :error
+call :build_target windows amd64 hydra-cli.exe
+if errorlevel 1 goto :error
+call :build_target darwin amd64 hydra-cli
+if errorlevel 1 goto :error
+call :build_target darwin arm64 hydra-cli
+if errorlevel 1 goto :error
+
+where sha256sum >nul 2>nul
+if not errorlevel 1 (
+    pushd "%RELEASE_DIR%"
+    (for /r %%F in (hydra-cli hydra-cli.exe) do @if exist "%%F" sha256sum "%%F") > SHA256SUMS
+    popd
+) else (
+    certutil -hashfile build\release\linux-amd64\hydra-cli SHA256 >nul 2>nul
+    echo       (sha256sum not found - install it or use certutil per-file to checksum release\ manually)
+)
+echo       Done. Release artifacts: %RELEASE_DIR%\
+echo.
+
 echo ========================================
 echo  Build complete. Run run.bat to execute the binary again.
+echo  Cross-platform release artifacts: %RELEASE_DIR%\
 echo ========================================
 pause
+exit /b 0
+
+:build_target
+setlocal
+set "GOOS=%~1"
+set "GOARCH=%~2"
+set "OUT_NAME=%~3"
+set "OUT_DIR=%RELEASE_DIR%\%GOOS%-%GOARCH%"
+if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
+pushd src
+go build -o "..\%OUT_DIR%\%OUT_NAME%" .\cmd\hydra-cli
+set "RESULT=%ERRORLEVEL%"
+popd
+if not "%RESULT%"=="0" (
+    endlocal
+    exit /b 1
+)
+echo       Built: %OUT_DIR%\%OUT_NAME%
+endlocal
 exit /b 0
 
 :error

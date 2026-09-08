@@ -89,7 +89,7 @@ HYDRA-UMC-TOOL-CLI/
 ├── images/                    # 媒体与图表
 ├── bump_version.py            # 原生版本的里程表式递增（由构建运行）
 ├── bump_manifest_version.py   # 将 hydra-umc.project.json 的版本与原生版本同步(--sync)
-├── build.sh / build.bat       # 真实构建：版本递增 + 真实测试套件 + go build + 冒烟测试
+├── build.sh / build.bat       # 真实构建：版本递增 + 真实测试套件 + go build + 冒烟测试 + 跨平台发布打包
 ├── run.sh / run.bat           # 真实运行：执行编译后的二进制文件
 └── README.md
 ```
@@ -123,7 +123,10 @@ run.bat config apply --config .\hydra-cli.json --dry-run
 
 `build` 会递增版本号（`src/cmd/hydra-cli/version.go`），运行真实测试
 套件（`go vet` + `go test`），将 `src/` 中的 Go 模块编译为
-`build/hydra-cli(.exe)`，并运行一次 `version` 命令以进行验证。`run`
+`build/hydra-cli(.exe)`，并运行一次 `version` 命令以进行验证——随后为
+`linux/amd64`、`linux/arm64`（CM5 自身的架构）、`windows/amd64`、
+`darwin/amd64` 和 `darwin/arm64` 交叉编译真实的发布版本，输出到
+`build/release/`，并附带一份真实的 `SHA256SUMS` 校验和文件。`run`
 再次执行编译后的二进制文件，并转发所有参数——试着对一个正在运行的
 `HYDRA-UMC-SERVER` 实例运行 `run doctor`。Doctor 是安全的只读端点契约检查；详见 [docs/DOCTOR.md](docs/DOCTOR.md)。
 

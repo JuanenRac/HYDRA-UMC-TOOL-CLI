@@ -85,7 +85,7 @@ HYDRA-UMC-TOOL-CLI/
 ├── images/                    # Médias et diagrammes
 ├── bump_version.py            # Incrémentation de version native façon compteur kilométrique (exécuté par build)
 ├── bump_manifest_version.py   # Synchronise la version de hydra-umc.project.json avec la version native (--sync)
-├── build.sh / build.bat       # Build réel : incrémentation + vraie suite de tests + go build + test de fumée
+├── build.sh / build.bat       # Build réel : incrémentation + vraie suite de tests + go build + test de fumée + empaquetage multiplateforme
 ├── run.sh / run.bat           # Exécution réelle : lance le binaire compilé
 └── README.md
 ```
@@ -117,7 +117,7 @@ run.bat config validate --config .\hydra-cli.json
 run.bat config apply --config .\hydra-cli.json --dry-run
 ```
 
-`build` incrémente la version (`src/cmd/hydra-cli/version.go`), exécute la vraie suite de tests (`go vet` + `go test`), compile le module Go dans `src/` vers `build/hydra-cli(.exe)`, puis exécute `version` une fois pour vérifier. `run` relance le binaire compilé en transmettant tous les arguments — essayez `run doctor` face à une instance `HYDRA-UMC-SERVER` en cours d'exécution. Doctor est une vérification sûre et en lecture seule des contrats d'endpoints ; voir [docs/DOCTOR.md](docs/DOCTOR.md).
+`build` incrémente la version (`src/cmd/hydra-cli/version.go`), exécute la vraie suite de tests (`go vet` + `go test`), compile le module Go dans `src/` vers `build/hydra-cli(.exe)`, puis exécute `version` une fois pour vérifier - avant de compiler de façon croisée une version réelle pour `linux/amd64`, `linux/arm64` (l'architecture propre de la CM5), `windows/amd64`, `darwin/amd64` et `darwin/arm64` dans `build/release/`, avec un vrai fichier de somme de contrôle `SHA256SUMS`. `run` relance le binaire compilé en transmettant tous les arguments — essayez `run doctor` face à une instance `HYDRA-UMC-SERVER` en cours d'exécution. Doctor est une vérification sûre et en lecture seule des contrats d'endpoints ; voir [docs/DOCTOR.md](docs/DOCTOR.md).
 
 ---
 
