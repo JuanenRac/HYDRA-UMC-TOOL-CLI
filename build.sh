@@ -70,10 +70,48 @@ fi
 echo "      Done. Binary: build/${BIN_NAME}"
 echo ""
 
-echo "[4/4] Verifying the binary runs..."
+echo "[4/5] Verifying the binary runs..."
 "./build/${BIN_NAME}" version
+echo ""
+
+# C12 (this repo's own real packaging gap): until now this script only
+# ever produced ONE native binary, for running/testing on THIS machine -
+# nothing here ever cross-compiled a real release for the other
+# platforms an operator's own workstation (or the CM5 itself) might
+# actually be. Go's own cross-compilation is just GOOS/GOARCH env vars,
+# no separate toolchain needed - real, not aspirational.
+echo "[5/5] Packaging cross-platform release binaries..."
+RELEASE_DIR="build/release"
+rm -rf "$RELEASE_DIR"
+mkdir -p "$RELEASE_DIR"
+# linux/arm64 is the CM5's own real architecture; the other four cover
+# an operator's own workstation (Windows/Linux/macOS, both Apple
+# Silicon and Intel).
+for target in "linux amd64" "linux arm64" "windows amd64" "darwin amd64" "darwin arm64"; do
+    read -r goos goarch <<< "$target"
+    out_name="hydra-cli"
+    [ "$goos" = "windows" ] && out_name="hydra-cli.exe"
+    out_dir="$RELEASE_DIR/${goos}-${goarch}"
+    mkdir -p "$out_dir"
+    ( cd src && GOOS="$goos" GOARCH="$goarch" go build -o "../${out_dir}/${out_name}" ./cmd/hydra-cli )
+    echo "      Built: ${out_dir}/${out_name}"
+done
+# A real, verifiable checksum per artifact - the same real integrity
+# guarantee HYDRA-UMC-OS-REBUILDER's own base-image download already
+# relies on for a real published release, applied here to this
+# project's own output instead of someone else's.
+(
+    cd "$RELEASE_DIR"
+    if command -v sha256sum >/dev/null 2>&1; then
+        find . -type f \( -name "hydra-cli" -o -name "hydra-cli.exe" \) -exec sha256sum {} \; > SHA256SUMS
+    else
+        shasum -a 256 $(find . -type f \( -name "hydra-cli" -o -name "hydra-cli.exe" \)) > SHA256SUMS
+    fi
+)
+echo "      Done. Checksums: ${RELEASE_DIR}/SHA256SUMS"
 echo ""
 
 echo "========================================"
 echo " Build complete. Run ./run.sh to execute the binary again."
+echo " Cross-platform release artifacts: ${RELEASE_DIR}/"
 echo "========================================"

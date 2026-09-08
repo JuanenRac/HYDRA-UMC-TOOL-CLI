@@ -85,7 +85,7 @@ HYDRA-UMC-TOOL-CLI/
 ├── images/                    # Media e diagrammi
 ├── bump_version.py            # Incremento versione nativa stile contachilometri (eseguito dal build)
 ├── bump_manifest_version.py   # Sincronizza la versione di hydra-umc.project.json con quella nativa (--sync)
-├── build.sh / build.bat       # Build reale: incremento + vera suite di test + go build + smoke test
+├── build.sh / build.bat       # Build reale: incremento + vera suite di test + go build + smoke test + packaging multipiattaforma
 ├── run.sh / run.bat           # Esecuzione reale: avvia il binario compilato
 └── README.md
 ```
@@ -117,7 +117,7 @@ run.bat config validate --config .\hydra-cli.json
 run.bat config apply --config .\hydra-cli.json --dry-run
 ```
 
-`build` incrementa la versione (`src/cmd/hydra-cli/version.go`), esegue la vera suite di test (`go vet` + `go test`), compila il modulo Go in `src/` in `build/hydra-cli(.exe)` ed esegue `version` una volta per verificare. `run` riesegue il binario compilato, inoltrando tutti gli argomenti — prova `run doctor` contro un'istanza `HYDRA-UMC-SERVER` in esecuzione. Doctor è un controllo sicuro e in sola lettura dei contratti endpoint; vedi [docs/DOCTOR.md](docs/DOCTOR.md).
+`build` incrementa la versione (`src/cmd/hydra-cli/version.go`), esegue la vera suite di test (`go vet` + `go test`), compila il modulo Go in `src/` in `build/hydra-cli(.exe)` ed esegue `version` una volta per verificare - poi compila in modo incrociato una release reale per linux/amd64, linux/arm64 (l'architettura propria della CM5), windows/amd64, darwin/amd64 e darwin/arm64 in build/release/, con un vero file di checksum SHA256SUMS. `run` riesegue il binario compilato, inoltrando tutti gli argomenti — prova `run doctor` contro un'istanza `HYDRA-UMC-SERVER` in esecuzione. Doctor è un controllo sicuro e in sola lettura dei contratti endpoint; vedi [docs/DOCTOR.md](docs/DOCTOR.md).
 
 ---
 

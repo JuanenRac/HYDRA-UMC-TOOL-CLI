@@ -93,7 +93,7 @@ HYDRA-UMC-TOOL-CLI/
 ├── images/                    # メディアと図表
 ├── bump_version.py            # ネイティブバージョンのオドメーター式インクリメント（ビルドが実行）
 ├── bump_manifest_version.py   # hydra-umc.project.json のバージョンをネイティブ版と同期(--sync)
-├── build.sh / build.bat       # 実際のビルド：バージョンインクリメント + 実際のテストスイート + go build + スモークテスト
+├── build.sh / build.bat       # 実際のビルド：バージョンインクリメント + 実際のテストスイート + go build + スモークテスト + クロスプラットフォームパッケージング
 ├── run.sh / run.bat           # 実際の実行：コンパイル済みバイナリを実行
 └── README.md
 ```
@@ -128,7 +128,11 @@ run.bat config apply --config .\hydra-cli.json --dry-run
 `build` はバージョンを増加させ（`src/cmd/hydra-cli/version.go`）、
 実際のテストスイートを実行し（`go vet` + `go test`）、`src/` 内の Go
 モジュールを `build/hydra-cli(.exe)` としてコンパイルし、検証のために
-一度 `version` を実行します。`run` はコンパイル済みバイナリを再度実行
+一度 `version` を実行します - その後、`linux/amd64`、`linux/arm64`
+（CM5自身のアーキテクチャ）、`windows/amd64`、`darwin/amd64`、
+`darwin/arm64` 向けに実際のリリースをクロスコンパイルし、
+`build/release/` に出力、実際の `SHA256SUMS` チェックサムファイルも
+添えます。`run` はコンパイル済みバイナリを再度実行
 し、すべての引数を転送します——実行中の `HYDRA-UMC-SERVER` インスタンス
 に対して `run doctor` を試してみてください。Doctor は安全な読み取り専用のエンドポイント契約チェックです。詳細は [docs/DOCTOR.md](docs/DOCTOR.md) を参照してください。
 

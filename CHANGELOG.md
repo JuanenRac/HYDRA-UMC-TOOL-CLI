@@ -29,6 +29,22 @@ binary.
   --cached` only, no `-f` - the physical file was left untouched on disk.
   Repo-hygiene fix, no runtime code changed, no version bump.
 
+## [0.0.9] - C12: real cross-platform release packaging
+
+`build.sh`/`build.bat` only ever produced ONE native binary, for running
+on the machine doing the build - nothing here ever cross-compiled a real
+release for the CM5 itself or an operator's other platforms.
+
+- `build.sh`/`build.bat` now also cross-compile, via Go's own real
+  `GOOS`/`GOARCH` (no separate toolchain needed): `linux/amd64`,
+  `linux/arm64` (the CM5's own real architecture),
+  `windows/amd64`, `darwin/amd64`, `darwin/arm64` - into
+  `build/release/<os>-<arch>/hydra-cli(.exe)`, plus a real `SHA256SUMS`
+  checksum file over every artifact (`sha256sum` on Linux/macOS/Git
+  Bash, falling back to `certutil` on plain Windows `cmd`).
+- The existing native build/test/run step is unchanged - this is purely
+  additive packaging after it, not a replacement.
+
 ## [0.0.8] - `--config` now really drives every live command, not just validation
 
 - Found in an ecosystem-wide software-improvements audit: `config
