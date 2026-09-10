@@ -40,7 +40,7 @@ func TestCmdStatus_ReturnsErrorOnUnreachableServer(t *testing.T) {
 }
 
 // TestCmdStatus_ConfigFileDrivesRealServerTarget closes the real gap found
-// in an ecosystem-wide software-improvements audit: a --config file was
+// while auditing the code: a --config file was
 // already schema-validated by `config validate`/`config apply`, but no
 // live command ever actually consulted it - status still only looked at
 // --server/HYDRA_CLI_SERVER/the compiled-in default. Passing --config
