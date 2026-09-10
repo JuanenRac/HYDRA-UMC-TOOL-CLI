@@ -80,11 +80,12 @@ HYDRA-UMC-TOOL-CLI/
 ├── src/                       # Go モジュール
 │   ├── go.mod                 # モジュール定義（github.com/JuanenRac/HYDRA-UMC-TOOL-CLI）
 │   └── cmd/hydra-cli/         # バイナリのエントリポイント
-│       ├── main.go            # コマンドディスパッチ（version/help/status/robots/doctor/config）
+│       ├── main.go            # コマンドディスパッチ（version/help/status/robots/doctor/config/shell）
 │       ├── server.go          # --server/--config/HYDRA_CLI_SERVER の共有解決処理
 │       ├── robots.go          # 実際の GET /api/settings クライアント + 一覧表示
 │       ├── doctor.go          # 読み取り専用の二つのエンドポイント契約診断
 │       ├── config.go          # 実際の設定ファイルの読み込み、検証、apply --dry-run
+│       ├── shell.go           # 同じコマンドテーブル上の対話型 REPL
 │       ├── exitcode.go        # 実際の、安定した ExitCode/CliError 契約
 │       ├── *_test.go          # 実際のテスト（net/http/httptest ラウンドトリップ、一時ファイルのフィクスチャ）
 │       └── version.go         # const Version - オドメーター式インクリメント、マニフェストと同期

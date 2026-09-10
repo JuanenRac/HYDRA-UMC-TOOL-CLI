@@ -72,11 +72,12 @@ HYDRA-UMC-TOOL-CLI/
 ├── src/                       # Modulo Go
 │   ├── go.mod                 # Definizione del modulo (github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)
 │   └── cmd/hydra-cli/         # Punto di ingresso del binario
-│       ├── main.go            # Smistamento dei comandi (version/help/status/robots/doctor/config)
+│       ├── main.go            # Smistamento dei comandi (version/help/status/robots/doctor/config/shell)
 │       ├── server.go          # Risoluzione condivisa di --server/--config/HYDRA_CLI_SERVER
 │       ├── robots.go          # Vero client GET /api/settings + stampa dell'elenco
 │       ├── doctor.go          # Diagnostica di contratto a due endpoint, sola lettura
 │       ├── config.go          # Caricamento reale del file di configurazione, validazione, apply --dry-run
+│       ├── shell.go           # REPL interattivo sulla stessa tabella di comandi
 │       ├── exitcode.go        # Contratto reale e stabile ExitCode/CliError
 │       ├── *_test.go          # Test reali (round-trip net/http/httptest, fixture di file temporanei)
 │       └── version.go         # const Version - incremento contachilometri, sincronizzato con il manifesto

@@ -76,11 +76,12 @@ HYDRA-UMC-TOOL-CLI/
 ├── src/                       # Go 模块
 │   ├── go.mod                 # 模块定义（github.com/JuanenRac/HYDRA-UMC-TOOL-CLI）
 │   └── cmd/hydra-cli/         # 二进制文件入口点
-│       ├── main.go            # 命令分发（version/help/status/robots/doctor/config）
+│       ├── main.go            # 命令分发（version/help/status/robots/doctor/config/shell）
 │       ├── server.go          # 共享的 --server/--config/HYDRA_CLI_SERVER 解析
 │       ├── robots.go          # 真实的 GET /api/settings 客户端 + 名单打印
 │       ├── doctor.go          # 只读双端点契约诊断
 │       ├── config.go          # 真实的配置文件加载、校验、apply --dry-run
+│       ├── shell.go           # 基于同一命令表的交互式 REPL
 │       ├── exitcode.go        # 真实、稳定的 ExitCode/CliError 契约
 │       ├── *_test.go          # 真实测试（net/http/httptest 往返，临时文件测试夹具）
 │       └── version.go         # const Version —— 里程表式递增，与清单保持同步
