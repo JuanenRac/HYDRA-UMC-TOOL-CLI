@@ -23,7 +23,7 @@ const defaultRequestTimeout = 5 * time.Second
 
 // resolveTarget picks the target HYDRA-UMC-SERVER base URL AND the
 // request timeout every live command (status/robots/doctor/shell) uses -
-// found in an ecosystem-wide software-improvements audit: `config
+// found while auditing the code: `config
 // validate`/`config apply` already schema-validate a real local config
 // file (config.go), but no live command ever consulted it, so --config
 // only ever affected validation, never a real run. Precedence for the

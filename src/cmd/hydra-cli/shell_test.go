@@ -129,7 +129,7 @@ func TestCmdShell_SetsSessionServerFromFlag(t *testing.T) {
 }
 
 // TestCmdShell_SetsSessionServerAndTimeoutFromConfigFlag closes the real
-// gap found in an ecosystem-wide software-improvements audit: a --config
+// gap found while auditing the code: a --config
 // file was already schema-validated, but no live command (including a
 // `shell` session) ever consulted it - this proves --config passed to
 // `shell` itself now becomes BOTH session defaults, so every line typed
