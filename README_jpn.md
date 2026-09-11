@@ -16,6 +16,10 @@
 
 ---
 
+**正直な現状確認 - 実際に今動くもの:** `version`、`status`、`robots`、`doctor`、`config validate`、`config apply --dry-run`、そして対話型の `shell`（`main.go`、`server.go`、`robots.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）は、62件のテストがすべて通過している（`go test ./...`）、実際に動く本物の Go コードであり — 偽サーバーに対する本物の `net/http`/`httptest` の往復通信と、本物の一時設定ファイルのフィクスチャを使っており、スタブではない。これらのテストは HYDRA-UMC-SERVER のインスタンスを模擬しているだけで、今回のパスでは実際に稼働中の本物の HYDRA-UMC-SERVER プロセスに対しては再検証していない。`config apply` は `--dry-run` なしで実行すると、成功を装うのではなく正直に `ExitNotImplemented` の終了コードを返す。呼び出すはずのフリート書き込みエンドポイントが HYDRA-UMC-SERVER にまだ存在しないためだ。`deploy`、`flash-all`、`audit` は純粋な構想であり、下記では「planned」と記されている通り `src/` には一切存在せず、スタブ関数すらない。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を参照。
+
+---
+
 ## 1. 🛠️ 技術概要
 
 **HYDRA-UMC-TOOL-CLI** は、HYDRA-UMC エコシステムの開発者およびシステム

@@ -16,6 +16,10 @@
 
 ---
 
+**Honesty check - what actually runs today:** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run`, and the interactive `shell` (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) are real, working Go code, exercised by 62 passing tests (`go test ./...`) - real `net/http`/`httptest` round-trips against a fake server plus real temp-file config fixtures, not stubs. Those tests simulate a HYDRA-UMC-SERVER instance; this CLI has not been separately re-verified against a live, real HYDRA-UMC-SERVER process in this pass. `config apply` without `--dry-run` honestly returns the `ExitNotImplemented` exit code rather than faking success, because the fleet-write endpoint it would call doesn't exist on HYDRA-UMC-SERVER yet. `deploy`, `flash-all` and `audit` are pure aspiration - marked "planned" below and absent from `src/` entirely, not even a stub function. See `CHANGELOG.md` for exactly what has shipped so far.
+
+---
+
 ## 1. 🛠️ TECHNICAL OVERVIEW
 
 **HYDRA-UMC-TOOL-CLI** is the Swiss Army knife for developers and system administrators of the HYDRA-UMC ecosystem. It is a single static Go binary providing command-line tools to query, update, and audit HYDRA-UMC deployments.
