@@ -112,10 +112,13 @@ COMMANDS:
                           --config file's own "server" (see config validate/
                           apply below), or the HYDRA_CLI_SERVER environment
                           variable, in that precedence order.
-	doctor [--server URL] [--config PATH]
+	doctor [--server URL] [--config PATH] [--json]
 	                      Read-only diagnostic: validates /api/hydra-info and
 	                      /api/settings, then verifies their controller/robot
 	                      counts agree. It never sends commands or probes hardware.
+	                      --json prints a structured report (checkId/severity/
+	                      status per check) instead of the DOCTOR=PASS line, for
+	                      scripts that need to act on individual results.
     config validate --config PATH
                           Load and schema-validate a local config file.
     config apply --config PATH [--dry-run]
