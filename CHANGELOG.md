@@ -29,6 +29,20 @@ binary.
   --cached` only, no `-f` - the physical file was left untouched on disk.
   Repo-hygiene fix, no runtime code changed, no version bump.
 
+## [0.1.0]
+
+- **`hydra-cli doctor --json`** - the diagnostic previously only ever printed
+  a single `DOCTOR=PASS ...` prose line, and printed nothing at all to
+  stdout on failure. `--json` now emits a structured report instead: a
+  `checkId`/`severity`/`status` entry per real check (`hydra-info-reachable`,
+  `hydra-info-has-app-version`, `settings-reachable`,
+  `controller-count-cross-check`, `robot-count-cross-check`), plus an overall
+  `ok` flag and the same facts (`appVersion`, `controllers`, `robots`, ...)
+  the plain-text line already reported. A failure still returns the exact
+  same error and exit code as before - `--json` only changes what stdout
+  carries, never doctor's pass/fail verdict. Plain-text `doctor` (no
+  `--json`) is byte-for-byte unchanged.
+
 ## [0.0.9] - C12: real cross-platform release packaging
 
 `build.sh`/`build.bat` only ever produced ONE native binary, for running

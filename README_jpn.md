@@ -16,7 +16,7 @@
 
 ---
 
-**正直な現状確認 - 実際に今動くもの:** `version`、`status`、`robots`、`doctor`、`config validate`、`config apply --dry-run`、そして対話型の `shell`（`main.go`、`server.go`、`robots.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）は、62件のテストがすべて通過している（`go test ./...`）、実際に動く本物の Go コードであり — 偽サーバーに対する本物の `net/http`/`httptest` の往復通信と、本物の一時設定ファイルのフィクスチャを使っており、スタブではない。これらのテストは HYDRA-UMC-SERVER のインスタンスを模擬しているだけで、今回のパスでは実際に稼働中の本物の HYDRA-UMC-SERVER プロセスに対しては再検証していない。`config apply` は `--dry-run` なしで実行すると、成功を装うのではなく正直に `ExitNotImplemented` の終了コードを返す。呼び出すはずのフリート書き込みエンドポイントが HYDRA-UMC-SERVER にまだ存在しないためだ。`deploy`、`flash-all`、`audit` は純粋な構想であり、下記では「planned」と記されている通り `src/` には一切存在せず、スタブ関数すらない。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を参照。
+**正直な現状確認 - 実際に今動くもの:** `version`、`status`、`robots`、`doctor`、`config validate`、`config apply --dry-run`、そして対話型の `shell`（`main.go`、`server.go`、`robots.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）は、65件のテストがすべて通過している（`go test ./...`）、実際に動く本物の Go コードであり — 偽サーバーに対する本物の `net/http`/`httptest` の往復通信と、本物の一時設定ファイルのフィクスチャを使っており、スタブではない。これらのテストは HYDRA-UMC-SERVER のインスタンスを模擬しているだけで、今回のパスでは実際に稼働中の本物の HYDRA-UMC-SERVER プロセスに対しては再検証していない。`config apply` は `--dry-run` なしで実行すると、成功を装うのではなく正直に `ExitNotImplemented` の終了コードを返す。呼び出すはずのフリート書き込みエンドポイントが HYDRA-UMC-SERVER にまだ存在しないためだ。`deploy`、`flash-all`、`audit` は純粋な構想であり、下記では「planned」と記されている通り `src/` には一切存在せず、スタブ関数すらない。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を参照。
 
 ---
 
@@ -37,7 +37,7 @@
 * ✅ **`hydra-cli version`** — CLI 自身の名前とバージョンを表示します。*（実装済み）*
 * ✅ **`hydra-cli status [--server URL] [--config PATH]`** — 実行中の HYDRA-UMC-SERVER の `GET /api/hydra-info` を照会し、報告されたアイデンティティを表示します。*（実装済み）*
 * ✅ **`hydra-cli robots [--server URL] [--config PATH]`** — 実行中の HYDRA-UMC-SERVER の `GET /api/settings` を照会し、実際のコントローラー/ロボット一覧（名前、オンライン状態、モデル、役割）を表示します。*（実装済み）*
-* ✅ **`hydra-cli doctor [--server URL] [--config PATH]`** — 読み取り専用のサーバー契約診断：`/api/hydra-info` と `/api/settings` を検証し、公開されたコントローラー/ロボット数を一覧と照合します。コマンド送信やハードウェアの検査は行いません。*（実装済み）*
+* ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** — 読み取り専用のサーバー契約診断：`/api/hydra-info` と `/api/settings` を検証し、公開されたコントローラー/ロボット数を一覧と照合します。コマンド送信やハードウェアの検査は行いません。`--json` を付けるとテキスト行の代わりに、チェックごとの `checkId`/`severity`/`status` を含む構造化レポートを出力します(スクリプト向け、詳細は [docs/DOCTOR.md](docs/DOCTOR.md))。*（実装済み）*
 * ✅ **実際に安定した終了コード契約** — `0` 正常、`1` 一般エラー、`2` 使用方法エラー、`3` 設定エラー、`4` ネットワークエラー、`5` サーバーエラー、`6` 未実装。各コマンドは単なる `exit 1` の代わりにこの契約を通じて自身の失敗を分類するため、この CLI をラップするスクリプトは*失敗の理由*に応じて分岐できます。*（実装済み）*
 * ✅ **`hydra-cli config validate --config PATH`** — ローカルの設定ファイル（サーバー URL、リクエストタイムアウト）を読み込み、スキーマ検証します。*（実装済み）*
 * ✅ **`hydra-cli config apply --config PATH [--dry-run]`** — `--dry-run` は実際の検証パスをエンドツーエンドで証明し、送信される内容を正確に表示します。指定しない場合は、実際にはまだライブのフリート書き込みエンドポイントが存在しないため、正直に「未実装」を返します。*（実装済み、dry-run のみ）*

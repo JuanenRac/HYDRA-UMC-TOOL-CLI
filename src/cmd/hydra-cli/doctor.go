@@ -30,40 +30,118 @@ type doctorInfo struct {
 	RobotCount       *int   `json:"robotCount"`
 }
 
+// doctorCheck is one machine-readable diagnostic result inside --json
+// output. checkId is a stable identifier a script can key off without
+// parsing prose; severity classifies how much a "fail" status should matter
+// to an automated caller: "critical" means doctor could not even complete
+// (unreachable server, malformed response), while "warning" is the same
+// best-effort cross-check the plain-text countCrossCheck=not-reported output
+// already tolerates on an older server.
+type doctorCheck struct {
+	CheckID  string `json:"checkId"`
+	Severity string `json:"severity"`
+	Status   string `json:"status"` // "pass", "fail", or "not-reported"
+	Message  string `json:"message,omitempty"`
+}
+
+// doctorReport is cmdDoctor's --json payload: the same facts the plain-text
+// DOCTOR=PASS line already reports, plus the individual checks list that
+// plain-text output has never exposed to a script. Checks accumulate in the
+// order they run, so a report from a failed diagnosis still shows every
+// check that passed before the one that failed.
+type doctorReport struct {
+	Server           string        `json:"server"`
+	OK               bool          `json:"ok"`
+	AppVersion       string        `json:"appVersion,omitempty"`
+	SchemaVersion    string        `json:"schemaVersion,omitempty"`
+	RemoteAPIVersion int           `json:"remoteApiVersion,omitempty"`
+	Controllers      int           `json:"controllers,omitempty"`
+	Robots           int           `json:"robots,omitempty"`
+	Checks           []doctorCheck `json:"checks"`
+}
+
 // cmdDoctor implements a safe, endpoint-contract diagnostic. A successful
 // diagnosis means only that the server answered valid JSON and that its
 // published fleet counts agree with its settings response. It is not a claim
 // about physical controller, actuator, or safety health.
+//
+// --json switches the plain-text DOCTOR=PASS line for a structured
+// doctorReport with a checkId/severity/status per check, for a caller that
+// wants to act on individual results instead of grepping prose.
 func cmdDoctor(w io.Writer, args []string) error {
 	server, timeout, rest, err := resolveTarget(args)
 	if err != nil {
 		return err
 	}
-	if len(rest) != 0 {
-		return newCliError(ExitUsageError, fmt.Errorf("doctor does not accept arguments: %s", strings.Join(rest, " ")))
+
+	jsonOutput := false
+	filtered := make([]string, 0, len(rest))
+	for _, arg := range rest {
+		if arg == "--json" {
+			jsonOutput = true
+			continue
+		}
+		filtered = append(filtered, arg)
+	}
+	if len(filtered) != 0 {
+		return newCliError(ExitUsageError, fmt.Errorf("doctor does not accept arguments: %s", strings.Join(filtered, " ")))
 	}
 
+	report := doctorReport{Server: server}
 	client := http.Client{Timeout: timeout}
+
 	var info doctorInfo
 	if err := getJSON(&client, server, "/api/hydra-info", &info); err != nil {
-		return err
+		report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-reachable", Severity: "critical", Status: "fail", Message: err.Error()})
+		return finishDoctor(w, jsonOutput, report, err)
 	}
+	report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-reachable", Severity: "critical", Status: "pass"})
+
 	if strings.TrimSpace(info.AppVersion) == "" {
-		return newCliError(ExitServerError, fmt.Errorf("%s returned /api/hydra-info without appVersion", server))
+		err := newCliError(ExitServerError, fmt.Errorf("%s returned /api/hydra-info without appVersion", server))
+		report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-has-app-version", Severity: "critical", Status: "fail", Message: err.Error()})
+		return finishDoctor(w, jsonOutput, report, err)
 	}
+	report.AppVersion = info.AppVersion
+	report.SchemaVersion = info.SchemaVersion
+	report.RemoteAPIVersion = info.RemoteAPIVersion
+	report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-has-app-version", Severity: "critical", Status: "pass"})
 
 	var settings settingsResponse
 	if err := getJSON(&client, server, "/api/settings", &settings); err != nil {
-		return err
+		report.Checks = append(report.Checks, doctorCheck{CheckID: "settings-reachable", Severity: "critical", Status: "fail", Message: err.Error()})
+		return finishDoctor(w, jsonOutput, report, err)
 	}
+	report.Checks = append(report.Checks, doctorCheck{CheckID: "settings-reachable", Severity: "critical", Status: "pass"})
 
 	actualControllers := len(settings.Controllers)
 	actualRobots := robotCount(settings)
+	report.Controllers = actualControllers
+	report.Robots = actualRobots
+
 	if info.ControllerCount != nil && *info.ControllerCount != actualControllers {
-		return newCliError(ExitServerError, fmt.Errorf("controller count mismatch: /api/hydra-info reports %d but /api/settings contains %d", *info.ControllerCount, actualControllers))
+		err := newCliError(ExitServerError, fmt.Errorf("controller count mismatch: /api/hydra-info reports %d but /api/settings contains %d", *info.ControllerCount, actualControllers))
+		report.Checks = append(report.Checks, doctorCheck{CheckID: "controller-count-cross-check", Severity: "warning", Status: "fail", Message: err.Error()})
+		return finishDoctor(w, jsonOutput, report, err)
 	}
 	if info.RobotCount != nil && *info.RobotCount != actualRobots {
-		return newCliError(ExitServerError, fmt.Errorf("robot count mismatch: /api/hydra-info reports %d but /api/settings contains %d", *info.RobotCount, actualRobots))
+		err := newCliError(ExitServerError, fmt.Errorf("robot count mismatch: /api/hydra-info reports %d but /api/settings contains %d", *info.RobotCount, actualRobots))
+		report.Checks = append(report.Checks, doctorCheck{CheckID: "robot-count-cross-check", Severity: "warning", Status: "fail", Message: err.Error()})
+		return finishDoctor(w, jsonOutput, report, err)
+	}
+
+	crossCheckStatus := "pass"
+	if info.ControllerCount == nil || info.RobotCount == nil {
+		crossCheckStatus = "not-reported"
+	}
+	report.Checks = append(report.Checks,
+		doctorCheck{CheckID: "controller-count-cross-check", Severity: "warning", Status: crossCheckStatus},
+		doctorCheck{CheckID: "robot-count-cross-check", Severity: "warning", Status: crossCheckStatus},
+	)
+	report.OK = true
+
+	if jsonOutput {
+		return writeDoctorJSON(w, report)
 	}
 
 	fmt.Fprintf(w, "DOCTOR=PASS server=%s appVersion=%s", server, info.AppVersion)
@@ -74,13 +152,34 @@ func cmdDoctor(w io.Writer, args []string) error {
 		fmt.Fprintf(w, " remoteApiVersion=%d", info.RemoteAPIVersion)
 	}
 	fmt.Fprintf(w, " controllers=%d robots=%d", actualControllers, actualRobots)
-	if info.ControllerCount == nil || info.RobotCount == nil {
-		fmt.Fprint(w, " countCrossCheck=not-reported")
-	} else {
-		fmt.Fprint(w, " countCrossCheck=pass")
-	}
+	fmt.Fprintf(w, " countCrossCheck=%s", crossCheckStatus)
 	fmt.Fprintln(w)
 	return nil
+}
+
+// finishDoctor centralizes the JSON-vs-plain-text choice on every early
+// failure path. A --json caller gets the same structured report (marked
+// ok=false, carrying whatever checks ran before the failure) that a healthy
+// run produces, instead of plain-text mode's silence on stdout when it
+// fails; a non-JSON caller's behavior is completely unchanged. Either way
+// the original error is returned unmodified, so main's exit-code
+// classification and stderr message stay exactly as before this flag
+// existed.
+func finishDoctor(w io.Writer, jsonOutput bool, report doctorReport, err error) error {
+	if !jsonOutput {
+		return err
+	}
+	report.OK = false
+	if writeErr := writeDoctorJSON(w, report); writeErr != nil {
+		return writeErr
+	}
+	return err
+}
+
+func writeDoctorJSON(w io.Writer, report doctorReport) error {
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	return enc.Encode(report)
 }
 
 // getJSON owns the common read-only HTTP/error mapping used by doctor. Keeping

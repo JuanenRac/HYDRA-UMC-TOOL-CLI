@@ -54,3 +54,42 @@ DOCTOR=PASS server=http://localhost:3000 appVersion=0.2.4 schema=1.0 remoteApiVe
 matched the settings roster. `countCrossCheck=not-reported` means the Server
 is an older compatible endpoint that did not expose both count fields; the
 CLI reports that absence honestly rather than claiming a count comparison.
+
+## `--json`: structured output for scripts
+
+```bash
+./run.sh doctor --json
+```
+
+Instead of the single `DOCTOR=PASS ...` line, `--json` prints a report with
+one entry per real check:
+
+```json
+{
+  "server": "http://localhost:3000",
+  "ok": true,
+  "appVersion": "0.2.4",
+  "schemaVersion": "1.0",
+  "remoteApiVersion": 2,
+  "controllers": 1,
+  "robots": 8,
+  "checks": [
+    { "checkId": "hydra-info-reachable", "severity": "critical", "status": "pass" },
+    { "checkId": "hydra-info-has-app-version", "severity": "critical", "status": "pass" },
+    { "checkId": "settings-reachable", "severity": "critical", "status": "pass" },
+    { "checkId": "controller-count-cross-check", "severity": "warning", "status": "pass" },
+    { "checkId": "robot-count-cross-check", "severity": "warning", "status": "pass" }
+  ]
+}
+```
+
+`status` is `"pass"`, `"fail"`, or (for the two count cross-checks against an
+older Server that never published both count fields) `"not-reported"`. A
+`"fail"` entry carries a `message` describing what went wrong. `severity`
+distinguishes a `"critical"` check (doctor could not complete at all - an
+unreachable Server, a malformed response) from a `"warning"` one (the same
+best-effort count comparison the plain-text `countCrossCheck` already
+tolerates being absent). The report still appears on a failing run, listing
+whichever checks ran before the failure with `"ok": false` - `--json` only
+changes what stdout carries; the command's exit code and pass/fail verdict
+are identical to plain-text mode either way.
