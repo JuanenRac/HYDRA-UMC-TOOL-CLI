@@ -78,6 +78,12 @@ func run(args []string) ExitCode {
 			return exitCodeFor(err)
 		}
 		return ExitOK
+	case "completion":
+		if err := cmdCompletion(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli completion: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
 	default:
 		fmt.Fprintf(os.Stderr, "hydra-cli: unknown command %q\n\n", args[0])
 		printHelp()
@@ -130,6 +136,11 @@ COMMANDS:
                           repeatedly against the same server without
                           restarting the process. exit/quit or Ctrl-D
                           to leave.
+    completion <bash|zsh>
+                          Print a real completion script for the given
+                          shell to stdout - eval "$(hydra-cli completion
+                          bash)" (or source it from a completions
+                          directory) to enable tab-completion.
     help                  Show this message.
 
     Every live command above also reads a --config file's own "timeoutSec"
