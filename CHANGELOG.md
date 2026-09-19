@@ -29,6 +29,13 @@ binary.
   --cached` only, no `-f` - the physical file was left untouched on disk.
   Repo-hygiene fix, no runtime code changed, no version bump.
 
+## [0.1.1] - Real shell completion
+
+New `hydra-cli completion <bash|zsh>` prints a real completion script
+for the given shell - the subcommand list it suggests is kept as one
+small, explicit slice mirroring `run()`'s own real dispatch table in
+main.go, not reflection or a guess. 5 new tests.
+
 ## [0.1.0]
 
 - **`hydra-cli doctor --json`** - the diagnostic previously only ever printed
