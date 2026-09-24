@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"os"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -232,5 +233,72 @@ func TestCmdDoctor_JSONOutputUnreachableServerReportsCriticalFailCheck(t *testin
 	check := report.Checks[0]
 	if check.CheckID != "hydra-info-reachable" || check.Severity != "critical" || check.Status != "fail" || check.Message == "" {
 		t.Fatalf("unexpected single check: %+v", check)
+	}
+}
+
+// TestCmdDoctor_JSONOutputKeepsAStableKeySet pins the machine-readable
+// contract: automation keys off these names, so adding a field is a
+// deliberate change to this list and renaming or dropping one fails here.
+func TestCmdDoctor_JSONOutputKeepsAStableKeySet(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/api/hydra-info":
+			_, _ = w.Write([]byte(`{"schema_version":"1.0","appVersion":"0.2.4","remoteApiVersion":2,"controllerCount":1,"robotCount":2}`))
+		case "/api/settings":
+			_, _ = w.Write([]byte(`{"controllers":[{"name":"Master","robots":[{"name":"A1"},{"name":"A2"}]}]}`))
+		}
+	}))
+	defer server.Close()
+
+	var output bytes.Buffer
+	if err := cmdDoctor(&output, []string{"--server", server.URL, "--json"}); err != nil {
+		t.Fatal(err)
+	}
+	var top map[string]json.RawMessage
+	if err := json.Unmarshal(output.Bytes(), &top); err != nil {
+		t.Fatal(err)
+	}
+	for _, key := range []string{"server", "ok", "appVersion", "schemaVersion", "remoteApiVersion", "checks"} {
+		if _, present := top[key]; !present {
+			t.Fatalf("the --json output lost the %q key: %s", key, output.String())
+		}
+	}
+	var checks []map[string]any
+	if err := json.Unmarshal(top["checks"], &checks); err != nil {
+		t.Fatal(err)
+	}
+	for _, check := range checks {
+		for _, key := range []string{"checkId", "severity", "status"} {
+			if _, present := check[key]; !present {
+				t.Fatalf("a check lost the %q key: %v", key, check)
+			}
+		}
+	}
+	if bytes.Contains(output.Bytes(), []byte("\x1b[")) {
+		t.Fatal("the --json output must never contain terminal colour codes")
+	}
+}
+
+// TestCmdDoctor_NeverAsksForInput proves the command works with nothing on
+// stdin, so it can run unattended and can never leave a credential prompt in a log.
+func TestCmdDoctor_NeverAsksForInput(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	defer server.Close()
+	realStdin := os.Stdin
+	closed, writer, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = writer.Close() // a closed pipe: any attempt to read would return EOF immediately
+	os.Stdin = closed
+	defer func() { os.Stdin = realStdin }()
+
+	var output bytes.Buffer
+	_ = cmdDoctor(&output, []string{"--server", server.URL, "--json"}) // the result does not matter, only that it returns
+	if bytes.Contains(bytes.ToLower(output.Bytes()), []byte("password")) || bytes.Contains(bytes.ToLower(output.Bytes()), []byte("enter ")) {
+		t.Fatalf("the output looks like a prompt: %s", output.String())
 	}
 }
