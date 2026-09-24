@@ -124,7 +124,7 @@ func TestCmdDoctor_RejectsUnexpectedArguments(t *testing.T) {
 	assertCliErrorCode(t, cmdDoctor(&discard, []string{"unexpected"}), ExitUsageError)
 }
 
-// TestCmdDoctor_JSONOutputHealthyReportsEveryCheckPass closes I17/I44's real
+// TestCmdDoctor_JSONOutputHealthyReportsEveryCheckPass closes 's real
 // gap: a script driving `doctor` had only DOCTOR=PASS prose to parse, with no
 // per-check identifier or severity. --json must report the full, real check
 // list, all passing, on a healthy target.

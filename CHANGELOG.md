@@ -50,7 +50,7 @@ main.go, not reflection or a guess. 5 new tests.
   carries, never doctor's pass/fail verdict. Plain-text `doctor` (no
   `--json`) is byte-for-byte unchanged.
 
-## [0.0.9] - C12: real cross-platform release packaging
+## [0.0.9] - real cross-platform release packaging
 
 `build.sh`/`build.bat` only ever produced ONE native binary, for running
 on the machine doing the build - nothing here ever cross-compiled a real
