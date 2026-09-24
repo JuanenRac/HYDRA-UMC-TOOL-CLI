@@ -29,6 +29,13 @@ binary.
   --cached` only, no `-f` - the physical file was left untouched on disk.
   Repo-hygiene fix, no runtime code changed, no version bump.
 
+## [0.1.2] - The JSON contract and unattended use are pinned by tests
+
+- `doctor --json` now has a test pinning its key set (top-level and per check) and asserting
+  no terminal colour codes, so automation cannot be broken by a rename unnoticed. A second
+  test runs it with nothing on stdin and checks the output never looks like a prompt: the CLI
+  handles no credentials and never asks for any.
+
 ## [0.1.1] - Real shell completion
 
 New `hydra-cli completion <bash|zsh>` prints a real completion script
