@@ -75,7 +75,7 @@ release for the CM5 itself or an operator's other platforms.
 
 ## [0.0.8] - `--config` now really drives every live command, not just validation
 
-- Found while auditing the code: `config
+- Found on code review: `config
   validate`/`config apply --dry-run` already schema-validated a real
   local config file's `server`/`timeoutSec` (`config.go`), but no live
   command ever consulted it - `status`/`robots`/`doctor`/`shell` only
