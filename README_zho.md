@@ -4,7 +4,7 @@
 
 # 💻 HYDRA-UMC-TOOL-CLI
 
-<p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | 🇨🇳 <b>简体中文</b> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
+<p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | 🇨🇳 <b>简体中文</b> | <a href="README_jpn.md">🇯🇵 日本語</a> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 🛠️ 面向车队 DevOps 与自动化的命令行界面
 
@@ -16,7 +16,7 @@
 
 ---
 
-**诚实核查 - 今天真正能运行的部分：** `version`、`status`、`robots`、`doctor`、`config validate`、`config apply --dry-run`，以及交互式 `shell`（`main.go`、`server.go`、`robots.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）都是真实可运行的 Go 代码，由 65 个通过的测试（`go test ./...`）验证——针对一个模拟服务器的真实 `net/http`/`httptest` 往返请求，加上真实的临时配置文件测试夹具，而不是桩代码。这些测试模拟的是一个 HYDRA-UMC-SERVER 实例；本次审查并未针对真实运行中的 HYDRA-UMC-SERVER 进程重新验证这个 CLI。`config apply` 在没有 `--dry-run` 时会诚实地返回 `ExitNotImplemented` 退出码，而不是伪装成功，因为它需要调用的车队写入端点在 HYDRA-UMC-SERVER 上还不存在。`deploy`、`flash-all` 和 `audit` 完全是愿景——在下文中标记为"planned"，在 `src/` 中完全不存在，连桩函数都没有。具体已经交付了什么，请参见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** `version`、`status`、`robots`、`doctor`、`config validate`、`config apply --dry-run`，以及交互式 `shell`（`main.go`、`server.go`、`robots.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）都是真实可运行的 Go 代码，由 83 个通过的测试（`go test ./...`）验证——针对一个模拟服务器的真实 `net/http`/`httptest` 往返请求，加上真实的临时配置文件测试夹具，而不是桩代码。这些测试模拟的是一个 HYDRA-UMC-SERVER 实例；`status`、`robots` 和 `doctor`（包括登录）也已针对真实的 HYDRA-UMC-SERVER 进程运行过。`config apply` 在没有 `--dry-run` 时会诚实地返回 `ExitNotImplemented` 退出码，而不是伪装成功，因为它需要调用的车队写入端点在 HYDRA-UMC-SERVER 上还不存在。`deploy`、`flash-all` 和 `audit` 完全是愿景——在下文中标记为"planned"，在 `src/` 中完全不存在，连桩函数都没有。具体已经交付了什么，请参见 `CHANGELOG.md`。
 
 ---
 
@@ -35,7 +35,7 @@ HYDRA-UMC 部署的命令行工具。
 * ✅ **`hydra-cli status [--server URL] [--config PATH]`** —— 查询实时 HYDRA-UMC-SERVER 的 `GET /api/hydra-info`，并打印其报告的身份信息。*（已实现）*
 * ✅ **`hydra-cli robots [--server URL] [--config PATH]`** —— 查询实时 HYDRA-UMC-SERVER 的 `GET /api/settings`，并打印其真实的控制器/机器人名单（名称、在线状态、型号、角色）。*（已实现）*
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** —— 只读服务器契约诊断：验证 `/api/hydra-info` 和 `/api/settings`，并将已发布的控制器/机器人总数与名单进行核对。不发送命令，也不探测硬件。`--json` 会输出结构化报告(每项检查带 `checkId`/`severity`/`status`)而不是纯文本行,供脚本使用(见 [docs/DOCTOR.md](docs/DOCTOR.md))。*（已实现）*
-* ✅ **真实、稳定的退出码契约** —— `0` 正常，`1` 一般错误，`2` 用法错误，`3` 配置错误，`4` 网络错误，`5` 服务器错误，`6` 未实现。每个命令都通过该契约对自身的失败进行分类，而不是简单地 `exit 1`，因此封装本 CLI 的脚本可以根据*失败原因*进行分支处理。*（已实现）*
+* ✅ **真实、稳定的退出码契约** —— `0` 正常，`1` 一般错误，`2` 用法错误，`3` 配置错误，`4` 网络错误，`5` 服务器错误，`6` 未实现，`7` 需要认证或认证被拒绝。每个命令都通过该契约对自身的失败进行分类，而不是简单地 `exit 1`，因此封装本 CLI 的脚本可以根据*失败原因*进行分支处理。*（已实现）*
 * ✅ **`hydra-cli config validate --config PATH`** —— 加载并按模式校验本地配置文件（服务器 URL、请求超时）。*（已实现）*
 * ✅ **`hydra-cli config apply --config PATH [--dry-run]`** —— `--dry-run` 端到端地验证真实的校验路径，并准确打印将要发送的内容；若不带该参数，则会如实返回“未实现”，因为目前尚不存在实时的车队写入端点。*（已实现，仅支持 dry-run）*
 * ✅ **在 `status`/`robots`/`doctor`/`shell` 上使用 `--config PATH`** —— 同一个已校验文件的 `server`/`timeoutSec` 现在真正驱动每个实时命令的 HTTP 目标与请求超时,不再只影响 `config validate`/`apply`；若两者同时给出,`--server` 仍然优先。*（已实现）*
@@ -64,7 +64,7 @@ flowchart LR
 * **为何 `src/` 包含一个 `cmd/hydra-cli/` 子路径，而非扁平布局。** 遵循标准的 Go CLI 惯例（一个 `cmd/<binary-name>/` 入口点，并为随着 CLI 超出单一命令规模而增加的未来 `internal/`/`pkg/` 包留出空间）——这并非本生态系统自身的发明，而是更广泛 Go 社区针对多命令 CLI 的自有惯例。
 * **为何采用 CLI，而非直接编写脚本调用 HYDRA-UMC-SERVER 自身的 REST API。** 车队规模的操作（跨多个 CM5 进行安装/更新，而非仅一个）需要真正的编排——重试、并行性、一致的用户体验——这些是一次性 curl 脚本无法提供的，HYDRA-UMC-UPDATER 后来在生态系统检出层面应用的正是同样的理由。
 * **这如何融入生态系统的其余部分。** 在车队规模上完成 URTC-FLASHER 和 URTC-TESTER 各自为单块板卡所做的事——管理跨车队的多个 HYDRA-UMC-SERVER 实例，而非单块板卡自身的固件。
-* **为何 `robots` 读取 `GET /api/settings`，而非新建一个端点。** 该端点已经携带完整的控制器/机器人名单，并且已经是一个真实的、无需鉴权的读取操作（参见 HYDRA-UMC-SERVER 自身的 `src/server.ts`）——`robots` 是一个已发布契约的真实客户端，而非新的服务器端工作。`doctor` 将同一读取与 `/api/hydra-info` 组合，在不添加端点的情况下发现不兼容的公开车队总数。更大型的、仍在计划中的命令（`deploy`/`flash-all`/面向硬件的 `audit`）确实需要目前尚不存在的新写入端点。
+* **为何 `robots` 读取 `GET /api/settings`，而非新建一个端点。** 该端点已经携带完整的控制器/机器人名单，并且已经是一个需要已登录账户的真实读取操作（参见 HYDRA-UMC-SERVER 自身的 `src/server.ts`；CLI 使用 `HYDRA_CLI_USER`/`HYDRA_CLI_PASSWORD` 登录，或发送 `HYDRA_CLI_TOKEN`）——`robots` 是一个已发布契约的真实客户端，而非新的服务器端工作。`doctor` 将同一读取与 `/api/hydra-info` 组合，在不添加端点的情况下发现不兼容的公开车队总数。更大型的、仍在计划中的命令（`deploy`/`flash-all`/面向硬件的 `audit`）确实需要目前尚不存在的新写入端点。
 * **为何 `doctor` 明确为只读。** 契约检查在硬件到位前很有用，也适合在 CI 中安全运行。它只报告 HTTP/JSON/计数一致性；不会控制设备，也不会声明 CAN、执行器、传感器、摄像头、Hailo、CM5 或安全状态的健康性。
 * **为何不带 `--dry-run` 的 `config apply` 会返回“未实现”，而非悄无声息地什么都不做。** 它本应调用的 HYDRA-UMC-SERVER 实时写入端点确实尚不存在（与 `deploy`/`flash-all` 被卡住的原因相同）——一个独立的 `ExitNotImplemented` 退出码会告诉调用者“这是一个真实的缺口，而非 bug”，而不是让其误以为是一次成功的空操作。
 * **为何现在每个命令的错误都统一流经一个 `CliError`/`ExitCode` 类型，而非零散的 `os.Exit` 调用。** 一个稳定、有文档记录的退出码契约，只有在存在唯一一处分配退出码的地方时才能保持稳定——`exitCodeFor()`（`exitcode.go`）就是那个地方，各命令函数则继续返回符合惯例、可包装的 `error` 值，而不是自行调用 `os.Exit`。
@@ -82,6 +82,7 @@ HYDRA-UMC-TOOL-CLI/
 │   └── cmd/hydra-cli/         # 二进制文件入口点
 │       ├── main.go            # 命令分发（version/help/status/robots/doctor/config/shell）
 │       ├── server.go          # 共享的 --server/--config/HYDRA_CLI_SERVER 解析
+│       ├── auth.go            # 来自环境变量的凭据（令牌或登录），用于需要认证的读取
 │       ├── robots.go          # 真实的 GET /api/settings 客户端 + 名单打印
 │       ├── doctor.go          # 只读双端点契约诊断
 │       ├── config.go          # 真实的配置文件加载、校验、apply --dry-run
@@ -114,7 +115,7 @@ HYDRA-UMC-TOOL-CLI/
 ./run.sh doctor --server http://localhost:3000
 ./run.sh config validate --config ./hydra-cli.json
 ./run.sh config apply --config ./hydra-cli.json --dry-run
-echo $?   # 0=正常 2=用法 3=配置 4=网络 5=服务器 6=未实现
+echo $?   # 0=正常 2=用法 3=配置 4=网络 5=服务器 6=未实现 7=认证
 
 # Windows
 build.bat
@@ -125,6 +126,8 @@ run.bat doctor --server http://localhost:3000
 run.bat config validate --config .\hydra-cli.json
 run.bat config apply --config .\hydra-cli.json --dry-run
 ```
+
+`robots` 和 `doctor` 读取 `/api/settings`，HYDRA-UMC-SERVER 只会把它交给已登录的账户（管理员看到完整设置，其他角色看到隐去机密的副本）。请通过环境变量而不是命令行选项把凭据交给 CLI，这样它不会出现在进程列表和 shell 历史中：`HYDRA_CLI_TOKEN`（服务器已签发的 Bearer 令牌），或 `HYDRA_CLI_USER` 和 `HYDRA_CLI_PASSWORD`（CLI 在该次运行中通过 `POST /api/login` 登录；两者都设置时以令牌为准）。两者都没有时，命令以退出码 `7` 结束，并说明要设置哪些变量。`status` 和 `doctor` 的第一个请求使用公开的 `/api/hydra-info`，从不发送凭据。响应最多读取 4 MiB。
 
 `build` 会递增版本号（`src/cmd/hydra-cli/version.go`），运行真实测试
 套件（`go vet` + `go test`），将 `src/` 中的 Go 模块编译为

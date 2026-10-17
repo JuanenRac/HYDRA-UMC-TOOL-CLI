@@ -4,7 +4,7 @@
 
 # 💻 HYDRA-UMC-TOOL-CLI
 
-<p align="center">🇺🇸 <b>English</b> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
+<p align="center">🇺🇸 <b>English</b> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 🛠️ Command-Line Interface for Fleet DevOps & Automation
 
@@ -16,7 +16,7 @@
 
 ---
 
-**Honesty check - what actually runs today:** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run`, and the interactive `shell` (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) are real, working Go code, exercised by 65 passing tests (`go test ./...`) - real `net/http`/`httptest` round-trips against a fake server plus real temp-file config fixtures, not stubs. Those tests simulate a HYDRA-UMC-SERVER instance; this CLI has not been separately re-verified against a live, real HYDRA-UMC-SERVER process in this pass. `config apply` without `--dry-run` honestly returns the `ExitNotImplemented` exit code rather than faking success, because the fleet-write endpoint it would call doesn't exist on HYDRA-UMC-SERVER yet. `deploy`, `flash-all` and `audit` are pure aspiration - marked "planned" below and absent from `src/` entirely, not even a stub function. See `CHANGELOG.md` for exactly what has shipped so far.
+**Honesty check - what actually runs today:** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run`, and the interactive `shell` (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) are real, working Go code, exercised by 83 passing tests (`go test ./...`) - real `net/http`/`httptest` round-trips against a fake server plus real temp-file config fixtures, not stubs. Those tests simulate a HYDRA-UMC-SERVER instance; `status`, `robots` and `doctor` (login included) have also been run against a real HYDRA-UMC-SERVER process. `config apply` without `--dry-run` honestly returns the `ExitNotImplemented` exit code rather than faking success, because the fleet-write endpoint it would call doesn't exist on HYDRA-UMC-SERVER yet. `deploy`, `flash-all` and `audit` are pure aspiration - marked "planned" below and absent from `src/` entirely, not even a stub function. See `CHANGELOG.md` for exactly what has shipped so far.
 
 ---
 
@@ -31,7 +31,7 @@ The long-term goal is massive deployments of missions, parallel firmware updates
 * ✅ **`hydra-cli status [--server URL] [--config PATH]`** — queries a live HYDRA-UMC-SERVER's `GET /api/hydra-info` and prints its reported identity. *(implemented)*
 * ✅ **`hydra-cli robots [--server URL] [--config PATH]`** — queries a live HYDRA-UMC-SERVER's `GET /api/settings` and prints its real controller/robot roster (name, online status, model, role). *(implemented)*
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** — read-only Server contract diagnosis: validates `/api/hydra-info` and `/api/settings`, then verifies published controller/robot totals against the settings roster. It never sends commands or probes hardware. `--json` prints a structured report with a `checkId`/`severity`/`status` per check instead of the plain-text line, for scripts (see [docs/DOCTOR.md](docs/DOCTOR.md)). *(implemented)*
-* ✅ **A real, stable exit-code contract** — `0` ok, `1` general error, `2` usage error, `3` config error, `4` network error, `5` server error, `6` not implemented. Every command classifies its own failures through this contract instead of a bare `exit 1`, so scripts wrapping this CLI can branch on *why* it failed. *(implemented)*
+* ✅ **A real, stable exit-code contract** — `0` ok, `1` general error, `2` usage error, `3` config error, `4` network error, `5` server error, `6` not implemented, `7` authentication required or refused. Every command classifies its own failures through this contract instead of a bare `exit 1`, so scripts wrapping this CLI can branch on *why* it failed. *(implemented)*
 * ✅ **`hydra-cli config validate --config PATH`** — loads and schema-validates a local config file (server URL, request timeout). *(implemented)*
 * ✅ **`hydra-cli config apply --config PATH [--dry-run]`** — `--dry-run` proves the real validation path end to end and prints exactly what it would send; without it, honestly returns "not implemented" since no live fleet-write endpoint exists yet. *(implemented, dry-run only)*
 * ✅ **`--config PATH` on `status`/`robots`/`doctor`/`shell`** — the same validated file's `server`/`timeoutSec` really drives every live command's HTTP target and request timeout now, not just `config validate`/`apply`; `--server` still wins when both are given. *(implemented)*
@@ -59,7 +59,7 @@ flowchart LR
 
 * **Why `src/` holds a `cmd/hydra-cli/` subpath, not a flat layout.** Matches the standard Go CLI convention (a `cmd/<binary-name>/` entry point, with room for future `internal/`/`pkg/` packages as the CLI grows past a single command) - not this ecosystem's own invention, the wider Go community's own convention for multi-command CLIs.
 * **Why a CLI, not just scripting HYDRA-UMC-SERVER's own REST API directly.** Fleet-scale operations (install/update across many CM5s, not just one) need real orchestration - retries, parallelism, a consistent UX - that a one-off curl script doesn't provide, the same reasoning HYDRA-UMC-UPDATER later applies at the ecosystem-checkout level.
-* **Why `robots` reads `GET /api/settings`, not a new endpoint.** That endpoint already carries the full controller/robot roster and is already a real, unauthenticated read (see HYDRA-UMC-SERVER's own `src/server.ts`) - `robots` is a real client of an already-shipping contract, not new server-side work. `doctor` uses that same read together with `/api/hydra-info` to catch incompatible public fleet totals without adding a new endpoint. The bigger, still-planned commands (`deploy`/`flash-all`/hardware-facing `audit`) genuinely do need new write endpoints that don't exist yet.
+* **Why `robots` reads `GET /api/settings`, not a new endpoint.** That endpoint already carries the full controller/robot roster and is already a real read that needs a logged-in account (see HYDRA-UMC-SERVER's own `src/server.ts`; the CLI logs in with `HYDRA_CLI_USER`/`HYDRA_CLI_PASSWORD`, or sends `HYDRA_CLI_TOKEN`) - `robots` is a real client of an already-shipping contract, not new server-side work. `doctor` uses that same read together with `/api/hydra-info` to catch incompatible public fleet totals without adding a new endpoint. The bigger, still-planned commands (`deploy`/`flash-all`/hardware-facing `audit`) genuinely do need new write endpoints that don't exist yet.
 * **Why `doctor` is explicitly read-only.** An endpoint-contract check is useful before hardware exists and safe in CI. It reports only HTTP/JSON/count consistency; it neither commands equipment nor claims CAN, actuator, sensor, camera, Hailo, CM5, or safety health.
 * **How this fits the rest of the ecosystem.** Does at fleet scale what URTC-FLASHER and URTC-TESTER each do for one board - manages HYDRA-UMC-SERVER instances across a fleet rather than a single board's own firmware.
 * **Why `config apply` without `--dry-run` returns "not implemented" instead of silently doing nothing.** The live write endpoint on HYDRA-UMC-SERVER this would call genuinely does not exist yet (same gap `deploy`/`flash-all` are blocked on) - a distinct `ExitNotImplemented` exit code tells a caller "this is a real gap, not a bug" instead of a misleadingly successful no-op.
@@ -78,6 +78,7 @@ HYDRA-UMC-TOOL-CLI/
 │   └── cmd/hydra-cli/         # Binary entry point
 │       ├── main.go            # Command dispatch (version/help/status/robots/doctor/config/shell)
 │       ├── server.go          # Shared --server/--config/HYDRA_CLI_SERVER resolution
+│       ├── auth.go            # Credential from the environment (token or login) for the authenticated reads
 │       ├── robots.go          # Real GET /api/settings client + roster printer
 │       ├── doctor.go          # Read-only two-endpoint contract diagnostic
 │       ├── config.go          # Real config file loading, validation, apply --dry-run
@@ -110,7 +111,7 @@ Requires Go >= 1.21.
 ./run.sh doctor --server http://localhost:3000
 ./run.sh config validate --config ./hydra-cli.json
 ./run.sh config apply --config ./hydra-cli.json --dry-run
-echo $?   # 0=ok 2=usage 3=config 4=network 5=server 6=not-implemented
+echo $?   # 0=ok 2=usage 3=config 4=network 5=server 6=not-implemented 7=auth
 
 # Windows
 build.bat
@@ -121,6 +122,8 @@ run.bat doctor --server http://localhost:3000
 run.bat config validate --config .\hydra-cli.json
 run.bat config apply --config .\hydra-cli.json --dry-run
 ```
+
+`robots` and `doctor` read `/api/settings`, which HYDRA-UMC-SERVER only gives to a logged-in account (an administrator sees the full settings, the other roles a redacted copy). Give the CLI a credential through the environment - never a flag, so it stays out of process listings and shell history: `HYDRA_CLI_TOKEN` (a bearer token the server already issued), or `HYDRA_CLI_USER` and `HYDRA_CLI_PASSWORD` (the CLI logs in with `POST /api/login` for that run; the token wins when both are set). Without one, the command exits with code `7` and says which variables to set. `status` and the first request of `doctor` use the public `/api/hydra-info` and never send the credential. A response is read up to 4 MiB.
 
 `build` bumps the version (`src/cmd/hydra-cli/version.go`), runs the real test suite (`go vet` + `go test`), compiles the Go module in `src/` into `build/hydra-cli(.exe)`, and runs `version` once to verify - then cross-compiles a real release for `linux/amd64`, `linux/arm64` (the CM5's own architecture), `windows/amd64`, `darwin/amd64` and `darwin/arm64` into `build/release/<os>-<arch>/`, with a real `SHA256SUMS` checksum file alongside them. `run` executes the compiled binary again, forwarding all arguments — try `run doctor` against a running `HYDRA-UMC-SERVER` instance. Doctor is a safe read-only endpoint-contract check; see [docs/DOCTOR.md](docs/DOCTOR.md).
 

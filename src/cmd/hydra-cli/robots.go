@@ -71,19 +71,13 @@ func cmdRobots(w io.Writer, args []string) error {
 	}
 
 	client := http.Client{Timeout: timeout}
-	resp, err := client.Get(server + "/api/settings")
+	status, body, err := getAuthenticated(&client, server, "/api/settings")
 	if err != nil {
-		return newCliError(ExitNetworkError, fmt.Errorf("could not reach %s: %w", server, err))
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return newCliError(ExitNetworkError, fmt.Errorf("reading response from %s: %w", server, err))
+		return err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return newCliError(ExitServerError, fmt.Errorf("%s replied with HTTP %d: %s", server, resp.StatusCode, string(body)))
+	if status != http.StatusOK {
+		return newCliError(ExitServerError, fmt.Errorf("%s replied with HTTP %d: %s", server, status, string(body)))
 	}
 
 	var settings settingsResponse

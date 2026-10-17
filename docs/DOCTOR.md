@@ -14,13 +14,18 @@ deployment checks before any hardware operation is attempted.
 
 1. `GET /api/hydra-info` responds with HTTP 200 and valid JSON containing an
    `appVersion`.
-2. `GET /api/settings` responds with HTTP 200 and valid JSON.
+2. `GET /api/settings` responds with HTTP 200 and valid JSON. The Server only
+   gives it to a logged-in account, so doctor sends the credential from
+   `HYDRA_CLI_TOKEN`, or logs in with `HYDRA_CLI_USER` and `HYDRA_CLI_PASSWORD`
+   (see [CLI_REFERENCE.md](CLI_REFERENCE.md#authentication)). The first request
+   goes to the public `/api/hydra-info` and never carries it.
 3. When `/api/hydra-info` publishes `controllerCount` and `robotCount`, each
    total matches the actual controllers and nested robots in `/api/settings`.
 
 The command returns `0` only after those applicable checks pass. It returns
-`4` when the Server cannot be reached and `5` for bad HTTP responses, invalid
-JSON, missing `appVersion`, or a published count mismatch.
+`4` when the Server cannot be reached, `5` for bad HTTP responses, invalid
+JSON, missing `appVersion`, or a published count mismatch, and `7` when
+`/api/settings` needs a credential that was not given or was refused.
 
 ## What it deliberately does not verify
 

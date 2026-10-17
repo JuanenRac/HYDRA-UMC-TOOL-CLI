@@ -15,7 +15,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 )
@@ -147,11 +146,17 @@ COMMANDS:
     as its HTTP request timeout (default 5s), the same value config
     validate/apply already schema-validate.
 
+    robots and doctor read /api/settings, which the server only gives to a
+    logged-in account. Set HYDRA_CLI_TOKEN (a bearer token), or HYDRA_CLI_USER
+    and HYDRA_CLI_PASSWORD (the CLI logs in for that run); they are read from
+    the environment, never from a flag.
+
 EXIT CODES:
     0  ok                     3  config error
     1  general error          4  network error (server unreachable)
     2  usage error            5  server error (bad status/response)
                               6  not implemented
+                              7  authentication required or refused
 
 Report issues at: https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI
 `, projectName, Version, defaultServerURL)
@@ -185,7 +190,7 @@ func cmdStatus(args []string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	body, err := readBody(resp.Body)
 	if err != nil {
 		return newCliError(ExitNetworkError, fmt.Errorf("reading response from %s: %w", server, err))
 	}

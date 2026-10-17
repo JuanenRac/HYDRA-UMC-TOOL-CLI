@@ -186,23 +186,41 @@ func writeDoctorJSON(w io.Writer, report doctorReport) error {
 // this local prevents a broad refactor of established status/robots behaviour
 // while ensuring both doctor endpoints receive identical failure handling.
 func getJSON(client *http.Client, server, path string, target any) error {
-	resp, err := client.Get(strings.TrimRight(server, "/") + path)
-	if err != nil {
-		return newCliError(ExitNetworkError, fmt.Errorf("could not reach %s: %w", server, err))
+	var (
+		status int
+		body   []byte
+		err    error
+	)
+	if path == "/api/hydra-info" {
+		// the public identity endpoint: no credential is needed or sent
+		status, body, err = getPublic(client, server, path)
+	} else {
+		status, body, err = getAuthenticated(client, server, path)
 	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return newCliError(ExitNetworkError, fmt.Errorf("reading response from %s: %w", server, err))
+		return err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return newCliError(ExitServerError, fmt.Errorf("%s%s replied with HTTP %d: %s", server, path, resp.StatusCode, string(body)))
+	if status != http.StatusOK {
+		return newCliError(ExitServerError, fmt.Errorf("%s%s replied with HTTP %d: %s", server, path, status, string(body)))
 	}
 	if err := json.Unmarshal(body, target); err != nil {
 		return newCliError(ExitServerError, fmt.Errorf("unexpected response from %s%s: %w", server, path, err))
 	}
 	return nil
+}
+
+// getPublic is GET path with no credential and a bounded read.
+func getPublic(client *http.Client, server, path string) (int, []byte, error) {
+	resp, err := client.Get(strings.TrimRight(server, "/") + path)
+	if err != nil {
+		return 0, nil, newCliError(ExitNetworkError, fmt.Errorf("could not reach %s: %w", server, err))
+	}
+	defer resp.Body.Close()
+	body, err := readBody(resp.Body)
+	if err != nil {
+		return 0, nil, newCliError(ExitNetworkError, fmt.Errorf("reading response from %s: %w", server, err))
+	}
+	return resp.StatusCode, body, nil
 }
 
 func robotCount(settings settingsResponse) int {

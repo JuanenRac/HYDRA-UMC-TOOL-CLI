@@ -29,6 +29,14 @@ binary.
   --cached` only, no `-f` - the physical file was left untouched on disk.
   Repo-hygiene fix, no runtime code changed, no version bump.
 
+## [0.1.3] - Credentials for the authenticated reads, exit code 7, bounded responses
+
+- **`robots` and `doctor` worked against no real Server:** HYDRA-UMC-SERVER only answers `GET /api/settings` to a logged-in account, but the CLI sent it with no credential, so against a current Server both commands ended in `HTTP 401` (exit code 5) while the docs called the read "unauthenticated". The CLI now takes a credential from the environment - `HYDRA_CLI_TOKEN`, or `HYDRA_CLI_USER` and `HYDRA_CLI_PASSWORD` (it logs in with `POST /api/login` for that run; the token wins) - never from a flag, so it stays out of process listings and shell history. `status` and the first request of `doctor` use the public `/api/hydra-info` and never send it. Checked end to end against a real HYDRA-UMC-SERVER process: no credential, wrong password, login and token.
+- **New exit code 7:** authentication required or refused (no credential given, a refused login, an expired or invalid token), kept apart from `5` so a script can tell "set a credential" from "the server is broken". Documented in `help`, the README and `docs/CLI_REFERENCE.md`.
+- **Bounded responses:** every response is read up to 4 MiB and a larger one is refused (exit code 4), instead of reading whatever an endpoint sends into memory.
+- **Tests:** 11 new tests cover a guarded fake server (no credential, wrong token, token, login, wrong password, user without password, token winning over login), that the public endpoint never receives the credential, doctor with a credential, and the size cap (83 tests).
+- **Docs:** the README no longer says the settings read is unauthenticated, states that the commands were run against a real Server, and a README in Portuguese (`README_por.md`) joins the other translations.
+
 ## [0.1.2] - The JSON contract and unattended use are pinned by tests
 
 - `doctor --json` now has a test pinning its key set (top-level and per check) and asserting

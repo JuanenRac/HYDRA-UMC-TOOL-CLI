@@ -4,7 +4,7 @@
 
 # 💻 HYDRA-UMC-TOOL-CLI
 
-<p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | 🇯🇵 <b>日本語</b></p>
+<p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | 🇯🇵 <b>日本語</b> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 🛠️ フリート DevOps と自動化のためのコマンドラインインターフェース
 
@@ -16,7 +16,7 @@
 
 ---
 
-**正直な現状確認 - 実際に今動くもの:** `version`、`status`、`robots`、`doctor`、`config validate`、`config apply --dry-run`、そして対話型の `shell`（`main.go`、`server.go`、`robots.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）は、65件のテストがすべて通過している（`go test ./...`）、実際に動く本物の Go コードであり — 偽サーバーに対する本物の `net/http`/`httptest` の往復通信と、本物の一時設定ファイルのフィクスチャを使っており、スタブではない。これらのテストは HYDRA-UMC-SERVER のインスタンスを模擬しているだけで、今回のパスでは実際に稼働中の本物の HYDRA-UMC-SERVER プロセスに対しては再検証していない。`config apply` は `--dry-run` なしで実行すると、成功を装うのではなく正直に `ExitNotImplemented` の終了コードを返す。呼び出すはずのフリート書き込みエンドポイントが HYDRA-UMC-SERVER にまだ存在しないためだ。`deploy`、`flash-all`、`audit` は純粋な構想であり、下記では「planned」と記されている通り `src/` には一切存在せず、スタブ関数すらない。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を参照。
+**正直な現状確認 - 実際に今動くもの:** `version`、`status`、`robots`、`doctor`、`config validate`、`config apply --dry-run`、そして対話型の `shell`（`main.go`、`server.go`、`robots.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）は、65件のテストがすべて通過している（`go test ./...`）、実際に動く本物の Go コードであり — 偽サーバーに対する本物の `net/http`/`httptest` の往復通信と、本物の一時設定ファイルのフィクスチャを使っており、スタブではない。これらのテストは HYDRA-UMC-SERVER のインスタンスを模擬しているが、`status`、`robots`、`doctor`（ログインを含む）は本物の HYDRA-UMC-SERVER プロセスに対しても実行している。`config apply` は `--dry-run` なしで実行すると、成功を装うのではなく正直に `ExitNotImplemented` の終了コードを返す。呼び出すはずのフリート書き込みエンドポイントが HYDRA-UMC-SERVER にまだ存在しないためだ。`deploy`、`flash-all`、`audit` は純粋な構想であり、下記では「planned」と記されている通り `src/` には一切存在せず、スタブ関数すらない。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を参照。
 
 ---
 
@@ -38,7 +38,7 @@
 * ✅ **`hydra-cli status [--server URL] [--config PATH]`** — 実行中の HYDRA-UMC-SERVER の `GET /api/hydra-info` を照会し、報告されたアイデンティティを表示します。*（実装済み）*
 * ✅ **`hydra-cli robots [--server URL] [--config PATH]`** — 実行中の HYDRA-UMC-SERVER の `GET /api/settings` を照会し、実際のコントローラー/ロボット一覧（名前、オンライン状態、モデル、役割）を表示します。*（実装済み）*
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** — 読み取り専用のサーバー契約診断：`/api/hydra-info` と `/api/settings` を検証し、公開されたコントローラー/ロボット数を一覧と照合します。コマンド送信やハードウェアの検査は行いません。`--json` を付けるとテキスト行の代わりに、チェックごとの `checkId`/`severity`/`status` を含む構造化レポートを出力します(スクリプト向け、詳細は [docs/DOCTOR.md](docs/DOCTOR.md))。*（実装済み）*
-* ✅ **実際に安定した終了コード契約** — `0` 正常、`1` 一般エラー、`2` 使用方法エラー、`3` 設定エラー、`4` ネットワークエラー、`5` サーバーエラー、`6` 未実装。各コマンドは単なる `exit 1` の代わりにこの契約を通じて自身の失敗を分類するため、この CLI をラップするスクリプトは*失敗の理由*に応じて分岐できます。*（実装済み）*
+* ✅ **実際に安定した終了コード契約** — `0` 正常、`1` 一般エラー、`2` 使用方法エラー、`3` 設定エラー、`4` ネットワークエラー、`5` サーバーエラー、`6` 未実装、`7` 認証が必要、または拒否。各コマンドは単なる `exit 1` の代わりにこの契約を通じて自身の失敗を分類するため、この CLI をラップするスクリプトは*失敗の理由*に応じて分岐できます。*（実装済み）*
 * ✅ **`hydra-cli config validate --config PATH`** — ローカルの設定ファイル（サーバー URL、リクエストタイムアウト）を読み込み、スキーマ検証します。*（実装済み）*
 * ✅ **`hydra-cli config apply --config PATH [--dry-run]`** — `--dry-run` は実際の検証パスをエンドツーエンドで証明し、送信される内容を正確に表示します。指定しない場合は、実際にはまだライブのフリート書き込みエンドポイントが存在しないため、正直に「未実装」を返します。*（実装済み、dry-run のみ）*
 * ✅ **`status`/`robots`/`doctor`/`shell` の `--config PATH`** — 同じ検証済みファイルの `server`/`timeoutSec` が、`config validate`/`apply` だけでなく、あらゆるライブコマンドの実際の HTTP 接続先とリクエストタイムアウトを左右するようになりました。両方指定された場合は引き続き `--server` が優先されます。*（実装済み）*
@@ -67,7 +67,7 @@ flowchart LR
 * **`src/` がフラットなレイアウトではなく `cmd/hydra-cli/` サブパスを持つ理由。** 標準的な Go CLI の慣例（`cmd/<binary-name>/` エントリポイント、CLI が単一コマンドを超えて成長した際の将来の `internal/`/`pkg/` パッケージのための余地）に従っています——これはこのエコシステム独自の発明ではなく、マルチコマンド CLI に対する Go コミュニティ全体の慣例です。
 * **HYDRA-UMC-SERVER 自身の REST API に直接スクリプトを書くのではなく、CLI を採用した理由。** フリート規模の操作（1 台だけでなく多数の CM5 にわたるインストール/更新）には、リトライ、並列性、一貫した UX といった、その場しのぎの curl スクリプトでは提供できない真のオーケストレーションが必要です。これは、後に HYDRA-UMC-UPDATER がエコシステムチェックアウトのレベルで適用するのと同じ理由です。
 * **エコシステムの他の部分との関係。** URTC-FLASHER と URTC-TESTER がそれぞれ 1 枚の基板に対して行っていることを、フリート規模で行います——単一基板自身のファームウェアではなく、フリート全体にわたる複数の HYDRA-UMC-SERVER インスタンスを管理します。
-* **`robots` が新しいエンドポイントではなく `GET /api/settings` を読み取る理由。** そのエンドポイントはすでにコントローラー/ロボットの完全な一覧を持っており、すでに実際の、認証不要の読み取り操作です（HYDRA-UMC-SERVER 自身の `src/server.ts` を参照）——`robots` はすでに提供されている契約に対する実際のクライアントであり、新たなサーバー側の作業ではありません。`doctor` は同じ読み取りを `/api/hydra-info` と組み合わせ、新しいエンドポイントを追加せずに不整合な公開フリート数を検出します。より大規模な、まだ計画段階のコマンド（`deploy`/`flash-all`/ハードウェア向け `audit`）は、まだ存在しない新しい書き込みエンドポイントを本当に必要とします。
+* **`robots` が新しいエンドポイントではなく `GET /api/settings` を読み取る理由。** そのエンドポイントはすでにコントローラー/ロボットの完全な一覧を持っており、すでに、ログイン済みのアカウントを必要とする実際の読み取り操作です（HYDRA-UMC-SERVER 自身の `src/server.ts` を参照。CLI は `HYDRA_CLI_USER`/`HYDRA_CLI_PASSWORD` でログインするか、`HYDRA_CLI_TOKEN` を送ります）——`robots` はすでに提供されている契約に対する実際のクライアントであり、新たなサーバー側の作業ではありません。`doctor` は同じ読み取りを `/api/hydra-info` と組み合わせ、新しいエンドポイントを追加せずに不整合な公開フリート数を検出します。より大規模な、まだ計画段階のコマンド（`deploy`/`flash-all`/ハードウェア向け `audit`）は、まだ存在しない新しい書き込みエンドポイントを本当に必要とします。
 * **`doctor` が明示的に読み取り専用である理由。** 契約チェックはハードウェアがない段階でも有用で、CI でも安全です。報告するのは HTTP/JSON/数の整合性だけであり、機器を操作したり、CAN、アクチュエータ、センサー、カメラ、Hailo、CM5、安全性の健全性を主張したりしません。
 * **`--dry-run` を指定しない `config apply` が、黙って何もしない代わりに「未実装」を返す理由。** これが呼び出すはずの HYDRA-UMC-SERVER 上のライブ書き込みエンドポイントは、実際にはまだ存在しません（`deploy`/`flash-all` が塞き止められているのと同じギャップです）——専用の `ExitNotImplemented` 終了コードは、呼び出し元に「これは本物のギャップであり、バグではない」ことを伝えます。誤解を招くような、成功したように見える無操作にはしません。
 * **すべてのコマンドのエラーが、場当たり的な `os.Exit` 呼び出しではなく、単一の `CliError`/`ExitCode` 型を通じて流れるようになった理由。** 安定した、文書化された終了コード契約は、コードを割り当てる場所が一つしかない場合にのみ安定を保てます——`exitCodeFor()`（`exitcode.go`）がその場所であり、各コマンド関数は自ら `os.Exit` を呼び出す代わりに、慣用的でラップ可能な `error` 値を返し続けます。
@@ -86,6 +86,7 @@ HYDRA-UMC-TOOL-CLI/
 │   └── cmd/hydra-cli/         # バイナリのエントリポイント
 │       ├── main.go            # コマンドディスパッチ（version/help/status/robots/doctor/config/shell）
 │       ├── server.go          # --server/--config/HYDRA_CLI_SERVER の共有解決処理
+│       ├── auth.go            # 認証付き読み取りのための、環境変数からの認証情報（トークンまたはログイン）
 │       ├── robots.go          # 実際の GET /api/settings クライアント + 一覧表示
 │       ├── doctor.go          # 読み取り専用の二つのエンドポイント契約診断
 │       ├── config.go          # 実際の設定ファイルの読み込み、検証、apply --dry-run
@@ -118,7 +119,7 @@ Go >= 1.21 が必要です。
 ./run.sh doctor --server http://localhost:3000
 ./run.sh config validate --config ./hydra-cli.json
 ./run.sh config apply --config ./hydra-cli.json --dry-run
-echo $?   # 0=正常 2=使用方法 3=設定 4=ネットワーク 5=サーバー 6=未実装
+echo $?   # 0=正常 2=使用方法 3=設定 4=ネットワーク 5=サーバー 6=未実装 7=認証
 
 # Windows
 build.bat
@@ -129,6 +130,8 @@ run.bat doctor --server http://localhost:3000
 run.bat config validate --config .\hydra-cli.json
 run.bat config apply --config .\hydra-cli.json --dry-run
 ```
+
+`robots` と `doctor` は `/api/settings` を読み取りますが、HYDRA-UMC-SERVER はこれをログイン済みのアカウントにしか渡しません（管理者は完全な設定を、他のロールは秘密を伏せたコピーを見ます）。CLI への認証情報は環境変数で渡します。オプションでは渡しません（プロセス一覧やシェル履歴に残らないようにするため）。`HYDRA_CLI_TOKEN`（サーバーがすでに発行した Bearer トークン）、または `HYDRA_CLI_USER` と `HYDRA_CLI_PASSWORD`（CLI がその実行のために `POST /api/login` でログインします。両方ある場合はトークンが優先されます）。どちらもない場合、コマンドはコード `7` で終了し、設定すべき変数を示します。`status` と `doctor` の最初のリクエストは公開の `/api/hydra-info` を使い、認証情報を送ることはありません。レスポンスは 4 MiB まで読み取ります。
 
 `build` はバージョンを増加させ（`src/cmd/hydra-cli/version.go`）、
 実際のテストスイートを実行し（`go vet` + `go test`）、`src/` 内の Go

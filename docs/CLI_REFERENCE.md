@@ -27,6 +27,27 @@ hydra-cli status --server http://192.168.1.50:3000
 HYDRA_CLI_SERVER=http://192.168.1.50:3000 hydra-cli robots
 ```
 
+## Authentication
+
+`GET /api/hydra-info` (used by `status`) is public. `GET /api/settings` (used by
+`robots` and by the second request of `doctor`) is only given to a logged-in
+account: an administrator sees the full settings, any other role a copy with
+the secrets redacted. The credential comes from the environment, never from a
+flag, so it stays out of process listings and shell history:
+
+| Variable | Meaning |
+|---|---|
+| `HYDRA_CLI_TOKEN` | a bearer token the server already issued |
+| `HYDRA_CLI_USER` + `HYDRA_CLI_PASSWORD` | the CLI logs in with `POST /api/login` for that run |
+
+The token wins when both are set. With neither, `robots` and `doctor` fail with
+exit code `7` and name the variables to set; a refused login or an expired or
+invalid token is also exit code `7`. Server responses are read up to 4 MiB.
+
+```bash
+HYDRA_CLI_USER=operator HYDRA_CLI_PASSWORD='...' hydra-cli robots --server http://192.168.1.50:3000
+```
+
 ## Commands
 
 ### `version`
@@ -71,6 +92,12 @@ EXIT CODES:
     1  general error          4  network error (server unreachable)
     2  usage error            5  server error (bad status/response)
                               6  not implemented
+                              7  authentication required or refused
+
+    robots and doctor read /api/settings, which the server only gives to a
+    logged-in account. Set HYDRA_CLI_TOKEN (a bearer token), or HYDRA_CLI_USER
+    and HYDRA_CLI_PASSWORD (the CLI logs in for that run); they are read from
+    the environment, never from a flag.
 
 Report issues at: https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI
 ```
@@ -101,8 +128,9 @@ hydra-cli status: could not reach http://127.0.0.1:1: Get "http://127.0.0.1:1/ap
 
 ### `robots [--server URL]`
 
-Real `GET /api/settings` against a live HYDRA-UMC-SERVER. Prints every
-controller's real robot roster — name, online status, model, role.
+Real `GET /api/settings` against a live HYDRA-UMC-SERVER, with the credential
+described under *Authentication*. Prints every controller's real robot roster —
+name, online status, model, role.
 
 ```
 $ hydra-cli robots
@@ -122,8 +150,9 @@ If the server reports zero robots, `robots` prints
 
 ### `doctor [--server URL]`
 
-Performs a read-only contract diagnosis against the same two public Server
-endpoints used by this CLI: `GET /api/hydra-info` and `GET /api/settings`.
+Performs a read-only contract diagnosis against the two Server endpoints used by
+this CLI: the public `GET /api/hydra-info` and `GET /api/settings`, which needs
+the credential described under *Authentication*.
 It confirms that both responses are valid and, when the Server reports fleet
 counts, that its published controller and robot totals match the roster in
 `/api/settings`.
@@ -136,7 +165,8 @@ DOCTOR=PASS server=http://localhost:3000 appVersion=0.2.4 schema=1.0 remoteApiVe
 This is not a physical health test: it never sends a command and does not
 probe CAN, cameras, sensors, motion, or safety hardware. A mismatch, invalid
 JSON, or non-200 response is a server error (exit code `5`); an unreachable
-Server is a network error (exit code `4`). Older Servers which do not publish
+Server is a network error (exit code `4`); a missing or refused credential is
+exit code `7`. Older Servers which do not publish
 the two count fields remain supported but report `countCrossCheck=not-reported`
 instead of a false pass.
 

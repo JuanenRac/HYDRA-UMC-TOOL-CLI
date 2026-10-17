@@ -43,6 +43,11 @@ const (
 	// --dry-run - see config.go) - distinct from every error above,
 	// which all mean something actually went wrong.
 	ExitNotImplemented ExitCode = 6
+	// ExitAuthError: HYDRA-UMC-SERVER was reached but needs a login this
+	// invocation did not present (or refused the one it presented) - kept apart
+	// from ExitServerError so a script can tell "set a credential" from "the
+	// server is broken".
+	ExitAuthError ExitCode = 7
 )
 
 // CliError carries a real ExitCode alongside a normal Go error, so a
