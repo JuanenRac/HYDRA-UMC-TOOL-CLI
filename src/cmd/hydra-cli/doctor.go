@@ -30,6 +30,10 @@ type doctorInfo struct {
 	RobotCount       *int   `json:"robotCount"`
 }
 
+// supportedSchemaVersion is the only /api/hydra-info schema_version this CLI
+// accepts; the discovery contract says consumers reject a missing or unknown one.
+const supportedSchemaVersion = "1.0"
+
 // doctorCheck is one machine-readable diagnostic result inside --json
 // output. checkId is a stable identifier a script can key off without
 // parsing prose; severity classifies how much a "fail" status should matter
@@ -55,8 +59,8 @@ type doctorReport struct {
 	AppVersion       string        `json:"appVersion,omitempty"`
 	SchemaVersion    string        `json:"schemaVersion,omitempty"`
 	RemoteAPIVersion int           `json:"remoteApiVersion,omitempty"`
-	Controllers      int           `json:"controllers,omitempty"`
-	Robots           int           `json:"robots,omitempty"`
+	Controllers      int           `json:"controllers"`
+	Robots           int           `json:"robots"`
 	Checks           []doctorCheck `json:"checks"`
 }
 
@@ -102,6 +106,12 @@ func cmdDoctor(w io.Writer, args []string) error {
 		report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-has-app-version", Severity: "critical", Status: "fail", Message: err.Error()})
 		return finishDoctor(w, jsonOutput, report, err)
 	}
+	if info.SchemaVersion != supportedSchemaVersion {
+		err := newCliError(ExitServerError, fmt.Errorf("%s reports schema_version %q for /api/hydra-info; this CLI understands %q", server, info.SchemaVersion, supportedSchemaVersion))
+		report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-schema-version", Severity: "critical", Status: "fail", Message: err.Error()})
+		return finishDoctor(w, jsonOutput, report, err)
+	}
+	report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-schema-version", Severity: "critical", Status: "pass"})
 	report.AppVersion = info.AppVersion
 	report.SchemaVersion = info.SchemaVersion
 	report.RemoteAPIVersion = info.RemoteAPIVersion
@@ -218,7 +228,7 @@ func getPublic(client *http.Client, server, path string) (int, []byte, error) {
 	defer resp.Body.Close()
 	body, err := readBody(resp.Body)
 	if err != nil {
-		return 0, nil, newCliError(ExitNetworkError, fmt.Errorf("reading response from %s: %w", server, err))
+		return 0, nil, bodyReadError(server, "response", err)
 	}
 	return resp.StatusCode, body, nil
 }

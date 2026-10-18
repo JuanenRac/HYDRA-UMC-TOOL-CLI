@@ -47,7 +47,7 @@ func TestCmdDoctor_ConfigFileDrivesRealServerTarget(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.URL.Path {
 		case "/api/hydra-info":
-			_, _ = w.Write([]byte(`{"appVersion":"0.2.4","controllerCount":1,"robotCount":1}`))
+			_, _ = w.Write([]byte(`{"schema_version":"1.0","appVersion":"0.2.4","controllerCount":1,"robotCount":1}`))
 		case "/api/settings":
 			_, _ = w.Write([]byte(`{"controllers":[{"name":"C1","robots":[{"name":"R1"}]}]}`))
 		default:
@@ -70,7 +70,7 @@ func TestCmdDoctor_RejectsPublishedCountMismatch(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.URL.Path == "/api/hydra-info" {
-			_, _ = w.Write([]byte(`{"appVersion":"0.2.4","controllerCount":1,"robotCount":8}`))
+			_, _ = w.Write([]byte(`{"schema_version":"1.0","appVersion":"0.2.4","controllerCount":1,"robotCount":8}`))
 			return
 		}
 		_, _ = w.Write([]byte(`{"controllers":[{"robots":[{"name":"A1"}]}]}`))
@@ -89,7 +89,7 @@ func TestCmdDoctor_ReportsWhenOlderServerOmitsCounts(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.URL.Path == "/api/hydra-info" {
-			_, _ = w.Write([]byte(`{"appVersion":"0.1.0"}`))
+			_, _ = w.Write([]byte(`{"schema_version":"1.0","appVersion":"0.1.0"}`))
 			return
 		}
 		_, _ = w.Write([]byte(`{"controllers":[]}`))
@@ -158,8 +158,8 @@ func TestCmdDoctor_JSONOutputHealthyReportsEveryCheckPass(t *testing.T) {
 	if report.AppVersion != "0.2.4" || report.Controllers != 1 || report.Robots != 2 {
 		t.Fatalf("unexpected report facts: %+v", report)
 	}
-	if len(report.Checks) != 5 {
-		t.Fatalf("expected 5 checks, got %d: %+v", len(report.Checks), report.Checks)
+	if len(report.Checks) != 6 {
+		t.Fatalf("expected 6 checks, got %d: %+v", len(report.Checks), report.Checks)
 	}
 	for _, check := range report.Checks {
 		if check.Status != "pass" {
@@ -179,7 +179,7 @@ func TestCmdDoctor_JSONOutputCountMismatchReportsFailedCheck(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.URL.Path == "/api/hydra-info" {
-			_, _ = w.Write([]byte(`{"appVersion":"0.2.4","controllerCount":1,"robotCount":8}`))
+			_, _ = w.Write([]byte(`{"schema_version":"1.0","appVersion":"0.2.4","controllerCount":1,"robotCount":8}`))
 			return
 		}
 		_, _ = w.Write([]byte(`{"controllers":[{"robots":[{"name":"A1"}]}]}`))

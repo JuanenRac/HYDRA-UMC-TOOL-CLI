@@ -6,9 +6,13 @@
 package main
 
 import (
+	"bytes"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -84,31 +88,63 @@ func TestResolveTarget_FlagOverridesEnvVar(t *testing.T) {
 	}
 }
 
-func TestResolveTarget_TrailingServerFlagWithNoValueIsIgnored(t *testing.T) {
+func TestResolveTarget_TrailingFlagsWithoutAValueAreUsageErrors(t *testing.T) {
 	os.Unsetenv("HYDRA_CLI_SERVER")
-	server, _, rest, err := resolveTarget([]string{"--server"})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if server != defaultServerURL {
-		t.Fatalf("a --server flag with no following value should not change the resolved server, got %q", server)
-	}
-	if !reflect.DeepEqual(rest, []string{"--server"}) {
-		t.Fatalf("a --server flag with no following value should be left in rest, got %v", rest)
+	for _, flag := range []string{"--server", "--config"} {
+		_, _, _, err := resolveTarget([]string{flag})
+		if got := exitCodeFor(err); got != ExitUsageError {
+			t.Errorf("%s with no value: exit code = %d, err = %v, want ExitUsageError", flag, got, err)
+		}
 	}
 }
 
-func TestResolveTarget_TrailingConfigFlagWithNoValueIsIgnored(t *testing.T) {
+func TestResolveTarget_ServerIsNormalizedAndValidated(t *testing.T) {
 	os.Unsetenv("HYDRA_CLI_SERVER")
-	server, timeout, rest, err := resolveTarget([]string{"--config"})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	server, _, _, err := resolveTarget([]string{"--server", "http://host:3000/"})
+	if err != nil || server != "http://host:3000" {
+		t.Fatalf("trailing slash should be dropped, got %q err=%v", server, err)
 	}
-	if server != defaultServerURL || timeout != defaultRequestTimeout {
-		t.Fatalf("a --config flag with no following value should not change the resolved target, got server=%q timeout=%v", server, timeout)
+	for _, bad := range []string{"127.0.0.1:18999", "ftp://host", "http://", ""} {
+		os.Setenv("HYDRA_CLI_SERVER", bad)
+		_, _, _, err := resolveTarget(nil)
+		if bad != "" && exitCodeFor(err) != ExitUsageError {
+			t.Errorf("server %q: exit code = %d, want ExitUsageError (err=%v)", bad, exitCodeFor(err), err)
+		}
 	}
-	if !reflect.DeepEqual(rest, []string{"--config"}) {
-		t.Fatalf("a --config flag with no following value should be left in rest, got %v", rest)
+	os.Unsetenv("HYDRA_CLI_SERVER")
+}
+
+func TestStatusAndRobots_RejectUnknownArguments(t *testing.T) {
+	os.Unsetenv("HYDRA_CLI_SERVER")
+	if err := cmdStatus([]string{"--sever", "http://x"}); exitCodeFor(err) != ExitUsageError {
+		t.Errorf("status with a typo flag: err = %v, want a usage error", err)
+	}
+	if err := cmdRobots(&bytes.Buffer{}, []string{"--bogus"}); exitCodeFor(err) != ExitUsageError {
+		t.Errorf("robots with an unknown flag: err = %v, want a usage error", err)
+	}
+}
+
+func TestStatus_RejectsAJSONThatIsNotAHydraServer(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	defer srv.Close()
+	if err := cmdStatus([]string{"--server", srv.URL}); exitCodeFor(err) != ExitServerError {
+		t.Errorf("status against a foreign JSON: err = %v, want ExitServerError", err)
+	}
+}
+
+func TestLogin_RateLimitHasAClearMessage(t *testing.T) {
+	clearCredentials(t)
+	t.Setenv("HYDRA_CLI_USER", "u")
+	t.Setenv("HYDRA_CLI_PASSWORD", "p")
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	defer srv.Close()
+	err := cmdRobots(&bytes.Buffer{}, []string{"--server", srv.URL})
+	if err == nil || !strings.Contains(err.Error(), "rate limited") || exitCodeFor(err) != ExitServerError {
+		t.Errorf("429 on login: err = %v, want a rate-limit message with ExitServerError", err)
 	}
 }
 

@@ -29,7 +29,7 @@ func newGuardedServer(t *testing.T, logins *int32, sawAuthOnInfo *int32) *httpte
 			if r.Header.Get("Authorization") != "" && sawAuthOnInfo != nil {
 				atomic.AddInt32(sawAuthOnInfo, 1)
 			}
-			_, _ = w.Write([]byte(`{"appVersion":"0.8.0","controllerCount":1,"robotCount":1}`))
+			_, _ = w.Write([]byte(`{"schema_version":"1.0","appVersion":"0.8.0","controllerCount":1,"robotCount":1}`))
 		case "/api/settings":
 			if r.Header.Get("Authorization") == "" {
 				w.WriteHeader(http.StatusUnauthorized)
@@ -235,8 +235,8 @@ func TestAnOversizedResponseIsRefused(t *testing.T) {
 		"status": func() error { return cmdStatus([]string{"--server", server.URL}) },
 	} {
 		err := run()
-		if got := exitCodeFor(err); got != ExitNetworkError || !strings.Contains(err.Error(), "larger than") {
-			t.Errorf("%s: exit code = %d, err = %v, want ExitNetworkError naming the size cap", name, got, err)
+		if got := exitCodeFor(err); got != ExitServerError || !strings.Contains(err.Error(), "larger than") {
+			t.Errorf("%s: exit code = %d, err = %v, want ExitServerError naming the size cap", name, got, err)
 		}
 	}
 }

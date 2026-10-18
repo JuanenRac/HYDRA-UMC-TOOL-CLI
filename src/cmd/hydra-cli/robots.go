@@ -7,9 +7,8 @@
 // this CLI has (the README's own bigger promises - deploy/flash-all/
 // audit - still need real write endpoints on HYDRA-UMC-SERVER that don't
 // exist yet). GET /api/settings already carries the full
-// controller/robot roster and is a real, unauthenticated read
-// (see HYDRA-UMC-SERVER/src/server.ts's own `app.get("/api/settings", ...)`
-// route) - this command is a real client of that real, already-shipping
+// controller/robot roster; the server gives it only to a logged-in account
+// (see auth.go) - this command is a real client of that already-shipping
 // contract, not new server-side work.
 package main
 
@@ -65,8 +64,11 @@ type settingsResponse struct {
 // output via a bytes.Buffer instead of redirecting the process's real
 // stdout.
 func cmdRobots(w io.Writer, args []string) error {
-	server, timeout, _, err := resolveTarget(args)
+	server, timeout, rest, err := resolveTarget(args)
 	if err != nil {
+		return err
+	}
+	if err := rejectExtraArgs("robots", rest); err != nil {
 		return err
 	}
 

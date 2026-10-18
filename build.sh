@@ -40,7 +40,7 @@ cd "$(dirname "$0")"
 # CI/piped/non-interactive runs).
 trap '[ -t 0 ] && read -r -p "Press Enter to close..." _' EXIT
 # HYDRA_UMC_SCRIPT_STANDARD_VERSION_STEP
-printf '%s\n' "[1/4] Incrementing project version and synchronising its manifest..."
+printf '%s\n' "[1/5] Incrementing project version and synchronising its manifest..."
 python3 bump_version.py || exit 1
 # HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_BEFORE
 HYDRA_UMC_VERSION_BEFORE="$(python3 -c 'import json, pathlib, sys; print(json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["version"])' "$(dirname "$0")/hydra-umc.project.json")"
@@ -55,18 +55,18 @@ printf '%s\n' '*****************************************************************
 printf '\n'
 echo ""
 
-echo "[2/4] Running the real test suite (go test)..."
+echo "[2/5] Running the real test suite (go test)..."
 ( cd src && go vet ./... && go test ./... )
 echo "      Done."
 echo ""
 
-echo "[3/4] Compiling Go module (src/cmd/hydra-cli)..."
+echo "[3/5] Compiling Go module (src/cmd/hydra-cli)..."
 mkdir -p build
 BIN_NAME="hydra-cli"
 if [ "${OS:-}" = "Windows_NT" ]; then
     BIN_NAME="hydra-cli.exe"
 fi
-( cd src && go build -o "../build/${BIN_NAME}" ./cmd/hydra-cli )
+( cd src && CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o "../build/${BIN_NAME}" ./cmd/hydra-cli )
 echo "      Done. Binary: build/${BIN_NAME}"
 echo ""
 
@@ -93,7 +93,7 @@ for target in "linux amd64" "linux arm64" "windows amd64" "darwin amd64" "darwin
     [ "$goos" = "windows" ] && out_name="hydra-cli.exe"
     out_dir="$RELEASE_DIR/${goos}-${goarch}"
     mkdir -p "$out_dir"
-    ( cd src && GOOS="$goos" GOARCH="$goarch" go build -o "../${out_dir}/${out_name}" ./cmd/hydra-cli )
+    ( cd src && CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags "-s -w" -o "../${out_dir}/${out_name}" ./cmd/hydra-cli )
     echo "      Built: ${out_dir}/${out_name}"
 done
 # A real, verifiable checksum per artifact - the same real integrity

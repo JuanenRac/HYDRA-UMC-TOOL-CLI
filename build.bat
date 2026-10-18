@@ -31,7 +31,7 @@ REM module in src/ into build\hydra-cli.exe. Run this before run.bat.
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
 REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_STEP
-echo [1/4] Incrementing project version and synchronising its manifest...
+echo [1/5] Incrementing project version and synchronising its manifest...
 python bump_version.py
 if errorlevel 1 ( echo NATIVE VERSION BUMP FAILED. & pause & exit /b 1 )
 REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_BEFORE
@@ -52,7 +52,7 @@ echo ***************************************************************************
 echo.
 echo.
 
-echo [2/4] Running the real test suite (go test)...
+echo [2/5] Running the real test suite (go test)...
 pushd src
 go vet ./...
 if errorlevel 1 (
@@ -68,10 +68,11 @@ popd
 echo       Done.
 echo.
 
-echo [3/4] Compiling Go module (src/cmd/hydra-cli)...
+echo [3/5] Compiling Go module (src/cmd/hydra-cli)...
 if not exist build mkdir build
 pushd src
-go build -o ..\build\hydra-cli.exe .\cmd\hydra-cli
+set "CGO_ENABLED=0"
+go build -trimpath -ldflags "-s -w" -o ..\build\hydra-cli.exe .\cmd\hydra-cli
 if errorlevel 1 (
     popd
     goto :error
@@ -131,7 +132,8 @@ set "OUT_NAME=%~3"
 set "OUT_DIR=%RELEASE_DIR%\%GOOS%-%GOARCH%"
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
 pushd src
-go build -o "..\%OUT_DIR%\%OUT_NAME%" .\cmd\hydra-cli
+set "CGO_ENABLED=0"
+go build -trimpath -ldflags "-s -w" -o "..\%OUT_DIR%\%OUT_NAME%" .\cmd\hydra-cli
 set "RESULT=%ERRORLEVEL%"
 popd
 if not "%RESULT%"=="0" (

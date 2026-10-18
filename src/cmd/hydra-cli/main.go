@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 )
 
 const projectName = "HYDRA-UMC-TOOL-CLI"
@@ -178,8 +179,11 @@ type hydraInfo struct {
 // resolution (--server/--config/HYDRA_CLI_SERVER/default) is shared with
 // `robots`/`doctor`/`shell` via resolveTarget (see server.go).
 func cmdStatus(args []string) error {
-	server, timeout, _, err := resolveTarget(args)
+	server, timeout, rest, err := resolveTarget(args)
 	if err != nil {
+		return err
+	}
+	if err := rejectExtraArgs("status", rest); err != nil {
 		return err
 	}
 
@@ -192,7 +196,7 @@ func cmdStatus(args []string) error {
 
 	body, err := readBody(resp.Body)
 	if err != nil {
-		return newCliError(ExitNetworkError, fmt.Errorf("reading response from %s: %w", server, err))
+		return bodyReadError(server, "response", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -202,6 +206,10 @@ func cmdStatus(args []string) error {
 	var info hydraInfo
 	if err := json.Unmarshal(body, &info); err != nil {
 		return newCliError(ExitServerError, fmt.Errorf("unexpected response from %s: %w", server, err))
+	}
+
+	if strings.TrimSpace(info.AppVersion) == "" {
+		return newCliError(ExitServerError, fmt.Errorf("%s answered /api/hydra-info without an appVersion: it does not look like a HYDRA-UMC-SERVER", server))
 	}
 
 	fmt.Printf("server:      %s\n", server)
@@ -215,9 +223,7 @@ func cmdStatus(args []string) error {
 	if info.RemoteAPIVersion != 0 {
 		fmt.Printf("remoteApiVersion: %d\n", info.RemoteAPIVersion)
 	}
-	if info.Status == "" {
-		fmt.Println("status:      not reported")
-	} else {
+	if info.Status != "" {
 		fmt.Printf("status:      %s\n", info.Status)
 	}
 	return nil

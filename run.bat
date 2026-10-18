@@ -36,4 +36,6 @@ if not exist build\hydra-cli.exe (
 )
 
 build\hydra-cli.exe %*
-pause
+set "RC=%ERRORLEVEL%"
+if not defined HYDRA_UMC_CI if "%~1"=="" pause
+exit /b %RC%

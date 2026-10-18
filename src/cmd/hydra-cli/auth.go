@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 )
@@ -47,9 +48,37 @@ func readBody(r io.Reader) ([]byte, error) {
 		return nil, err
 	}
 	if len(body) > maxResponseBytes {
-		return nil, fmt.Errorf("the response is larger than %d bytes", maxResponseBytes)
+		return nil, errResponseTooLarge
 	}
 	return body, nil
+}
+
+// errResponseTooLarge marks a response the server did send but the CLI refuses
+// to hold in memory; callers classify it as a server error, not a network one.
+var errResponseTooLarge = fmt.Errorf("the response is larger than %d bytes", maxResponseBytes)
+
+// bodyReadError classifies a failed body read: an oversized response means the
+// server answered (exit 5), anything else is a transport problem (exit 4).
+func bodyReadError(server, what string, err error) error {
+	code := ExitNetworkError
+	if errors.Is(err, errResponseTooLarge) {
+		code = ExitServerError
+	}
+	return newCliError(code, fmt.Errorf("reading %s from %s: %w", what, server, err))
+}
+
+// warnIfInsecure writes a warning to stderr when a credential is about to
+// travel over plain http to a host that is not this machine.
+func warnIfInsecure(server string) {
+	parsed, err := url.Parse(server)
+	if err != nil || parsed.Scheme != "http" {
+		return
+	}
+	switch parsed.Hostname() {
+	case "localhost", "127.0.0.1", "::1":
+		return
+	}
+	fmt.Fprintf(os.Stderr, "hydra-cli: warning: sending credentials over plain http to %s; use https when the network is not trusted\n", parsed.Host)
 }
 
 // resolveToken returns the bearer token for an authenticated read, logging in
@@ -64,6 +93,7 @@ func resolveToken(client *http.Client, server string) (string, error) {
 	if user == "" || password == "" {
 		return "", nil
 	}
+	warnIfInsecure(server)
 	payload, err := json.Marshal(map[string]string{"username": user, "password": password})
 	if err != nil {
 		return "", newCliError(ExitGeneralError, err)
@@ -75,10 +105,13 @@ func resolveToken(client *http.Client, server string) (string, error) {
 	defer resp.Body.Close()
 	body, err := readBody(resp.Body)
 	if err != nil {
-		return "", newCliError(ExitNetworkError, fmt.Errorf("reading the login response from %s: %w", server, err))
+		return "", bodyReadError(server, "the login response", err)
 	}
 	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
 		return "", newCliError(ExitAuthError, fmt.Errorf("%s refused the login for %s: check %s and %s", server, user, userEnv, passwordEnv))
+	}
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return "", newCliError(ExitServerError, fmt.Errorf("%s/api/login is rate limited (HTTP 429): too many logins; wait and retry, or set %s to a token instead of logging in on every run", server, tokenEnv))
 	}
 	if resp.StatusCode != http.StatusOK {
 		return "", newCliError(ExitServerError, fmt.Errorf("%s/api/login replied with HTTP %d", server, resp.StatusCode))
@@ -104,6 +137,7 @@ func getAuthenticated(client *http.Client, server, path string) (int, []byte, er
 		return 0, nil, newCliError(ExitConfigError, fmt.Errorf("invalid server %q: %w", server, err))
 	}
 	if token != "" {
+		warnIfInsecure(server)
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
 	resp, err := client.Do(req)
@@ -113,7 +147,7 @@ func getAuthenticated(client *http.Client, server, path string) (int, []byte, er
 	defer resp.Body.Close()
 	body, err := readBody(resp.Body)
 	if err != nil {
-		return 0, nil, newCliError(ExitNetworkError, fmt.Errorf("reading response from %s: %w", server, err))
+		return 0, nil, bodyReadError(server, "response", err)
 	}
 	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
 		if token == "" {

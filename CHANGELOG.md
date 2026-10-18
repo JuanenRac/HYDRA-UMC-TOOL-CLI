@@ -20,14 +20,16 @@ binary.
 
 ---
 
-## Unreleased
+## [0.1.4] - Stricter arguments, safer logins, accurate reference
 
-- **`src/hydra-cli`** - untracked a stale, orphaned 8.6 MB compiled Linux
-  binary that had been committed directly (no `.exe` suffix, so it slipped
-  past `.gitignore`'s existing `*.exe` rule). `.gitignore` now also covers
-  `src/hydra-cli` and `src/cmd/hydra-cli/hydra-cli` explicitly. `git rm
-  --cached` only, no `-f` - the physical file was left untouched on disk.
-  Repo-hygiene fix, no runtime code changed, no version bump.
+- **Arguments:** `status` and `robots` reject unknown arguments (a mistyped `--sever` no longer silently queries another server), and `--server`/`--config` without a value are usage errors (exit code 2). A server value must be an absolute http(s) URL, a trailing `/` is dropped for every command, and a bad value is a usage error instead of a network error.
+- **`status`:** refuses an answer without `appVersion` (a foreign JSON service no longer "passes") and no longer prints the `status: not reported` line the Server never sends.
+- **`doctor`:** checks `schema_version` of `/api/hydra-info` (new `hydra-info-schema-version` check) and always emits the `controllers` and `robots` counters in `--json`.
+- **Logins:** an HTTP 429 on `POST /api/login` explains the rate limit and points to `HYDRA_CLI_TOKEN`; a warning goes to stderr when a credential would travel over plain `http://` to another machine.
+- **Responses over 4 MiB** are now reported as a server error (exit code 5) instead of "server unreachable".
+- **Build:** the native binary is built with `CGO_ENABLED=0` (truly static), the step numbering of `build.sh` is fixed, and `run.bat` keeps the CLI exit code and only pauses for an interactive run without arguments.
+- **Repo hygiene:** the stale compiled binary that had been committed is untracked and `.gitignore` covers it.
+- **Docs:** `docs/CLI_REFERENCE.md` regenerated from the real binary (version, help, server resolution, exit code 7, `doctor` output), the READMEs require Go 1.24 as `go.mod` does, and the manifest lists the real technologies and test count.
 
 ## [0.1.3] - Credentials for the authenticated reads, exit code 7, bounded responses
 

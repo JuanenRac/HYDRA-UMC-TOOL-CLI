@@ -11,8 +11,11 @@
 package main
 
 import (
+	"fmt"
+	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -51,13 +54,15 @@ func resolveTarget(args []string) (server string, timeout time.Duration, rest []
 	var explicitServer, configPath string
 	rest = make([]string, 0, len(args))
 	for i := 0; i < len(args); i++ {
-		if args[i] == "--server" && i+1 < len(args) {
-			explicitServer = args[i+1]
-			i++
-			continue
-		}
-		if args[i] == "--config" && i+1 < len(args) {
-			configPath = args[i+1]
+		if args[i] == "--server" || args[i] == "--config" {
+			if i+1 >= len(args) {
+				return "", 0, nil, newCliError(ExitUsageError, fmt.Errorf("%s needs a value", args[i]))
+			}
+			if args[i] == "--server" {
+				explicitServer = args[i+1]
+			} else {
+				configPath = args[i+1]
+			}
 			i++
 			continue
 		}
@@ -77,7 +82,33 @@ func resolveTarget(args []string) (server string, timeout time.Duration, rest []
 		server = explicitServer
 	}
 
+	server, err = normalizeServer(server)
+	if err != nil {
+		return "", 0, nil, err
+	}
 	return server, timeout, rest, nil
+}
+
+// normalizeServer checks that a server value (from a flag, the environment or
+// a config file) is an absolute http(s) URL and drops any trailing slash, so
+// every command builds the same request path from it. A bad value is a usage
+// error, not a network error.
+func normalizeServer(raw string) (string, error) {
+	trimmed := strings.TrimRight(strings.TrimSpace(raw), "/")
+	parsed, err := url.Parse(trimmed)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
+		return "", newCliError(ExitUsageError, fmt.Errorf("the server must be an absolute http:// or https:// URL, got %q", raw))
+	}
+	return trimmed, nil
+}
+
+// rejectExtraArgs fails with a usage error when a command that takes no
+// arguments of its own is given some (for example a mistyped --sever).
+func rejectExtraArgs(command string, rest []string) error {
+	if len(rest) == 0 {
+		return nil
+	}
+	return newCliError(ExitUsageError, fmt.Errorf("%s does not accept arguments: %s", command, strings.Join(rest, " ")))
 }
 
 // parsePositiveSeconds parses a HYDRA_CLI_TIMEOUT_SEC-style value, only

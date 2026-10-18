@@ -13,3 +13,6 @@ build/
 # Python tooling alongside this repo's Go core; generated locally, never source)
 __pycache__/
 *.py[cod]
+
+# Editor settings
+.vscode/

@@ -100,7 +100,7 @@ HYDRA-UMC-TOOL-CLI/
 
 ## 4. ⚙️ GUIA DE COMPILAÇÃO E EXECUÇÃO
 
-Requer o Go >= 1.21.
+Requer o Go >= 1.24.
 
 ```bash
 # Linux/macOS

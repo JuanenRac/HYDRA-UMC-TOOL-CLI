@@ -1,6 +1,6 @@
 # HYDRA-UMC-TOOL-CLI — CLI Reference
 
-`hydra-cli` is a single static Go binary (`src/cmd/hydra-cli/`). Every
+`hydra-cli` is a single Go binary (built with CGO disabled, so it has no shared-library dependencies) (`src/cmd/hydra-cli/`). Every
 command below was captured from a real, built binary — the output shown
 is real, not illustrative.
 
@@ -19,8 +19,14 @@ the same usage summary shown by `help` below.
 target a HYDRA-UMC-SERVER instance. The target is resolved in this order:
 
 1. `--server URL` on the command line
-2. the `HYDRA_CLI_SERVER` environment variable
-3. the default, `http://localhost:3000`
+2. the `"server"` of a `--config PATH` file
+3. the `HYDRA_CLI_SERVER` environment variable
+4. the default, `http://localhost:3000`
+
+The request timeout is the `--config` file's `"timeoutSec"`, then
+`HYDRA_CLI_TIMEOUT_SEC`, then 5 seconds. A server value must be an absolute
+`http://` or `https://` URL (a trailing `/` is dropped); a flag without a value
+or an unknown argument is a usage error (exit code `2`), not silently ignored.
 
 ```bash
 hydra-cli status --server http://192.168.1.50:3000
@@ -42,7 +48,7 @@ flag, so it stays out of process listings and shell history:
 
 The token wins when both are set. With neither, `robots` and `doctor` fail with
 exit code `7` and name the variables to set; a refused login or an expired or
-invalid token is also exit code `7`. Server responses are read up to 4 MiB.
+invalid token is also exit code `7`. Server responses are read up to 4 MiB. Logging in on every run is rate limited by the server (HTTP 429, reported as exit code `5`): for cron jobs and scripts set `HYDRA_CLI_TOKEN` instead. Over plain `http://` to another machine the CLI warns on stderr that the credential travels unencrypted.
 
 ```bash
 HYDRA_CLI_USER=operator HYDRA_CLI_PASSWORD='...' hydra-cli robots --server http://192.168.1.50:3000
@@ -56,7 +62,7 @@ Prints the CLI's own name and version, then exits.
 
 ```
 $ hydra-cli version
-HYDRA-UMC-TOOL-CLI v0.0.9
+HYDRA-UMC-TOOL-CLI v0.1.4
 ```
 
 ### `help` / `-h` / `--help` / (no arguments)
@@ -65,7 +71,7 @@ Prints full command usage.
 
 ```
 $ hydra-cli help
-HYDRA-UMC-TOOL-CLI v0.0.9
+HYDRA-UMC-TOOL-CLI v0.1.4
 Command-line interface for HYDRA-UMC/URTC fleet DevOps and automation.
 
 USAGE:
@@ -73,19 +79,49 @@ USAGE:
 
 COMMANDS:
     version              Print the CLI version and exit.
-    status [--server URL] Query a HYDRA-UMC-SERVER instance's /api/hydra-info
+    status [--server URL] [--config PATH]
+                          Query a HYDRA-UMC-SERVER instance's /api/hydra-info
                           endpoint and print its reported identity/version.
-    robots [--server URL] Query a HYDRA-UMC-SERVER instance's /api/settings
+    robots [--server URL] [--config PATH]
+                          Query a HYDRA-UMC-SERVER instance's /api/settings
                           endpoint and print its real controller/robot roster.
-                          Both default to http://localhost:3000; override with --server or the
-                          HYDRA_CLI_SERVER environment variable.
+                          Both default to http://localhost:3000; override with --server, a
+                          --config file's own "server" (see config validate/
+                          apply below), or the HYDRA_CLI_SERVER environment
+                          variable, in that precedence order.
+	doctor [--server URL] [--config PATH] [--json]
+	                      Read-only diagnostic: validates /api/hydra-info and
+	                      /api/settings, then verifies their controller/robot
+	                      counts agree. It never sends commands or probes hardware.
+	                      --json prints a structured report (checkId/severity/
+	                      status per check) instead of the DOCTOR=PASS line, for
+	                      scripts that need to act on individual results.
     config validate --config PATH
                           Load and schema-validate a local config file.
     config apply --config PATH [--dry-run]
                           Preview (--dry-run) what a config apply would send.
                           Without --dry-run, exits ExitNotImplemented: no
                           live fleet-write endpoint exists yet.
+    shell [--server URL] [--config PATH]
+                          Interactive REPL - run any command above
+                          repeatedly against the same server without
+                          restarting the process. exit/quit or Ctrl-D
+                          to leave.
+    completion <bash|zsh>
+                          Print a real completion script for the given
+                          shell to stdout - eval "$(hydra-cli completion
+                          bash)" (or source it from a completions
+                          directory) to enable tab-completion.
     help                  Show this message.
+
+    Every live command above also reads a --config file's own "timeoutSec"
+    as its HTTP request timeout (default 5s), the same value config
+    validate/apply already schema-validate.
+
+    robots and doctor read /api/settings, which the server only gives to a
+    logged-in account. Set HYDRA_CLI_TOKEN (a bearer token), or HYDRA_CLI_USER
+    and HYDRA_CLI_PASSWORD (the CLI logs in for that run); they are read from
+    the environment, never from a flag.
 
 EXIT CODES:
     0  ok                     3  config error
@@ -94,20 +130,15 @@ EXIT CODES:
                               6  not implemented
                               7  authentication required or refused
 
-    robots and doctor read /api/settings, which the server only gives to a
-    logged-in account. Set HYDRA_CLI_TOKEN (a bearer token), or HYDRA_CLI_USER
-    and HYDRA_CLI_PASSWORD (the CLI logs in for that run); they are read from
-    the environment, never from a flag.
-
 Report issues at: https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI
 ```
 
 ### `status [--server URL]`
 
 Real `GET /api/hydra-info` against a live HYDRA-UMC-SERVER. Prints the
-server's reported identity and version. Current Servers do not publish a
-`status` field; the CLI says `not reported` honestly rather than printing an
-empty value.
+server's reported identity and version. An answer without an `appVersion` is
+refused (exit code `5`): it is not a HYDRA-UMC-SERVER. A `status` line appears
+only when the server publishes one.
 
 ```
 $ hydra-cli status
@@ -116,7 +147,6 @@ product:     HYDRA-UMC TEST
 hostname:    JUANEN
 appVersion:  0.2.4
 remoteApiVersion: 2
-status:      not reported
 ```
 
 Unreachable server (real network error, exit code 4):
@@ -237,7 +267,7 @@ hydra-cli> status
 server:      http://192.168.1.50:3000
 appVersion:  0.2.4
 hydra-cli> doctor
-DOCTOR: OK - controllerCount and robotCount agree with the real roster (1/2)
+DOCTOR=PASS server=http://192.168.1.50:3000 appVersion=0.2.4 schema=1.0 remoteApiVersion=2 controllers=1 robots=2 countCrossCheck=pass
 hydra-cli> exit
 ```
 
@@ -250,8 +280,9 @@ hydra-cli> exit
 | `2` | usage error — unknown command or missing/malformed arguments |
 | `3` | config error — a local config file failed validation |
 | `4` | network error — the target server could not be reached at all |
-| `5` | server error — the server responded, but with a non-2xx status or a response this CLI couldn't parse |
+| `5` | server error — the server responded, but with a non-2xx status or a response this CLI couldn't parse or that is larger than 4 MiB |
 | `6` | not implemented — a real, honest "this can't run live yet" outcome |
+| `7` | authentication required or refused |
 
 ```
 $ hydra-cli bogus
