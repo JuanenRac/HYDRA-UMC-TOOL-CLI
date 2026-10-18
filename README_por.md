@@ -20,6 +20,17 @@
 
 ---
 
+## 📋 Num relance
+
+| | |
+|---|---|
+| Versão | `0.1.4` |
+| Maturidade | Estabelecido |
+| Testes | 83 (`go test ./...`) |
+| Tecnologia | Go / standard-library flag handling |
+| Destino | O PC de quem o usa |
+| Em hardware real | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |
+
 ## 1. 🛠️ VISÃO TÉCNICA GERAL
 
 O **HYDRA-UMC-TOOL-CLI** é o canivete suíço para programadores e administradores de sistemas do ecossistema HYDRA-UMC. É um único binário Go estático que fornece ferramentas de linha de comandos para consultar, atualizar e auditar implementações do HYDRA-UMC.
