@@ -79,7 +79,7 @@ func cmdRobots(w io.Writer, args []string) error {
 	}
 
 	if status != http.StatusOK {
-		return newCliError(ExitServerError, fmt.Errorf("%s replied with HTTP %d: %s", server, status, string(body)))
+		return newCliError(ExitServerError, fmt.Errorf("%s replied with HTTP %d: %s", server, status, printable(string(body))))
 	}
 
 	var settings settingsResponse
@@ -111,7 +111,7 @@ func printRobotRoster(w io.Writer, server string, settings settingsResponse) {
 			if r.Online {
 				online = "yes"
 			}
-			fmt.Fprintf(w, "%-14s %-20s %-8s %-24s %s\n", c.Name, r.Name, online, r.Model, r.Role)
+			fmt.Fprintf(w, "%-14s %-20s %-8s %-24s %s\n", printable(c.Name), printable(r.Name), online, printable(r.Model), printable(r.Role))
 		}
 	}
 }

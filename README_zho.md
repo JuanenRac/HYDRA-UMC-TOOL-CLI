@@ -16,7 +16,7 @@
 
 ---
 
-**诚实核查 - 今天真正能运行的部分：** `version`、`status`、`robots`、`doctor`、`config validate`、`config apply --dry-run`，以及交互式 `shell`（`main.go`、`server.go`、`robots.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）都是真实可运行的 Go 代码，由 83 个通过的测试（`go test ./...`）验证——针对一个模拟服务器的真实 `net/http`/`httptest` 往返请求，加上真实的临时配置文件测试夹具，而不是桩代码。这些测试模拟的是一个 HYDRA-UMC-SERVER 实例；`status`、`robots` 和 `doctor`（包括登录）也已针对真实的 HYDRA-UMC-SERVER 进程运行过。`config apply` 在没有 `--dry-run` 时会诚实地返回 `ExitNotImplemented` 退出码，而不是伪装成功，因为它需要调用的车队写入端点在 HYDRA-UMC-SERVER 上还不存在。`deploy`、`flash-all` 和 `audit` 完全是愿景——在下文中标记为"planned"，在 `src/` 中完全不存在，连桩函数都没有。具体已经交付了什么，请参见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** `version`、`status`、`robots`、`doctor`、`config validate`、`config apply --dry-run`，以及交互式 `shell`（`main.go`、`server.go`、`robots.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）都是真实可运行的 Go 代码，由 105 个通过的测试（`go test ./...`）验证——针对一个模拟服务器的真实 `net/http`/`httptest` 往返请求，加上真实的临时配置文件测试夹具，而不是桩代码。这些测试模拟的是一个 HYDRA-UMC-SERVER 实例；`status`、`robots` 和 `doctor`（包括登录）也已针对真实的 HYDRA-UMC-SERVER 进程运行过。`config apply` 在没有 `--dry-run` 时会诚实地返回 `ExitNotImplemented` 退出码，而不是伪装成功，因为它需要调用的车队写入端点在 HYDRA-UMC-SERVER 上还不存在。`deploy`、`flash-all` 和 `audit` 完全是愿景——在下文中标记为"planned"，在 `src/` 中完全不存在，连桩函数都没有。具体已经交付了什么，请参见 `CHANGELOG.md`。
 
 ---
 
@@ -24,9 +24,9 @@
 
 | | |
 |---|---|
-| 版本 | `0.1.4` |
+| 版本 | `0.1.5` |
 | 成熟度 | 成熟 |
-| 测试 | 83 (`go test ./...`) |
+| 测试 | 105 (`go test ./...`) |
 | 技术栈 | Go / standard-library flag handling |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |

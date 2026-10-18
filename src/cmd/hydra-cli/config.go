@@ -40,8 +40,8 @@ func validateConfig(cfg Config) error {
 		return fmt.Errorf(`"server" must not be empty`)
 	}
 	parsed, err := url.Parse(cfg.Server)
-	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
-		return fmt.Errorf(`"server" must be a valid absolute URL (e.g. "http://host:port"), got %q`, cfg.Server)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
+		return fmt.Errorf(`"server" must be an absolute http:// or https:// URL (e.g. "http://host:port"), got %q`, cfg.Server)
 	}
 	if cfg.TimeoutSec <= 0 {
 		return fmt.Errorf(`"timeoutSec" must be a positive integer, got %d`, cfg.TimeoutSec)

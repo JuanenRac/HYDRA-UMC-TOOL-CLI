@@ -62,7 +62,7 @@ Prints the CLI's own name and version, then exits.
 
 ```
 $ hydra-cli version
-HYDRA-UMC-TOOL-CLI v0.1.4
+HYDRA-UMC-TOOL-CLI v0.1.5
 ```
 
 ### `help` / `-h` / `--help` / (no arguments)
@@ -71,7 +71,7 @@ Prints full command usage.
 
 ```
 $ hydra-cli help
-HYDRA-UMC-TOOL-CLI v0.1.4
+HYDRA-UMC-TOOL-CLI v0.1.5
 Command-line interface for HYDRA-UMC/URTC fleet DevOps and automation.
 
 USAGE:

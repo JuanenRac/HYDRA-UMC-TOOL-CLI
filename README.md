@@ -16,7 +16,7 @@
 
 ---
 
-**Honesty check - what actually runs today:** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run`, and the interactive `shell` (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) are real, working Go code, exercised by 83 passing tests (`go test ./...`) - real `net/http`/`httptest` round-trips against a fake server plus real temp-file config fixtures, not stubs. Those tests simulate a HYDRA-UMC-SERVER instance; `status`, `robots` and `doctor` (login included) have also been run against a real HYDRA-UMC-SERVER process. `config apply` without `--dry-run` honestly returns the `ExitNotImplemented` exit code rather than faking success, because the fleet-write endpoint it would call doesn't exist on HYDRA-UMC-SERVER yet. `deploy`, `flash-all` and `audit` are pure aspiration - marked "planned" below and absent from `src/` entirely, not even a stub function. See `CHANGELOG.md` for exactly what has shipped so far.
+**Honesty check - what actually runs today:** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run`, and the interactive `shell` (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) are real, working Go code, exercised by 105 passing tests (`go test ./...`) - real `net/http`/`httptest` round-trips against a fake server plus real temp-file config fixtures, not stubs. Those tests simulate a HYDRA-UMC-SERVER instance; `status`, `robots` and `doctor` (login included) have also been run against a real HYDRA-UMC-SERVER process. `config apply` without `--dry-run` honestly returns the `ExitNotImplemented` exit code rather than faking success, because the fleet-write endpoint it would call doesn't exist on HYDRA-UMC-SERVER yet. `deploy`, `flash-all` and `audit` are pure aspiration - marked "planned" below and absent from `src/` entirely, not even a stub function. See `CHANGELOG.md` for exactly what has shipped so far.
 
 ---
 
@@ -24,9 +24,9 @@
 
 | | |
 |---|---|
-| Version | `0.1.4` |
+| Version | `0.1.5` |
 | Maturity | Established |
-| Tests | 83 (`go test ./...`) |
+| Tests | 105 (`go test ./...`) |
 | Stack | Go / standard-library flag handling |
 | Target | The PC of the person using it |
 | On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |

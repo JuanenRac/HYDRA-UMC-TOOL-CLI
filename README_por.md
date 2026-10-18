@@ -16,7 +16,7 @@
 
 ---
 
-**Verificação de honestidade - o que realmente funciona hoje:** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run` e o `shell` interativo (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) são código Go real e funcional, exercitado por 83 testes a passar (`go test ./...`) - idas e voltas reais com `net/http`/`httptest` contra um servidor simulado, mais ficheiros de configuração temporários reais como dados de teste, não stubs. Esses testes simulam uma instância do HYDRA-UMC-SERVER; `status`, `robots` e `doctor` (com o início de sessão incluído) também foram executados contra um processo real do HYDRA-UMC-SERVER. O `config apply` sem `--dry-run` devolve honestamente o código de saída `ExitNotImplemented` em vez de fingir êxito, porque o endpoint de escrita na frota que chamaria ainda não existe no HYDRA-UMC-SERVER. `deploy`, `flash-all` e `audit` são pura aspiração - marcados como "planeados" abaixo e ausentes por completo do `src/`, nem sequer uma função esboço. Veja o `CHANGELOG.md` para saber exatamente o que foi entregue até agora.
+**Verificação de honestidade - o que realmente funciona hoje:** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run` e o `shell` interativo (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) são código Go real e funcional, exercitado por 105 testes a passar (`go test ./...`) - idas e voltas reais com `net/http`/`httptest` contra um servidor simulado, mais ficheiros de configuração temporários reais como dados de teste, não stubs. Esses testes simulam uma instância do HYDRA-UMC-SERVER; `status`, `robots` e `doctor` (com o início de sessão incluído) também foram executados contra um processo real do HYDRA-UMC-SERVER. O `config apply` sem `--dry-run` devolve honestamente o código de saída `ExitNotImplemented` em vez de fingir êxito, porque o endpoint de escrita na frota que chamaria ainda não existe no HYDRA-UMC-SERVER. `deploy`, `flash-all` e `audit` são pura aspiração - marcados como "planeados" abaixo e ausentes por completo do `src/`, nem sequer uma função esboço. Veja o `CHANGELOG.md` para saber exatamente o que foi entregue até agora.
 
 ---
 
@@ -24,9 +24,9 @@
 
 | | |
 |---|---|
-| Versão | `0.1.4` |
+| Versão | `0.1.5` |
 | Maturidade | Estabelecido |
-| Testes | 83 (`go test ./...`) |
+| Testes | 105 (`go test ./...`) |
 | Tecnologia | Go / standard-library flag handling |
 | Destino | O PC de quem o usa |
 | Em hardware real | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |

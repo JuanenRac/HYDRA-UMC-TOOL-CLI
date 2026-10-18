@@ -154,9 +154,9 @@ func cmdDoctor(w io.Writer, args []string) error {
 		return writeDoctorJSON(w, report)
 	}
 
-	fmt.Fprintf(w, "DOCTOR=PASS server=%s appVersion=%s", server, info.AppVersion)
+	fmt.Fprintf(w, "DOCTOR=PASS server=%s appVersion=%s", server, printable(info.AppVersion))
 	if info.SchemaVersion != "" {
-		fmt.Fprintf(w, " schema=%s", info.SchemaVersion)
+		fmt.Fprintf(w, " schema=%s", printable(info.SchemaVersion))
 	}
 	if info.RemoteAPIVersion != 0 {
 		fmt.Fprintf(w, " remoteApiVersion=%d", info.RemoteAPIVersion)
@@ -211,7 +211,7 @@ func getJSON(client *http.Client, server, path string, target any) error {
 		return err
 	}
 	if status != http.StatusOK {
-		return newCliError(ExitServerError, fmt.Errorf("%s%s replied with HTTP %d: %s", server, path, status, string(body)))
+		return newCliError(ExitServerError, fmt.Errorf("%s%s replied with HTTP %d: %s", server, path, status, printable(string(body))))
 	}
 	if err := json.Unmarshal(body, target); err != nil {
 		return newCliError(ExitServerError, fmt.Errorf("unexpected response from %s%s: %w", server, path, err))

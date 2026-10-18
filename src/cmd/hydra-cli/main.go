@@ -200,7 +200,7 @@ func cmdStatus(args []string) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return newCliError(ExitServerError, fmt.Errorf("%s replied with HTTP %d: %s", server, resp.StatusCode, string(body)))
+		return newCliError(ExitServerError, fmt.Errorf("%s replied with HTTP %d: %s", server, resp.StatusCode, printable(string(body))))
 	}
 
 	var info hydraInfo
@@ -214,17 +214,17 @@ func cmdStatus(args []string) error {
 
 	fmt.Printf("server:      %s\n", server)
 	if info.Product != "" {
-		fmt.Printf("product:     %s\n", info.Product)
+		fmt.Printf("product:     %s\n", printable(info.Product))
 	}
 	if info.Hostname != "" {
-		fmt.Printf("hostname:    %s\n", info.Hostname)
+		fmt.Printf("hostname:    %s\n", printable(info.Hostname))
 	}
-	fmt.Printf("appVersion:  %s\n", info.AppVersion)
+	fmt.Printf("appVersion:  %s\n", printable(info.AppVersion))
 	if info.RemoteAPIVersion != 0 {
 		fmt.Printf("remoteApiVersion: %d\n", info.RemoteAPIVersion)
 	}
 	if info.Status != "" {
-		fmt.Printf("status:      %s\n", info.Status)
+		fmt.Printf("status:      %s\n", printable(info.Status))
 	}
 	return nil
 }

@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 )
 
 // defaultRequestTimeout is resolveTarget's own fallback request timeout,
@@ -125,4 +126,17 @@ func parsePositiveSeconds(raw string) (time.Duration, bool) {
 		return 0, false
 	}
 	return time.Duration(n) * time.Second, true
+}
+
+// printable replaces every control character (newlines, escape sequences,
+// DEL, the C1 range) in text that came from a server with "?", so a hostile or
+// broken server cannot forge extra lines in a table or a DOCTOR=PASS line, nor
+// drive the operator's terminal with escape codes.
+func printable(text string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) {
+			return '?'
+		}
+		return r
+	}, text)
 }

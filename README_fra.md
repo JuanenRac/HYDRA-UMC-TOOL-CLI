@@ -16,7 +16,7 @@
 
 ---
 
-**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run`, et le `shell` interactif (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) sont du code Go réel et fonctionnel, vérifié par 83 tests qui passent (`go test ./...`) - de vrais échanges `net/http`/`httptest` contre un faux serveur, plus de vraies fixtures de fichiers de configuration temporaires, pas des stubs. Ces tests simulent une instance de HYDRA-UMC-SERVER ; `status`, `robots` et `doctor` (connexion comprise) ont aussi été exécutés contre un vrai processus HYDRA-UMC-SERVER. `config apply` sans `--dry-run` renvoie honnêtement le code de sortie `ExitNotImplemented` plutôt que de simuler un succès, car le endpoint d'écriture de flotte qu'il appellerait n'existe pas encore sur HYDRA-UMC-SERVER. `deploy`, `flash-all` et `audit` relèvent de la pure aspiration - marqués "planned" ci-dessous et totalement absents de `src/`, pas même une fonction stub. Voir `CHANGELOG.md` pour savoir exactement ce qui a été livré jusqu'à présent.
+**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run`, et le `shell` interactif (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) sont du code Go réel et fonctionnel, vérifié par 105 tests qui passent (`go test ./...`) - de vrais échanges `net/http`/`httptest` contre un faux serveur, plus de vraies fixtures de fichiers de configuration temporaires, pas des stubs. Ces tests simulent une instance de HYDRA-UMC-SERVER ; `status`, `robots` et `doctor` (connexion comprise) ont aussi été exécutés contre un vrai processus HYDRA-UMC-SERVER. `config apply` sans `--dry-run` renvoie honnêtement le code de sortie `ExitNotImplemented` plutôt que de simuler un succès, car le endpoint d'écriture de flotte qu'il appellerait n'existe pas encore sur HYDRA-UMC-SERVER. `deploy`, `flash-all` et `audit` relèvent de la pure aspiration - marqués "planned" ci-dessous et totalement absents de `src/`, pas même une fonction stub. Voir `CHANGELOG.md` pour savoir exactement ce qui a été livré jusqu'à présent.
 
 ---
 
@@ -24,9 +24,9 @@
 
 | | |
 |---|---|
-| Version | `0.1.4` |
+| Version | `0.1.5` |
 | Maturité | Établi |
-| Tests | 83 (`go test ./...`) |
+| Tests | 105 (`go test ./...`) |
 | Technologie | Go / standard-library flag handling |
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |

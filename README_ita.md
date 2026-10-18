@@ -16,7 +16,7 @@
 
 ---
 
-**Verifica di onestà - cosa funziona davvero oggi:** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run` e la `shell` interattiva (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) sono codice Go reale e funzionante, verificato da 83 test superati (`go test ./...`) - veri round-trip `net/http`/`httptest` contro un server fittizio più vere fixture di file di configurazione temporanei, non stub. Questi test simulano un'istanza di HYDRA-UMC-SERVER; `status`, `robots` e `doctor` (login incluso) sono stati eseguiti anche contro un vero processo HYDRA-UMC-SERVER. `config apply` senza `--dry-run` restituisce onestamente il codice di uscita `ExitNotImplemented` invece di simulare un successo, perché l'endpoint di scrittura per la flotta che chiamerebbe non esiste ancora su HYDRA-UMC-SERVER. `deploy`, `flash-all` e `audit` sono pura aspirazione - segnati come "planned" più sotto e completamente assenti da `src/`, nemmeno come funzione stub. Vedi `CHANGELOG.md` per sapere esattamente cosa è stato consegnato finora.
+**Verifica di onestà - cosa funziona davvero oggi:** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run` e la `shell` interattiva (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) sono codice Go reale e funzionante, verificato da 105 test superati (`go test ./...`) - veri round-trip `net/http`/`httptest` contro un server fittizio più vere fixture di file di configurazione temporanei, non stub. Questi test simulano un'istanza di HYDRA-UMC-SERVER; `status`, `robots` e `doctor` (login incluso) sono stati eseguiti anche contro un vero processo HYDRA-UMC-SERVER. `config apply` senza `--dry-run` restituisce onestamente il codice di uscita `ExitNotImplemented` invece di simulare un successo, perché l'endpoint di scrittura per la flotta che chiamerebbe non esiste ancora su HYDRA-UMC-SERVER. `deploy`, `flash-all` e `audit` sono pura aspirazione - segnati come "planned" più sotto e completamente assenti da `src/`, nemmeno come funzione stub. Vedi `CHANGELOG.md` per sapere esattamente cosa è stato consegnato finora.
 
 ---
 
@@ -24,9 +24,9 @@
 
 | | |
 |---|---|
-| Versione | `0.1.4` |
+| Versione | `0.1.5` |
 | Maturità | Consolidato |
-| Test | 83 (`go test ./...`) |
+| Test | 105 (`go test ./...`) |
 | Tecnologia | Go / standard-library flag handling |
 | Destinazione | Il PC di chi lo usa |
 | Su hardware reale | Solo simulato: provato con emulatori, test double o simulatori; per questa versione non risulta alcuna esecuzione su hardware reale |

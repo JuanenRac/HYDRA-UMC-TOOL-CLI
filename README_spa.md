@@ -16,7 +16,7 @@
 
 ---
 
-**Comprobación de honestidad - lo que realmente funciona hoy:** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run`, y el `shell` interactivo (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) son código Go real y funcional, verificado por 83 tests que pasan (`go test ./...`) - peticiones reales `net/http`/`httptest` contra un servidor simulado más fixtures reales de archivos de configuración temporales, no stubs. Esos tests simulan una instancia de HYDRA-UMC-SERVER; `status`, `robots` y `doctor` (con el inicio de sesión incluido) también se han ejecutado contra un proceso real de HYDRA-UMC-SERVER. `config apply` sin `--dry-run` devuelve honestamente el código de salida `ExitNotImplemented` en vez de simular un éxito, porque el endpoint de escritura de flota que llamaría todavía no existe en HYDRA-UMC-SERVER. `deploy`, `flash-all` y `audit` son pura aspiración - marcados como "planned" más abajo y ausentes por completo de `src/`, ni siquiera como función stub. Consulta `CHANGELOG.md` para ver exactamente qué se ha entregado hasta ahora.
+**Comprobación de honestidad - lo que realmente funciona hoy:** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run`, y el `shell` interactivo (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) son código Go real y funcional, verificado por 105 tests que pasan (`go test ./...`) - peticiones reales `net/http`/`httptest` contra un servidor simulado más fixtures reales de archivos de configuración temporales, no stubs. Esos tests simulan una instancia de HYDRA-UMC-SERVER; `status`, `robots` y `doctor` (con el inicio de sesión incluido) también se han ejecutado contra un proceso real de HYDRA-UMC-SERVER. `config apply` sin `--dry-run` devuelve honestamente el código de salida `ExitNotImplemented` en vez de simular un éxito, porque el endpoint de escritura de flota que llamaría todavía no existe en HYDRA-UMC-SERVER. `deploy`, `flash-all` y `audit` son pura aspiración - marcados como "planned" más abajo y ausentes por completo de `src/`, ni siquiera como función stub. Consulta `CHANGELOG.md` para ver exactamente qué se ha entregado hasta ahora.
 
 ---
 
@@ -24,9 +24,9 @@
 
 | | |
 |---|---|
-| Versión | `0.1.4` |
+| Versión | `0.1.5` |
 | Madurez | Establecido |
-| Tests | 83 (`go test ./...`) |
+| Tests | 105 (`go test ./...`) |
 | Tecnología | Go / standard-library flag handling |
 | Destino | El PC de quien lo usa |
 | En hardware real | Solo simulado: probado con emuladores, dobles de prueba o simuladores; no consta ninguna ejecución en hardware real para esta versión |

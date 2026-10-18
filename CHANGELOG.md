@@ -20,6 +20,12 @@ binary.
 
 ---
 
+## [0.1.5] - Server text is printed safely, and config files must name an http(s) server
+
+- **Output safety:** names, versions, products, hostnames and error bodies that come from the server are printed with control characters (newlines, escape sequences) replaced by `?`, so a hostile or broken server can no longer forge extra table rows, status lines or a `DOCTOR=PASS` line, or drive the operator's terminal with escape codes. `--json` output was already escaped.
+- **Config files:** `config validate` and `config apply --dry-run` now require an `http://` or `https://` server, like every live command, instead of calling an `ftp://` or `ws://` server valid and letting the next command refuse it.
+- 19 new tests (105 in all, 94.8 % statement coverage, up from 86.3 %): the command dispatcher and its exit codes, hostile server text, hostile config files, server and timeout parsing, credential edge cases (blank and padded tokens, unusable login answers) and the exact response-size limit.
+
 ## [0.1.4] - Stricter arguments, safer logins, accurate reference
 
 - **Arguments:** `status` and `robots` reject unknown arguments (a mistyped `--sever` no longer silently queries another server), and `--server`/`--config` without a value are usage errors (exit code 2). A server value must be an absolute http(s) URL, a trailing `/` is dropped for every command, and a bad value is a usage error instead of a network error.

@@ -16,7 +16,7 @@
 
 ---
 
-**Ehrlichkeitscheck - was heute wirklich funktioniert:** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run` und die interaktive `shell` (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) sind echter, funktionierender Go-Code, geprüft durch 83 bestandene Tests (`go test ./...`) - echte `net/http`/`httptest`-Round-Trips gegen einen simulierten Server plus echte Temp-Datei-Konfigurationsfixtures, keine Stubs. Diese Tests simulieren eine HYDRA-UMC-SERVER-Instanz; `status`, `robots` und `doctor` (einschließlich der Anmeldung) wurden zusätzlich gegen einen echten HYDRA-UMC-SERVER-Prozess ausgeführt. `config apply` gibt ohne `--dry-run` ehrlich den Exit-Code `ExitNotImplemented` zurück, statt einen Erfolg vorzutäuschen, weil der Fleet-Write-Endpunkt, den es aufrufen würde, auf HYDRA-UMC-SERVER noch nicht existiert. `deploy`, `flash-all` und `audit` sind reine Zukunftsmusik - unten als "planned" markiert und in `src/` vollständig abwesend, nicht einmal als Stub-Funktion. Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
+**Ehrlichkeitscheck - was heute wirklich funktioniert:** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run` und die interaktive `shell` (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) sind echter, funktionierender Go-Code, geprüft durch 105 bestandene Tests (`go test ./...`) - echte `net/http`/`httptest`-Round-Trips gegen einen simulierten Server plus echte Temp-Datei-Konfigurationsfixtures, keine Stubs. Diese Tests simulieren eine HYDRA-UMC-SERVER-Instanz; `status`, `robots` und `doctor` (einschließlich der Anmeldung) wurden zusätzlich gegen einen echten HYDRA-UMC-SERVER-Prozess ausgeführt. `config apply` gibt ohne `--dry-run` ehrlich den Exit-Code `ExitNotImplemented` zurück, statt einen Erfolg vorzutäuschen, weil der Fleet-Write-Endpunkt, den es aufrufen würde, auf HYDRA-UMC-SERVER noch nicht existiert. `deploy`, `flash-all` und `audit` sind reine Zukunftsmusik - unten als "planned" markiert und in `src/` vollständig abwesend, nicht einmal als Stub-Funktion. Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
 
 ---
 
@@ -24,9 +24,9 @@
 
 | | |
 |---|---|
-| Version | `0.1.4` |
+| Version | `0.1.5` |
 | Reifegrad | Etabliert |
-| Tests | 83 (`go test ./...`) |
+| Tests | 105 (`go test ./...`) |
 | Technik | Go / standard-library flag handling |
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
