@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "ecosystem": "HYDRA-UMC",
   "name": "HYDRA-UMC-TOOL-CLI",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "role": "cli",
   "stack": "go",
   "technologies": [
@@ -10,7 +10,7 @@
     "standard-library flag handling"
   ],
   "deployment_target": "user-pc",
-  "maturity": "established",
+  "maturity": "functional",
   "family": "Complementary Tools",
   "parent": null,
   "build": "Go module root is src/. Build with go build ./cmd/hydra-cli from inside src/.",

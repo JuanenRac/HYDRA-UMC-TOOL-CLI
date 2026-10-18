@@ -20,6 +20,11 @@ binary.
 
 ---
 
+## [0.1.6]
+
+- Maturity is functional: nothing here has been verified on real hardware yet.
+- The READMEs say, in the eight languages, what is planned and what has only been tested against fakes, emulators or fixtures, and carry a short safety and security status note.
+
 ## [0.1.5] - Server text is printed safely, and config files must name an http(s) server
 
 - **Output safety:** names, versions, products, hostnames and error bodies that come from the server are printed with control characters (newlines, escape sequences) replaced by `?`, so a hostile or broken server can no longer forge extra table rows, status lines or a `DOCTOR=PASS` line, or drive the operator's terminal with escape codes. `--json` output was already escaped.
