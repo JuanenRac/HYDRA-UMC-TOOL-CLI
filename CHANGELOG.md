@@ -1,24 +1,6 @@
 # Changelog
 
-All notable work on **HYDRA-UMC-TOOL-CLI** is summarized here, newest first.
-This file intentionally omits calendar dates from individual entries.
-
-## Versioning scheme
-
-`src/cmd/hydra-cli/version.go`'s `Version` constant bumps automatically on
-every real build (`build.sh` / `build.bat` - see `bump_version.py`, run as
-the first step of both scripts). It follows the same base-10 "odometer"
-rule used across the ecosystem rather than semantic-versioning judgment
-calls:
-
-- `patch` +1 on every build
-- when `patch` would exceed 9, it resets to 0 and `minor` +1 instead (e.g. `0.0.9` -> `0.1.0`, never `0.0.10`)
-- the same carry cascades into `major` if `minor` would exceed 9
-
-`hydra-cli version` always prints the exact value currently baked into the
-binary.
-
----
+All notable changes to this project are documented here.
 
 ## [Unreleased]
 
