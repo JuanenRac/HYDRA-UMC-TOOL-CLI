@@ -26,7 +26,7 @@
 
 | | |
 |---|---|
-| Version | `0.1.6` |
+| Version | `0.1.7` |
 | Maturité | Fonctionnel |
 | Tests | 83 (`go test ./...`) |
 | Technologie | Go / standard-library flag handling |

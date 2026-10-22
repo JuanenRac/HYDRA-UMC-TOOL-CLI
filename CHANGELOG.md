@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.1.7] - An aligned robots table, JSON output and exit codes in scripts
 
 - The banner follows the animated style of the ecosystem banners, with the name, the kind and the technologies of the project.
 - **`robots` prints an aligned table** whatever the length of the names, and `robots --json` writes the roster as a JSON array (`[]` when the server reports no robots), like `doctor --json`.
