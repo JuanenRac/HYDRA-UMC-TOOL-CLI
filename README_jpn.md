@@ -51,6 +51,7 @@
 * ✅ **`hydra-cli status [--server URL] [--config PATH]`** — 実行中の HYDRA-UMC-SERVER の `GET /api/hydra-info` を照会し、報告されたアイデンティティを表示します。*（実装済み）*
 * ✅ **`hydra-cli robots [--server URL] [--config PATH] [--json]`** — 実行中の HYDRA-UMC-SERVER の `GET /api/settings` を照会し、実際のコントローラー/ロボット一覧（名前、オンライン状態、モデル、役割）を表示します。*（実装済み）*
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** — 読み取り専用のサーバー契約診断：`/api/hydra-info` と `/api/settings` を検証し、公開されたコントローラー/ロボット数を一覧と照合します。コマンド送信やハードウェアの検査は行いません。`--json` を付けるとテキスト行の代わりに、チェックごとの `checkId`/`severity`/`status` を含む構造化レポートを出力します(スクリプト向け、詳細は [docs/DOCTOR.md](docs/DOCTOR.md))。*（実装済み）*
+* ✅ **`hydra-cli completion <bash|zsh>`** — シェル用のタブ補完スクリプトを出力します。 *（実装済み）*
 * ✅ **実際に安定した終了コード契約** — `0` 正常、`1` 一般エラー、`2` 使用方法エラー、`3` 設定エラー、`4` ネットワークエラー、`5` サーバーエラー、`6` 未実装、`7` 認証が必要、または拒否。各コマンドは単なる `exit 1` の代わりにこの契約を通じて自身の失敗を分類するため、この CLI をラップするスクリプトは*失敗の理由*に応じて分岐できます。*（実装済み）*
 * ✅ **`hydra-cli config validate --config PATH`** — ローカルの設定ファイル（サーバー URL、リクエストタイムアウト）を読み込み、スキーマ検証します。*（実装済み）*
 * ✅ **`hydra-cli config apply --config PATH [--dry-run]`** — `--dry-run` は実際の検証パスをエンドツーエンドで証明し、送信される内容を正確に表示します。指定しない場合は、実際にはまだライブのフリート書き込みエンドポイントが存在しないため、正直に「未実装」を返します。*（実装済み、dry-run のみ）*
@@ -71,6 +72,8 @@ flowchart LR
     CLI -- HTTP --> SERVER["HYDRA-UMC-SERVER (/api/hydra-info)"]
     SERVER -- Fleet State --> CLI
     CLI -- Result --> USER
+    CLI -- "config validate / apply --dry-run" --> CONFIG["Config file"]
+    CLI -- "completion" --> SHELL["bash / zsh"]
 ```
 
 ---

@@ -25,6 +25,7 @@ binary.
 - **`robots` prints an aligned table** whatever the length of the names, and `robots --json` writes the roster as a JSON array (`[]` when the server reports no robots), like `doctor --json`.
 - **The interactive shell exits with the code of its last command,** so `echo ... | hydra-cli shell` can be used in scripts, and a failure to read the input is reported instead of ending as a clean exit.
 - **`build.bat` writes `SHA256SUMS` with relative paths** (`./linux-amd64/hydra-cli`), the same as `build.sh`, so the file verifies from the release folder.
+- **The READMEs in the eight languages list `completion`** among the implemented commands and the architecture diagram shows the config file and the shell completion next to the server.
 - Added `tools/hydra_project_tool.py`: the same `validate`, `test`, `version`, `status` and `bump` commands in every repository. The checks run with `HYDRA_UMC_CI=1` and fail if the version changes; only `bump` changes it.
 
 ## [0.1.6]

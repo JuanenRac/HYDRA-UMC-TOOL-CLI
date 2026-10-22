@@ -44,6 +44,7 @@ The long-term goal is massive deployments of missions, parallel firmware updates
 * ✅ **`hydra-cli status [--server URL] [--config PATH]`** — queries a live HYDRA-UMC-SERVER's `GET /api/hydra-info` and prints its reported identity. *(implemented)*
 * ✅ **`hydra-cli robots [--server URL] [--config PATH] [--json]`** — queries a live HYDRA-UMC-SERVER's `GET /api/settings` and prints its real controller/robot roster (name, online status, model, role). *(implemented)*
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** — read-only Server contract diagnosis: validates `/api/hydra-info` and `/api/settings`, then verifies published controller/robot totals against the settings roster. It never sends commands or probes hardware. `--json` prints a structured report with a `checkId`/`severity`/`status` per check instead of the plain-text line, for scripts (see [docs/DOCTOR.md](docs/DOCTOR.md)). *(implemented)*
+* ✅ **`hydra-cli completion <bash|zsh>`** — prints a tab-completion script for the shell. *(implemented)*
 * ✅ **A real, stable exit-code contract** — `0` ok, `1` general error, `2` usage error, `3` config error, `4` network error, `5` server error, `6` not implemented, `7` authentication required or refused. Every command classifies its own failures through this contract instead of a bare `exit 1`, so scripts wrapping this CLI can branch on *why* it failed. *(implemented)*
 * ✅ **`hydra-cli config validate --config PATH`** — loads and schema-validates a local config file (server URL, request timeout). *(implemented)*
 * ✅ **`hydra-cli config apply --config PATH [--dry-run]`** — `--dry-run` proves the real validation path end to end and prints exactly what it would send; without it, honestly returns "not implemented" since no live fleet-write endpoint exists yet. *(implemented, dry-run only)*
@@ -64,6 +65,8 @@ flowchart LR
     CLI -- HTTP --> SERVER["HYDRA-UMC-SERVER (/api/hydra-info)"]
     SERVER -- Fleet State --> CLI
     CLI -- Result --> USER
+    CLI -- "config validate / apply --dry-run" --> CONFIG["Config file"]
+    CLI -- "completion" --> SHELL["bash / zsh"]
 ```
 
 ---

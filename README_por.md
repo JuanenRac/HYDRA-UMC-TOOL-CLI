@@ -44,6 +44,7 @@ O objetivo a longo prazo são implementações massivas de missões, atualizaç�
 * ✅ **`hydra-cli status [--server URL] [--config PATH]`** — consulta o `GET /api/hydra-info` de um HYDRA-UMC-SERVER em direto e imprime a identidade que ele reporta. *(implementado)*
 * ✅ **`hydra-cli robots [--server URL] [--config PATH] [--json]`** — consulta o `GET /api/settings` de um HYDRA-UMC-SERVER em direto e imprime a sua lista real de controladores/robôs (nome, estado ligado, modelo, papel). *(implementado)*
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** — diagnóstico só de leitura do contrato do Servidor: valida `/api/hydra-info` e `/api/settings` e depois verifica os totais publicados de controladores/robôs contra a lista de definições. Nunca envia comandos nem sonda hardware. O `--json` imprime um relatório estruturado com um `checkId`/`severity`/`status` por verificação em vez da linha de texto simples, para scripts (veja [docs/DOCTOR.md](docs/DOCTOR.md)). *(implementado)*
+* ✅ **`hydra-cli completion <bash|zsh>`** — imprime um script de autocompletação para a shell. *(implementado)*
 * ✅ **Um contrato real e estável de códigos de saída** — `0` ok, `1` erro geral, `2` erro de utilização, `3` erro de configuração, `4` erro de rede, `5` erro do servidor, `6` não implementado, `7` autenticação exigida ou recusada. Cada comando classifica as suas próprias falhas através deste contrato em vez de um simples `exit 1`, para que os scripts que envolvem esta CLI possam ramificar consoante o *porquê* da falha. *(implementado)*
 * ✅ **`hydra-cli config validate --config PATH`** — carrega e valida segundo o esquema um ficheiro de configuração local (URL do servidor, tempo limite dos pedidos). *(implementado)*
 * ✅ **`hydra-cli config apply --config PATH [--dry-run]`** — o `--dry-run` prova o caminho de validação real de ponta a ponta e imprime exatamente o que enviaria; sem ele, devolve honestamente "não implementado", já que ainda não existe um endpoint real de escrita na frota. *(implementado, só dry-run)*
@@ -64,6 +65,8 @@ flowchart LR
     CLI -- HTTP --> SERVER["HYDRA-UMC-SERVER (/api/hydra-info)"]
     SERVER -- Fleet State --> CLI
     CLI -- Result --> USER
+    CLI -- "config validate / apply --dry-run" --> CONFIG["Config file"]
+    CLI -- "completion" --> SHELL["bash / zsh"]
 ```
 
 ---
