@@ -109,9 +109,9 @@ HYDRA-UMC-TOOL-CLI/
 ├── docs/                      # 文档：CLI_REFERENCE.md 和 DOCTOR.md
 ├── build/                     # 编译后的二进制文件（已被 gitignore）
 ├── images/                    # 媒体与图表
-├── bump_version.py            # 原生版本的里程表式递增（由构建运行）
+├── bump_version.py            # 里程表式版本递增（仅由显式 `bump` 命令运行）
 ├── bump_manifest_version.py   # 将 hydra-umc.project.json 的版本与原生版本同步(--sync)
-├── build.sh / build.bat       # 真实构建：版本递增 + 真实测试套件 + go build + 冒烟测试 + 跨平台发布打包
+├── build.sh / build.bat       # 验证并构建（构建不会更改版本）
 ├── run.sh / run.bat           # 真实运行：执行编译后的二进制文件
 └── README.md
 ```
@@ -145,7 +145,7 @@ run.bat config apply --config .\hydra-cli.json --dry-run
 
 `robots` 和 `doctor` 读取 `/api/settings`，HYDRA-UMC-SERVER 只会把它交给已登录的账户（管理员看到完整设置，其他角色看到隐去机密的副本）。请通过环境变量而不是命令行选项把凭据交给 CLI，这样它不会出现在进程列表和 shell 历史中：`HYDRA_CLI_TOKEN`（服务器已签发的 Bearer 令牌），或 `HYDRA_CLI_USER` 和 `HYDRA_CLI_PASSWORD`（CLI 在该次运行中通过 `POST /api/login` 登录；两者都设置时以令牌为准）。两者都没有时，命令以退出码 `7` 结束，并说明要设置哪些变量。`status` 和 `doctor` 的第一个请求使用公开的 `/api/hydra-info`，从不发送凭据。响应最多读取 4 MiB。
 
-`build` 会递增版本号（`src/cmd/hydra-cli/version.go`），运行真实测试
+`build` 不会更改版本号，运行真实测试
 套件（`go vet` + `go test`），将 `src/` 中的 Go 模块编译为
 `build/hydra-cli(.exe)`，并运行一次 `version` 命令以进行验证——随后为
 `linux/amd64`、`linux/arm64`（CM5 自身的架构）、`windows/amd64`、

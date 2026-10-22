@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- Building no longer changes the version; raising it is the explicit `bump` command (`python tools/hydra_project_tool.py bump`). The build scripts only report the version they built, and CI fails if a build script runs a bump.
+
 ## [0.1.7] - An aligned robots table, JSON output and exit codes in scripts
 
 - The banner follows the animated style of the ecosystem banners, with the name, the kind and the technologies of the project.

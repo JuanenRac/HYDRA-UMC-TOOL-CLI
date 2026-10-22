@@ -105,9 +105,9 @@ HYDRA-UMC-TOOL-CLI/
 ├── docs/                      # Documentação: CLI_REFERENCE.md e DOCTOR.md
 ├── build/                     # Binários compilados (ignorados pelo git)
 ├── images/                    # Multimédia e diagramas
-├── bump_version.py            # Subida de versão nativa ao estilo conta-quilómetros (executada pela compilação)
+├── bump_version.py            # Subida de versão ao estilo conta-quilómetros (executada só pelo comando `bump` explícito)
 ├── bump_manifest_version.py   # Sincroniza a versão do hydra-umc.project.json com a nativa (--sync)
-├── build.sh / build.bat       # Compilação real: subida de versão + suite de testes real + go build + teste rápido + empacotamento de versões multiplataforma
+├── build.sh / build.bat       # Valida e compila (compilar nunca altera a versão)
 ├── run.sh / run.bat           # Execução real: executa o binário compilado
 └── README.md
 ```
@@ -141,7 +141,7 @@ run.bat config apply --config .\hydra-cli.json --dry-run
 
 `robots` e `doctor` leem `/api/settings`, que o HYDRA-UMC-SERVER só entrega a uma conta com sessão iniciada (um administrador vê as definições completas, os restantes papéis uma cópia com os segredos ocultos). Dê uma credencial à CLI através do ambiente - nunca por uma opção, para que não apareça na lista de processos nem no histórico do shell: `HYDRA_CLI_TOKEN` (um token Bearer que o servidor já emitiu), ou `HYDRA_CLI_USER` e `HYDRA_CLI_PASSWORD` (a CLI inicia sessão com `POST /api/login` nessa execução; se houver as duas coisas, prevalece o token). Sem nenhuma, o comando termina com o código `7` e indica que variáveis definir. `status` e o primeiro pedido do `doctor` usam o `/api/hydra-info` público e nunca enviam a credencial. Uma resposta é lida até 4 MiB.
 
-O `build` sobe a versão (`src/cmd/hydra-cli/version.go`), executa a suite de testes real (`go vet` + `go test`), compila o módulo Go em `src/` para `build/hydra-cli(.exe)` e executa o `version` uma vez para verificar - depois compila de forma cruzada uma versão real para `linux/amd64`, `linux/arm64` (a arquitetura do próprio CM5), `windows/amd64`, `darwin/amd64` e `darwin/arm64` em `build/release/<os>-<arch>/`, com um ficheiro real de somas de verificação `SHA256SUMS` ao lado. O `run` volta a executar o binário compilado, reencaminhando todos os argumentos — experimente `run doctor` contra uma instância em execução do `HYDRA-UMC-SERVER`. O Doctor é uma verificação segura e só de leitura do contrato dos endpoints; veja [docs/DOCTOR.md](docs/DOCTOR.md).
+O `build` nunca altera a versão (só `python tools/hydra_project_tool.py bump` a sobe), executa a suite de testes real (`go vet` + `go test`), compila o módulo Go em `src/` para `build/hydra-cli(.exe)` e executa o `version` uma vez para verificar - depois compila de forma cruzada uma versão real para `linux/amd64`, `linux/arm64` (a arquitetura do próprio CM5), `windows/amd64`, `darwin/amd64` e `darwin/arm64` em `build/release/<os>-<arch>/`, com um ficheiro real de somas de verificação `SHA256SUMS` ao lado. O `run` volta a executar o binário compilado, reencaminhando todos os argumentos — experimente `run doctor` contra uma instância em execução do `HYDRA-UMC-SERVER`. O Doctor é uma verificação segura e só de leitura do contrato dos endpoints; veja [docs/DOCTOR.md](docs/DOCTOR.md).
 
 ---
 

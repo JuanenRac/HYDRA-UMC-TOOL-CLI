@@ -113,9 +113,9 @@ HYDRA-UMC-TOOL-CLI/
 ├── docs/                      # ドキュメント：CLI_REFERENCE.md と DOCTOR.md
 ├── build/                     # コンパイル済みバイナリ（gitignore 対象）
 ├── images/                    # メディアと図表
-├── bump_version.py            # ネイティブバージョンのオドメーター式インクリメント（ビルドが実行）
+├── bump_version.py            # オドメーター式バージョンインクリメント（明示的な `bump` コマンドのみが実行）
 ├── bump_manifest_version.py   # hydra-umc.project.json のバージョンをネイティブ版と同期(--sync)
-├── build.sh / build.bat       # 実際のビルド：バージョンインクリメント + 実際のテストスイート + go build + スモークテスト + クロスプラットフォームパッケージング
+├── build.sh / build.bat       # 検証してビルド（ビルドはバージョンを変更しない）
 ├── run.sh / run.bat           # 実際の実行：コンパイル済みバイナリを実行
 └── README.md
 ```
@@ -149,7 +149,7 @@ run.bat config apply --config .\hydra-cli.json --dry-run
 
 `robots` と `doctor` は `/api/settings` を読み取りますが、HYDRA-UMC-SERVER はこれをログイン済みのアカウントにしか渡しません（管理者は完全な設定を、他のロールは秘密を伏せたコピーを見ます）。CLI への認証情報は環境変数で渡します。オプションでは渡しません（プロセス一覧やシェル履歴に残らないようにするため）。`HYDRA_CLI_TOKEN`（サーバーがすでに発行した Bearer トークン）、または `HYDRA_CLI_USER` と `HYDRA_CLI_PASSWORD`（CLI がその実行のために `POST /api/login` でログインします。両方ある場合はトークンが優先されます）。どちらもない場合、コマンドはコード `7` で終了し、設定すべき変数を示します。`status` と `doctor` の最初のリクエストは公開の `/api/hydra-info` を使い、認証情報を送ることはありません。レスポンスは 4 MiB まで読み取ります。
 
-`build` はバージョンを増加させ（`src/cmd/hydra-cli/version.go`）、
+`build` はバージョンを変更せず（`src/cmd/hydra-cli/version.go`）、
 実際のテストスイートを実行し（`go vet` + `go test`）、`src/` 内の Go
 モジュールを `build/hydra-cli(.exe)` としてコンパイルし、検証のために
 一度 `version` を実行します - その後、`linux/amd64`、`linux/arm64`
