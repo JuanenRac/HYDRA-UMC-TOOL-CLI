@@ -7,6 +7,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"strings"
 	"testing"
@@ -182,5 +183,33 @@ func TestCmdShell_RefusesToNestAnotherShell(t *testing.T) {
 	}
 	if !strings.Contains(out.String(), "already in an interactive shell") {
 		t.Fatalf("expected a refusal notice, got output: %q", out.String())
+	}
+}
+
+func TestCmdShell_ExitsWithTheCodeOfTheLastCommand(t *testing.T) {
+	codes := map[string]ExitCode{"good": ExitOK, "bad": ExitUsageError}
+	dispatch := func(args []string) ExitCode { return codes[args[0]] }
+
+	var out bytes.Buffer
+	err := cmdShell(&out, strings.NewReader("good\nbad\nquit\n"), nil, dispatch)
+	if got := exitCodeFor(err); err == nil || got != ExitUsageError {
+		t.Fatalf("exit code after a failing last command = %v (err %v), want %v", got, err, ExitUsageError)
+	}
+
+	out.Reset()
+	if err := cmdShell(&out, strings.NewReader("bad\ngood\n"), nil, dispatch); err != nil {
+		t.Fatalf("a later success must clear an earlier failure, got %v", err)
+	}
+}
+
+type failingReader struct{}
+
+func (failingReader) Read([]byte) (int, error) { return 0, errors.New("disk on fire") }
+
+func TestCmdShell_ReportsAReadErrorInsteadOfEndingCleanly(t *testing.T) {
+	var out bytes.Buffer
+	err := cmdShell(&out, failingReader{}, nil, func([]string) ExitCode { return ExitOK })
+	if err == nil || exitCodeFor(err) != ExitGeneralError {
+		t.Fatalf("want a general error for an unreadable input, got %v", err)
 	}
 }

@@ -46,7 +46,7 @@ HYDRA-UMC 部署的命令行工具。
 ### 关键特性：
 * ✅ **`hydra-cli version`** —— 打印 CLI 自身的名称和版本。*（已实现）*
 * ✅ **`hydra-cli status [--server URL] [--config PATH]`** —— 查询实时 HYDRA-UMC-SERVER 的 `GET /api/hydra-info`，并打印其报告的身份信息。*（已实现）*
-* ✅ **`hydra-cli robots [--server URL] [--config PATH]`** —— 查询实时 HYDRA-UMC-SERVER 的 `GET /api/settings`，并打印其真实的控制器/机器人名单（名称、在线状态、型号、角色）。*（已实现）*
+* ✅ **`hydra-cli robots [--server URL] [--config PATH] [--json]`** —— 查询实时 HYDRA-UMC-SERVER 的 `GET /api/settings`，并打印其真实的控制器/机器人名单（名称、在线状态、型号、角色）。*（已实现）*
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** —— 只读服务器契约诊断：验证 `/api/hydra-info` 和 `/api/settings`，并将已发布的控制器/机器人总数与名单进行核对。不发送命令，也不探测硬件。`--json` 会输出结构化报告(每项检查带 `checkId`/`severity`/`status`)而不是纯文本行,供脚本使用(见 [docs/DOCTOR.md](docs/DOCTOR.md))。*（已实现）*
 * ✅ **真实、稳定的退出码契约** —— `0` 正常，`1` 一般错误，`2` 用法错误，`3` 配置错误，`4` 网络错误，`5` 服务器错误，`6` 未实现，`7` 需要认证或认证被拒绝。每个命令都通过该契约对自身的失败进行分类，而不是简单地 `exit 1`，因此封装本 CLI 的脚本可以根据*失败原因*进行分支处理。*（已实现）*
 * ✅ **`hydra-cli config validate --config PATH`** —— 加载并按模式校验本地配置文件（服务器 URL、请求超时）。*（已实现）*

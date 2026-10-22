@@ -65,18 +65,28 @@ func cmdShell(out io.Writer, in io.Reader, args []string, dispatch runFunc) erro
 	fmt.Fprintln(out, "Type a command (version, status, robots, doctor, config ...), or exit/quit to leave.")
 
 	scanner := bufio.NewScanner(in)
+	last := ExitOK // the exit code of the last dispatched command: it becomes the shell's own, like any shell
+	finish := func() error {
+		if last == ExitOK {
+			return nil
+		}
+		return newCliError(last, fmt.Errorf("the last command exited with code %d", int(last)))
+	}
 	for {
 		fmt.Fprint(out, "hydra-cli> ")
 		if !scanner.Scan() {
 			fmt.Fprintln(out)
-			return nil // real EOF (Ctrl-D / piped input exhausted) - a clean, non-error exit.
+			if err := scanner.Err(); err != nil {
+				return newCliError(ExitGeneralError, fmt.Errorf("could not read the input: %w", err))
+			}
+			return finish() // real EOF (Ctrl-D / piped input exhausted).
 		}
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
 			continue
 		}
 		if line == "exit" || line == "quit" {
-			return nil
+			return finish()
 		}
 
 		tokens, err := splitShellWords(line)
@@ -95,7 +105,7 @@ func cmdShell(out io.Writer, in io.Reader, args []string, dispatch runFunc) erro
 			fmt.Fprintln(out, "hydra-cli: already in an interactive shell")
 			continue
 		}
-		dispatch(tokens)
+		last = dispatch(tokens)
 	}
 }
 

@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"text/tabwriter"
 )
 
 // robotEntry mirrors the subset of one robot object inside
@@ -68,7 +69,16 @@ func cmdRobots(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	if err := rejectExtraArgs("robots", rest); err != nil {
+	jsonOutput := false
+	filtered := make([]string, 0, len(rest))
+	for _, arg := range rest {
+		if arg == "--json" {
+			jsonOutput = true
+			continue
+		}
+		filtered = append(filtered, arg)
+	}
+	if err := rejectExtraArgs("robots", filtered); err != nil {
 		return err
 	}
 
@@ -87,8 +97,37 @@ func cmdRobots(w io.Writer, args []string) error {
 		return newCliError(ExitServerError, fmt.Errorf("unexpected response from %s: %w", server, err))
 	}
 
+	if jsonOutput {
+		return printRobotRosterJSON(w, settings)
+	}
 	printRobotRoster(w, server, settings)
 	return nil
+}
+
+// robotRow is one line of the machine-readable roster (`robots --json`).
+type robotRow struct {
+	Controller string `json:"controller"`
+	Robot      string `json:"robot"`
+	Online     bool   `json:"online"`
+	Model      string `json:"model"`
+	Role       string `json:"role"`
+}
+
+// printRobotRosterJSON writes the roster as a JSON array - always an array,
+// empty when the server reports no robots, so a script never has to guess.
+func printRobotRosterJSON(w io.Writer, settings settingsResponse) error {
+	rows := make([]robotRow, 0)
+	for _, c := range settings.Controllers {
+		for _, r := range c.Robots {
+			rows = append(rows, robotRow{Controller: c.Name, Robot: r.Name, Online: r.Online, Model: r.Model, Role: r.Role})
+		}
+	}
+	encoded, err := json.MarshalIndent(rows, "", "  ")
+	if err != nil {
+		return newCliError(ExitGeneralError, fmt.Errorf("could not encode the roster: %w", err))
+	}
+	_, err = fmt.Fprintln(w, string(encoded))
+	return err
 }
 
 // printRobotRoster does the actual formatting, split out from cmdRobots
@@ -104,14 +143,16 @@ func printRobotRoster(w io.Writer, server string, settings settingsResponse) {
 		return
 	}
 
-	fmt.Fprintf(w, "%-14s %-20s %-8s %-24s %s\n", "CONTROLLER", "ROBOT", "ONLINE", "MODEL", "ROLE")
+	table := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(table, "CONTROLLER\tROBOT\tONLINE\tMODEL\tROLE")
 	for _, c := range settings.Controllers {
 		for _, r := range c.Robots {
 			online := "no"
 			if r.Online {
 				online = "yes"
 			}
-			fmt.Fprintf(w, "%-14s %-20s %-8s %-24s %s\n", printable(c.Name), printable(r.Name), online, printable(r.Model), printable(r.Role))
+			fmt.Fprintf(table, "%s\t%s\t%s\t%s\t%s\n", printable(c.Name), printable(r.Name), online, printable(r.Model), printable(r.Role))
 		}
 	}
+	table.Flush()
 }

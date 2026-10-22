@@ -112,7 +112,7 @@ if errorlevel 1 goto :error
 where sha256sum >nul 2>nul
 if not errorlevel 1 (
     pushd "%RELEASE_DIR%"
-    (for /r %%F in (hydra-cli hydra-cli.exe) do @if exist "%%F" sha256sum "%%F") > SHA256SUMS
+    (for %%D in (linux-amd64 linux-arm64 windows-amd64 darwin-amd64 darwin-arm64) do @for %%N in (hydra-cli hydra-cli.exe) do @if exist "./%%D/%%N" sha256sum "./%%D/%%N") > SHA256SUMS
     popd
 ) else (
     certutil -hashfile build\release\linux-amd64\hydra-cli SHA256 >nul 2>nul

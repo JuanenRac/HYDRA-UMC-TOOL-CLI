@@ -42,7 +42,7 @@ The long-term goal is massive deployments of missions, parallel firmware updates
 ### Key Features:
 * ✅ **`hydra-cli version`** — prints the CLI's own name and version. *(implemented)*
 * ✅ **`hydra-cli status [--server URL] [--config PATH]`** — queries a live HYDRA-UMC-SERVER's `GET /api/hydra-info` and prints its reported identity. *(implemented)*
-* ✅ **`hydra-cli robots [--server URL] [--config PATH]`** — queries a live HYDRA-UMC-SERVER's `GET /api/settings` and prints its real controller/robot roster (name, online status, model, role). *(implemented)*
+* ✅ **`hydra-cli robots [--server URL] [--config PATH] [--json]`** — queries a live HYDRA-UMC-SERVER's `GET /api/settings` and prints its real controller/robot roster (name, online status, model, role). *(implemented)*
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** — read-only Server contract diagnosis: validates `/api/hydra-info` and `/api/settings`, then verifies published controller/robot totals against the settings roster. It never sends commands or probes hardware. `--json` prints a structured report with a `checkId`/`severity`/`status` per check instead of the plain-text line, for scripts (see [docs/DOCTOR.md](docs/DOCTOR.md)). *(implemented)*
 * ✅ **A real, stable exit-code contract** — `0` ok, `1` general error, `2` usage error, `3` config error, `4` network error, `5` server error, `6` not implemented, `7` authentication required or refused. Every command classifies its own failures through this contract instead of a bare `exit 1`, so scripts wrapping this CLI can branch on *why* it failed. *(implemented)*
 * ✅ **`hydra-cli config validate --config PATH`** — loads and schema-validates a local config file (server URL, request timeout). *(implemented)*

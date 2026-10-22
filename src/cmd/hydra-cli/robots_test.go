@@ -7,6 +7,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -124,5 +125,81 @@ func TestPrintRobotRoster_PrintsOnlineStatusCorrectly(t *testing.T) {
 	}
 	if !strings.Contains(lines[2], "no") {
 		t.Fatalf("expected Offline-Robot's row to say no, got: %s", lines[2])
+	}
+}
+
+const rosterBody = `{"controllers": [
+	{"name": "Line 1", "robots": [
+		{"name": "A", "online": true, "model": "Parol6", "role": "Pnp"},
+		{"name": "Long robot name", "online": false, "model": "X", "role": "Assembly"}]}]}`
+
+func rosterServer(t *testing.T, body string) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(body))
+	}))
+}
+
+func TestCmdRobots_JSONIsAnArrayOfRows(t *testing.T) {
+	server := rosterServer(t, rosterBody)
+	defer server.Close()
+
+	var out bytes.Buffer
+	if err := cmdRobots(&out, []string{"--server", server.URL, "--json"}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	var rows []robotRow
+	if err := json.Unmarshal(out.Bytes(), &rows); err != nil {
+		t.Fatalf("output is not JSON: %v\n%s", err, out.String())
+	}
+	if len(rows) != 2 || rows[0].Robot != "A" || !rows[0].Online || rows[1].Controller != "Line 1" || rows[1].Online {
+		t.Fatalf("unexpected rows: %+v", rows)
+	}
+}
+
+func TestCmdRobots_JSONWithNoRobotsIsAnEmptyArray(t *testing.T) {
+	server := rosterServer(t, `{"controllers": []}`)
+	defer server.Close()
+
+	var out bytes.Buffer
+	if err := cmdRobots(&out, []string{"--json", "--server", server.URL}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.TrimSpace(out.String()) != "[]" {
+		t.Fatalf("want [], got %q", out.String())
+	}
+}
+
+func TestCmdRobots_TableColumnsLineUpWhateverTheNameLength(t *testing.T) {
+	server := rosterServer(t, rosterBody)
+	defer server.Close()
+
+	var out bytes.Buffer
+	if err := cmdRobots(&out, []string{"--server", server.URL}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	column := -1
+	for _, line := range strings.Split(strings.TrimRight(out.String(), "\n"), "\n") {
+		at := strings.Index(line, "no ")
+		if at < 0 {
+			at = strings.Index(line, "yes")
+		}
+		if at < 0 {
+			at = strings.Index(line, "ONLINE")
+		}
+		if column == -1 {
+			column = at
+		}
+		if at != column {
+			t.Fatalf("the ONLINE column moves (%d vs %d):\n%s", at, column, out.String())
+		}
+	}
+}
+
+func TestCmdRobots_UnknownArgumentStillRefused(t *testing.T) {
+	var out bytes.Buffer
+	if err := cmdRobots(&out, []string{"--server", "http://127.0.0.1:1", "--bogus"}); err == nil || exitCodeFor(err) != ExitUsageError {
+		t.Fatalf("want a usage error, got %v", err)
 	}
 }

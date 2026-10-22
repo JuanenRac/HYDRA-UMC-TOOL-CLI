@@ -111,7 +111,7 @@ COMMANDS:
     status [--server URL] [--config PATH]
                           Query a HYDRA-UMC-SERVER instance's /api/hydra-info
                           endpoint and print its reported identity/version.
-    robots [--server URL] [--config PATH]
+    robots [--server URL] [--config PATH] [--json]
                           Query a HYDRA-UMC-SERVER instance's /api/settings
                           endpoint and print its real controller/robot roster.
                           Both default to %s; override with --server, a
