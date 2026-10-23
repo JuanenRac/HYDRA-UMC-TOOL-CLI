@@ -28,7 +28,7 @@
 |---|---|
 | Version | `0.1.7` |
 | Reifegrad | Funktionsfähig |
-| Tests | 83 (`go test ./...`) |
+| Tests | 132 (`go test ./...`) |
 | Technik | Go / standard-library flag handling |
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
@@ -46,6 +46,7 @@ Das langfristige Ziel sind massive Missionsausrollungen, parallele Firmware-Upda
 * ✅ **`hydra-cli claims`, `claim <robot>`, `release <robot>`** — listet auf, wer welchen Roboter reserviert (`GET /api/claims`), und reserviert oder gibt einen frei. Die Reservierung gehört zu deinem Konto und zur Controller-ID dieses Programms (`--controller-id`, `HYDRA_CLI_CONTROLLER_ID`, Standard `hydra-cli-<host>`), die bei jeder Anfrage mitgesendet wird. Ablehnungen (anderes Konto, anderer Controller, Controller-ID erforderlich, Jog nicht scharfgeschaltet) werden unterschieden und enden mit Code `8`. *(implementiert)*
 * ✅ **`hydra-cli limits [--robot ID]`, `jog-arm <robot> <on|off>`, `jog <robot> <Achse> <Betrag> [--absolute]`** — liest die Sicherheitsgrenzen des Servers, schaltet den Jog scharf oder aus (nur nötig, wenn der Server es verlangt) und bewegt eine Achse. Ein Schritt über der Grenze des Robotermodells wird abgelehnt, bevor er gesendet wird, und es wird nichts gesendet, wenn die Grenze nicht gelesen werden kann; die Warnungen des Servers werden ausgegeben. *(implementiert)*
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** — schreibgeschützte Server-Vertragsdiagnose: prüft `/api/hydra-info` und `/api/settings` und vergleicht veröffentlichte Controller-/Roboterzahlen mit der Liste. Sendet keine Befehle und prüft keine Hardware. `--json` gibt statt der Textzeile einen strukturierten Bericht mit `checkId`/`severity`/`status` pro Prüfung aus, für Skripte (siehe [docs/DOCTOR.md](docs/DOCTOR.md)). *(implementiert)*
+* Jeder Text, der von einem Server kommt und ausgegeben wird (Fehlermeldungen, Namen, Versionen), läuft jetzt auch durch die gemeinsame Geheimnis-Schwärzung; ein Token, ein `password=`-Wert oder ein Bearer-Header in einer Antwort erscheint so nie im Terminal (dieselben Vektoren wie in den anderen Projekten).
 * ✅ **`hydra-cli completion <bash|zsh>`** — gibt ein Tab-Vervollständigungsskript für die Shell aus. *(implementiert)*
 * ✅ **Ein echter, stabiler Exit-Code-Vertrag** — `0` ok, `1` allgemeiner Fehler, `2` Nutzungsfehler, `3` Konfigurationsfehler, `4` Netzwerkfehler, `5` Serverfehler, `6` nicht implementiert, `7` Authentifizierung erforderlich oder abgelehnt. Jeder Befehl klassifiziert seine eigenen Fehlschläge über diesen Vertrag statt über ein bloßes `exit 1`, sodass Skripte, die dieses CLI umschließen, anhand des *Warum* eines Fehlschlags verzweigen können. *(implementiert)*
 * ✅ **`hydra-cli config validate --config PATH`** — lädt und validiert eine lokale Konfigurationsdatei anhand eines Schemas (Server-URL, Anfrage-Timeout). *(implementiert)*

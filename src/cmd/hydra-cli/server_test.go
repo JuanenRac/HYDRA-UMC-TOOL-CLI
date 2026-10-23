@@ -214,3 +214,15 @@ func TestResolveTarget_InvalidConfigFileIsARealConfigError(t *testing.T) {
 	_, _, _, err := resolveTarget([]string{"--config", path})
 	assertCliErrorCode(t, err, ExitConfigError)
 }
+
+func TestPrintableHidesSecretsAndControlCharacters(t *testing.T) {
+	got := printable("bad login for ana: password=hunter2 token: abc123456789\x1b[31m")
+	for _, leaked := range []string{"hunter2", "abc123456789", "\x1b"} {
+		if strings.Contains(got, leaked) {
+			t.Fatalf("printable kept %q: %q", leaked, got)
+		}
+	}
+	if !strings.Contains(got, "bad login for ana") || !strings.Contains(got, "[REDACTED]") {
+		t.Fatalf("the harmless text was lost or nothing was hidden: %q", got)
+	}
+}

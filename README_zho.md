@@ -28,7 +28,7 @@
 |---|---|
 | 版本 | `0.1.7` |
 | 成熟度 | 可用 |
-| 测试 | 83 (`go test ./...`) |
+| 测试 | 132 (`go test ./...`) |
 | 技术栈 | Go / standard-library flag handling |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
@@ -50,6 +50,7 @@ HYDRA-UMC 部署的命令行工具。
 * ✅ **`hydra-cli claims`、`claim <robot>`、`release <robot>`** —— 列出谁预留了哪台机器人（`GET /api/claims`），并预留或释放机器人。预留属于你的账户以及本程序的控制器 ID（`--controller-id`、`HYDRA_CLI_CONTROLLER_ID`，默认 `hydra-cli-<host>`），随每个请求发送。各种拒绝（其他账户、其他控制器、需要控制器 ID、点动未解锁）会被区分，并以退出码 `8` 结束。*（已实现）*
 * ✅ **`hydra-cli limits [--robot ID]`、`jog-arm <robot> <on|off>`、`jog <robot> <轴> <数值> [--absolute]`** —— 读取服务器保存的安全限值，解锁或锁定点动（仅在服务器要求时需要），并移动一个轴。超过该机器人型号限值的步长会在发送前被拒绝，读不到限值时不会发送任何内容；服务器的警告会被显示。*（已实现）*
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** —— 只读服务器契约诊断：验证 `/api/hydra-info` 和 `/api/settings`，并将已发布的控制器/机器人总数与名单进行核对。不发送命令，也不探测硬件。`--json` 会输出结构化报告(每项检查带 `checkId`/`severity`/`status`)而不是纯文本行,供脚本使用(见 [docs/DOCTOR.md](docs/DOCTOR.md))。*（已实现）*
+* 来自服务器并被打印的所有文本（错误信息、名称、版本）现在还会经过共享的机密脱敏，因此响应中的令牌、`password=` 的值或 bearer 头不会回显到终端（与其他项目使用相同的测试向量）。
 * ✅ **`hydra-cli completion <bash|zsh>`** — 输出适用于 shell 的 Tab 补全脚本。 *（已实现）*
 * ✅ **真实、稳定的退出码契约** —— `0` 正常，`1` 一般错误，`2` 用法错误，`3` 配置错误，`4` 网络错误，`5` 服务器错误，`6` 未实现，`7` 需要认证或认证被拒绝。每个命令都通过该契约对自身的失败进行分类，而不是简单地 `exit 1`，因此封装本 CLI 的脚本可以根据*失败原因*进行分支处理。*（已实现）*
 * ✅ **`hydra-cli config validate --config PATH`** —— 加载并按模式校验本地配置文件（服务器 URL、请求超时）。*（已实现）*

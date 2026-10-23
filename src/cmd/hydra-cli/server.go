@@ -18,7 +18,8 @@ import (
 	"strings"
 	"time"
 	"unicode"
-)
+
+	"github.com/JuanenRac/HYDRA-UMC-TOOL-CLI/redact")
 
 // defaultRequestTimeout is resolveTarget's own fallback request timeout,
 // used when neither a --config file's "timeoutSec" nor a
@@ -131,12 +132,15 @@ func parsePositiveSeconds(raw string) (time.Duration, bool) {
 // printable replaces every control character (newlines, escape sequences,
 // DEL, the C1 range) in text that came from a server with "?", so a hostile or
 // broken server cannot forge extra lines in a table or a DOCTOR=PASS line, nor
-// drive the operator's terminal with escape codes.
+// drive the operator's terminal with escape codes. Secret shapes (tokens, passwords, bearer headers) are
+// hidden as well, with the shared redaction.
 func printable(text string) string {
-	return strings.Map(func(r rune) rune {
+	cleaned := strings.Map(func(r rune) rune {
 		if unicode.IsControl(r) {
 			return '?'
 		}
 		return r
 	}, text)
+	// and nothing that looks like a credential is echoed back, whatever a server put in its answer
+	return redact.Secrets(cleaned)
 }

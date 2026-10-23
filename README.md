@@ -28,7 +28,7 @@
 |---|---|
 | Version | `0.1.7` |
 | Maturity | Functional |
-| Tests | 83 (`go test ./...`) |
+| Tests | 132 (`go test ./...`) |
 | Stack | Go / standard-library flag handling |
 | Target | The PC of the person using it |
 | On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |
@@ -46,6 +46,7 @@ The long-term goal is massive deployments of missions, parallel firmware updates
 * ✅ **`hydra-cli claims`, `claim <robot>`, `release <robot>`** — lists who reserves which robot (`GET /api/claims`) and reserves or releases one. The reservation belongs to your account and to this program's controller id (`--controller-id`, `HYDRA_CLI_CONTROLLER_ID`, default `hydra-cli-<host>`), sent with every request. Refusals (another account, another controller, controller id required, jog not armed) are told apart and exit with code `8`. *(implemented)*
 * ✅ **`hydra-cli limits [--robot ID]`, `jog-arm <robot> <on|off>`, `jog <robot> <axis> <amount> [--absolute]`** — reads the safety limits the server holds, arms or disarms the jog (needed only when the server requires it) and moves one axis. A step above the limit of the robot's model is refused before it is sent, and nothing is sent when the limit cannot be read; the warnings of the server are printed. *(implemented)*
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** — read-only Server contract diagnosis: validates `/api/hydra-info` and `/api/settings`, then verifies published controller/robot totals against the settings roster. It never sends commands or probes hardware. `--json` prints a structured report with a `checkId`/`severity`/`status` per check instead of the plain-text line, for scripts (see [docs/DOCTOR.md](docs/DOCTOR.md)). *(implemented)*
+* Every piece of text that came from a server and is printed (error messages, names, versions) now also passes through the shared secret redaction, so a token, a `password=` value or a bearer header in an answer is never echoed to the terminal (same vectors as the other projects).
 * ✅ **`hydra-cli completion <bash|zsh>`** — prints a tab-completion script for the shell. *(implemented)*
 * ✅ **A real, stable exit-code contract** — `0` ok, `1` general error, `2` usage error, `3` config error, `4` network error, `5` server error, `6` not implemented, `7` authentication required or refused. Every command classifies its own failures through this contract instead of a bare `exit 1`, so scripts wrapping this CLI can branch on *why* it failed. *(implemented)*
 * ✅ **`hydra-cli config validate --config PATH`** — loads and schema-validates a local config file (server URL, request timeout). *(implemented)*

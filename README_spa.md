@@ -28,7 +28,7 @@
 |---|---|
 | Versión | `0.1.7` |
 | Madurez | Funcional |
-| Tests | 83 (`go test ./...`) |
+| Tests | 132 (`go test ./...`) |
 | Tecnología | Go / standard-library flag handling |
 | Destino | El PC de quien lo usa |
 | En hardware real | Solo simulado: probado con emuladores, dobles de prueba o simuladores; no consta ninguna ejecución en hardware real para esta versión |
@@ -46,6 +46,7 @@ El objetivo a largo plazo son despliegues masivos de misiones, actualizaciones d
 * ✅ **`hydra-cli claims`, `claim <robot>`, `release <robot>`** — lista quién reserva qué robot (`GET /api/claims`) y reserva o libera uno. La reserva pertenece a tu cuenta y al identificador de controlador de este programa (`--controller-id`, `HYDRA_CLI_CONTROLLER_ID`, por defecto `hydra-cli-<host>`), que se envía en cada petición. Las negativas (otra cuenta, otro controlador, falta el identificador, jog sin armar) se distinguen y salen con el código `8`. *(implementado)*
 * ✅ **`hydra-cli limits [--robot ID]`, `jog-arm <robot> <on|off>`, `jog <robot> <eje> <cantidad> [--absolute]`** — lee los límites de seguridad que guarda el servidor, arma o desarma el jog (solo hace falta cuando el servidor lo exige) y mueve un eje. Un paso por encima del límite del modelo del robot se rechaza antes de enviarlo, y no se envía nada si no se puede leer el límite; se muestran los avisos del servidor. *(implementado)*
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** — diagnóstico de contrato del servidor en solo lectura: valida `/api/hydra-info` y `/api/settings` y comprueba que los totales publicados de controladores/robots coinciden con el listado. No envía comandos ni sondea hardware. `--json` imprime un informe estructurado con un `checkId`/`severity`/`status` por comprobación en vez de la línea de texto, para scripts (ver [docs/DOCTOR.md](docs/DOCTOR.md)). *(implementado)*
+* Todo texto que viene de un servidor y se imprime (mensajes de error, nombres, versiones) pasa además por la redacción de secretos compartida, de modo que un token, un valor de `password=` o una cabecera bearer en una respuesta nunca se repite en el terminal (mismos vectores que los demás proyectos).
 * ✅ **`hydra-cli completion <bash|zsh>`** — imprime un script de autocompletado para la shell. *(implementado)*
 * ✅ **Un contrato de códigos de salida real y estable** — `0` ok, `1` error general, `2` error de uso, `3` error de configuración, `4` error de red, `5` error de servidor, `6` no implementado, `7` autenticación requerida o rechazada. Cada comando clasifica sus propios fallos a través de este contrato en lugar de un simple `exit 1`, de modo que los scripts que envuelven esta CLI puedan ramificarse según *por qué* falló. *(implementado)*
 * ✅ **`hydra-cli config validate --config PATH`** — carga y valida contra el esquema un archivo de configuración local (URL del servidor, timeout de las peticiones). *(implementado)*

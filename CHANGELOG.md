@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Shared secret redaction**: `redact` is a Go port of the common module and passes the same 35 shared vectors (`redact/testdata/vectors.json`); `printable`, through which every text taken from a server is printed, now hides secret shapes as well as control characters, so a token or password in a server answer is never echoed. Go's regexp has no look-behind, look-ahead or back-references, so those are done by hand; a password inside a URL is only recognised up to 1000 characters.
 - **Reservations, safety limits and jog, the same contract as the other clients.** New commands: `claims` (who reserves which robot, `--json`), `claim <robot>` and `release <robot>`, `limits [--robot ID]` (the limits the server holds), `jog-arm <robot> <on|off>` and `jog <robot> <axis> <amount> [--absolute]`.
 - Every reservation, release, arming and jog request carries a controller id for the session (`--controller-id`, `HYDRA_CLI_CONTROLLER_ID`, default `hydra-cli-<host>`), so a reservation belongs to this program and not to the whole account.
 - The refusals of the server are told apart in plain messages: reserved by another account, by your account on another controller, controller id required, and jog not armed (with the command to arm it). They exit with the new code `8` (refused by the server's rules).
