@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **`hydra-cli <command> --help` (or `-h`) prints the usage of that command alone** and exits 0, whatever else was typed after it, without touching the network or any file (`usage.go`). Tests check that every command has one, that its first line names it, and that every `--option` it documents is one the sources really read.
 - **Conditional writes.** `claim`, `release`, `jog` and the new `table` take `--if-match REVISION` (a revision printed by `robot` or by an earlier write) or `--if-match current` (the CLI reads the robot first and sends the revision it has now). The request carries it as `If-Match`; when the robot changed in between, the server answers 412, nothing is applied and the CLI exits with code 8 saying which revision the robot is at now. Every successful write prints `Revision: ...` so a script can chain the next one. Without the option nothing changes.
 - **`hydra-cli robot <robot>`** reads one robot (`GET /api/robot/:id`) with its revision and cell (`--json` prints the answer).
 - **`hydra-cli table <robot> <x> <y> [--rz N] [--relative]`** moves the XY table in one atomic request. The move is checked as a whole against the limits the server holds for the model before anything is sent, an older server that does not know the command is told apart from a refusal, and the position the server applied is printed.

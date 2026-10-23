@@ -41,6 +41,11 @@ func run(args []string) ExitCode {
 		return ExitOK
 	}
 
+	// `hydra-cli <command> --help` prints the help of that command alone, whatever else follows it
+	if wantsCommandHelp(args[1:]) && printCommandUsage(os.Stdout, args[0]) {
+		return ExitOK
+	}
+
 	switch args[0] {
 	case "version", "-v", "--version":
 		cmdVersion()
@@ -231,6 +236,9 @@ COMMANDS:
                           bash)" (or source it from a completions
                           directory) to enable tab-completion.
     help                  Show this message.
+
+    <command> --help      Every command above prints its own usage with --help
+                          (or -h), whatever else follows it; nothing is sent.
 
     Every live command above also reads a --config file's own "timeoutSec"
     as its HTTP request timeout (default 5s), the same value config
