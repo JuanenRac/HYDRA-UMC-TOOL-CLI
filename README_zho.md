@@ -16,7 +16,7 @@
 
 ---
 
-**诚实核查 - 今天真正能运行的部分：** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`doctor`、`config validate`、`config apply --dry-run`，以及交互式 `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）都是真实可运行的 Go 代码，由 127 个通过的测试（`go test ./...`）验证——针对一个模拟服务器的真实 `net/http`/`httptest` 往返请求，加上真实的临时配置文件测试夹具，而不是桩代码。这些测试模拟的是一个 HYDRA-UMC-SERVER 实例；`status`、`robots` 和 `doctor`（包括登录）也已针对真实的 HYDRA-UMC-SERVER 进程运行过。`config apply` 在没有 `--dry-run` 时会诚实地返回 `ExitNotImplemented` 退出码，而不是伪装成功，因为它需要调用的车队写入端点在 HYDRA-UMC-SERVER 上还不存在。`deploy`、`flash-all` 和 `audit` 完全是愿景——在下文中标记为"planned"，在 `src/` 中完全不存在，连桩函数都没有。具体已经交付了什么，请参见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`table`、`robot`、`audit`、`doctor`、`config validate`、`config apply --dry-run`，以及交互式 `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）都是真实可运行的 Go 代码，由 127 个通过的测试（`go test ./...`）验证——针对一个模拟服务器的真实 `net/http`/`httptest` 往返请求，加上真实的临时配置文件测试夹具，而不是桩代码。这些测试模拟的是一个 HYDRA-UMC-SERVER 实例；`status`、`robots` 和 `doctor`（包括登录）也已针对真实的 HYDRA-UMC-SERVER 进程运行过。`config apply` 在没有 `--dry-run` 时会诚实地返回 `ExitNotImplemented` 退出码，而不是伪装成功，因为它需要调用的车队写入端点在 HYDRA-UMC-SERVER 上还不存在。`deploy`、`flash-all` 和 `audit` 完全是愿景——在下文中标记为"planned"，在 `src/` 中完全不存在，连桩函数都没有。具体已经交付了什么，请参见 `CHANGELOG.md`。
 
 ---
 
@@ -49,6 +49,7 @@ HYDRA-UMC 部署的命令行工具。
 * ✅ **`hydra-cli robots [--server URL] [--config PATH] [--json]`** —— 查询实时 HYDRA-UMC-SERVER 的 `GET /api/settings`，并打印其真实的控制器/机器人名单（名称、在线状态、型号、角色）。*（已实现）*
 * ✅ **`hydra-cli claims`、`claim <robot>`、`release <robot>`** —— 列出谁预留了哪台机器人（`GET /api/claims`），并预留或释放机器人。预留属于你的账户以及本程序的控制器 ID（`--controller-id`、`HYDRA_CLI_CONTROLLER_ID`，默认 `hydra-cli-<host>`），随每个请求发送。各种拒绝（其他账户、其他控制器、需要控制器 ID、点动未解锁）会被区分，并以退出码 `8` 结束。*（已实现）*
 * ✅ **`hydra-cli limits [--robot ID]`、`jog-arm <robot> <on|off>`、`jog <robot> <轴> <数值> [--absolute]`** —— 读取服务器保存的安全限值，解锁或锁定点动（仅在服务器要求时需要），并移动一个轴。超过该机器人型号限值的步长会在发送前被拒绝，读不到限值时不会发送任何内容；服务器的警告会被显示。*（已实现）*
+* ✅ **`hydra-cli robot <robot>`、`table <robot> <x> <y> [--rz N] [--relative]`、`audit [--limit N] [--type T] [--robot ID] [--verify] [--export FILE]`** —— `robot` 读取一个机器人及其修订号;`table` 用一次原子请求移动 XY 工作台(发送前先按型号限值检查,服务器要么全部应用要么全部不应用);`audit`(仅管理员)读取仅追加的审计记录,检查所收到各行的 SHA-256 哈希链(链断裂时退出码为 8),使用 `--verify` 时还会让服务器检查整份记录;`--export FILE` 按存储原样保存各行。`claim`、`release`、`jog` 和 `table` 还接受 `--if-match 修订号`(或 `current`):若自该修订号以来机器人已发生变化,服务器会以退出码 8 拒绝写入,且不应用任何内容。CLI 不使用预约的 WebSocket 推送(它只执行一条命令就退出)。
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** —— 只读服务器契约诊断：验证 `/api/hydra-info` 和 `/api/settings`，并将已发布的控制器/机器人总数与名单进行核对。不发送命令，也不探测硬件。`--json` 会输出结构化报告(每项检查带 `checkId`/`severity`/`status`)而不是纯文本行,供脚本使用(见 [docs/DOCTOR.md](docs/DOCTOR.md))。*（已实现）*
 * 来自服务器并被打印的所有文本（错误信息、名称、版本）现在还会经过共享的机密脱敏，因此响应中的令牌、`password=` 的值或 bearer 头不会回显到终端（与其他项目使用相同的测试向量）。
 * ✅ **`hydra-cli completion <bash|zsh>`** — 输出适用于 shell 的 Tab 补全脚本。 *（已实现）*
@@ -104,6 +105,7 @@ HYDRA-UMC-TOOL-CLI/
 │       ├── auth.go            # 来自环境变量的凭据（令牌或登录），用于需要认证的读取
 │       ├── robots.go          # 真实的 GET /api/settings 客户端 + 名单打印
 │       ├── control.go         # 预留、安全限值和点动（claims/claim/release/limits/jog-arm/jog）
+│       ├── record.go          # 机器人修订号、工作台原子移动和审计记录(robot/table/audit)
 │       ├── doctor.go          # 只读双端点契约诊断
 │       ├── config.go          # 真实的配置文件加载、校验、apply --dry-run
 │       ├── shell.go           # 基于同一命令表的交互式 REPL

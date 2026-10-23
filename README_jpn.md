@@ -16,7 +16,7 @@
 
 ---
 
-**正直な現状確認 - 実際に今動くもの:** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`doctor`、`config validate`、`config apply --dry-run`、そして対話型の `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）は、127件のテストがすべて通過している（`go test ./...`）、実際に動く本物の Go コードであり — 偽サーバーに対する本物の `net/http`/`httptest` の往復通信と、本物の一時設定ファイルのフィクスチャを使っており、スタブではない。これらのテストは HYDRA-UMC-SERVER のインスタンスを模擬しているが、`status`、`robots`、`doctor`（ログインを含む）は本物の HYDRA-UMC-SERVER プロセスに対しても実行している。`config apply` は `--dry-run` なしで実行すると、成功を装うのではなく正直に `ExitNotImplemented` の終了コードを返す。呼び出すはずのフリート書き込みエンドポイントが HYDRA-UMC-SERVER にまだ存在しないためだ。`deploy`、`flash-all`、`audit` は純粋な構想であり、下記では「planned」と記されている通り `src/` には一切存在せず、スタブ関数すらない。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を参照。
+**正直な現状確認 - 実際に今動くもの:** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`table`、`robot`、`audit`、`doctor`、`config validate`、`config apply --dry-run`、そして対話型の `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）は、127件のテストがすべて通過している（`go test ./...`）、実際に動く本物の Go コードであり — 偽サーバーに対する本物の `net/http`/`httptest` の往復通信と、本物の一時設定ファイルのフィクスチャを使っており、スタブではない。これらのテストは HYDRA-UMC-SERVER のインスタンスを模擬しているが、`status`、`robots`、`doctor`（ログインを含む）は本物の HYDRA-UMC-SERVER プロセスに対しても実行している。`config apply` は `--dry-run` なしで実行すると、成功を装うのではなく正直に `ExitNotImplemented` の終了コードを返す。呼び出すはずのフリート書き込みエンドポイントが HYDRA-UMC-SERVER にまだ存在しないためだ。`deploy`、`flash-all`、`audit` は純粋な構想であり、下記では「planned」と記されている通り `src/` には一切存在せず、スタブ関数すらない。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を参照。
 
 ---
 
@@ -52,6 +52,7 @@
 * ✅ **`hydra-cli robots [--server URL] [--config PATH] [--json]`** — 実行中の HYDRA-UMC-SERVER の `GET /api/settings` を照会し、実際のコントローラー/ロボット一覧（名前、オンライン状態、モデル、役割）を表示します。*（実装済み）*
 * ✅ **`hydra-cli claims`、`claim <robot>`、`release <robot>`** — どのロボットを誰が予約しているかを一覧表示し（`GET /api/claims`）、ロボットの予約と解放を行います。予約はあなたのアカウントと、このプログラムのコントローラーID（`--controller-id`、`HYDRA_CLI_CONTROLLER_ID`、既定は `hydra-cli-<host>`）に属し、すべてのリクエストと一緒に送られます。拒否（別アカウント、別コントローラー、コントローラーID必須、ジョグ未アーム）は区別され、終了コード `8` で終わります。*（実装済み）*
 * ✅ **`hydra-cli limits [--robot ID]`、`jog-arm <robot> <on|off>`、`jog <robot> <軸> <量> [--absolute]`** — サーバーが保持する安全上限を読み取り、ジョグのアーム/解除（サーバーが要求する場合のみ必要）と1軸の移動を行います。ロボットのモデルの上限を超えるステップは送信前に拒否され、上限を読めない場合は何も送られません。サーバーの警告も表示されます。*（実装済み）*
+* ✅ **`hydra-cli robot <robot>`、`table <robot> <x> <y> [--rz N] [--relative]`、`audit [--limit N] [--type T] [--robot ID] [--verify] [--export FILE]`** — `robot` はロボット 1 台をリビジョン付きで読み取ります。`table` は XY テーブルを 1 回のアトミックなリクエストで動かします(送信前にモデルの上限と照合し、サーバーは全部適用するか何も適用しません)。`audit`(管理者のみ)は追記専用の監査記録を読み、受け取った行の SHA-256 ハッシュのチェーンを確認し(壊れていれば終了コード 8)、`--verify` ではサーバーに記録全体を確認させます。`--export FILE` は保存されているままの行を保存します。`claim`、`release`、`jog`、`table` は `--if-match REVISION`(または `current`)も受け付けます。そのリビジョン以降にロボットが変更されていれば、サーバーは終了コード 8 で書き込みを拒否し、何も適用されません。予約の WebSocket 通知は CLI では使いません(1 つのコマンドを実行して終了するため)。
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** — 読み取り専用のサーバー契約診断：`/api/hydra-info` と `/api/settings` を検証し、公開されたコントローラー/ロボット数を一覧と照合します。コマンド送信やハードウェアの検査は行いません。`--json` を付けるとテキスト行の代わりに、チェックごとの `checkId`/`severity`/`status` を含む構造化レポートを出力します(スクリプト向け、詳細は [docs/DOCTOR.md](docs/DOCTOR.md))。*（実装済み）*
 * サーバーから届いて表示されるテキスト(エラーメッセージ、名前、バージョン)はすべて、共有の機密マスキングも通ります。応答に含まれるトークン、`password=` の値、bearer ヘッダーが端末に出ることはありません(他のプロジェクトと同じベクター)。
 * ✅ **`hydra-cli completion <bash|zsh>`** — シェル用のタブ補完スクリプトを出力します。 *（実装済み）*
@@ -108,6 +109,7 @@ HYDRA-UMC-TOOL-CLI/
 │       ├── auth.go            # 認証付き読み取りのための、環境変数からの認証情報（トークンまたはログイン）
 │       ├── robots.go          # 実際の GET /api/settings クライアント + 一覧表示
 │       ├── control.go         # 予約・安全上限・ジョグ（claims/claim/release/limits/jog-arm/jog）
+│       ├── record.go          # ロボットのリビジョン、テーブルのアトミックな移動、監査記録(robot/table/audit)
 │       ├── doctor.go          # 読み取り専用の二つのエンドポイント契約診断
 │       ├── config.go          # 実際の設定ファイルの読み込み、検証、apply --dry-run
 │       ├── shell.go           # 同じコマンドテーブル上の対話型 REPL

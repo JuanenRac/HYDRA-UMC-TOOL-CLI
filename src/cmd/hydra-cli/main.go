@@ -102,6 +102,24 @@ func run(args []string) ExitCode {
 			return exitCodeFor(err)
 		}
 		return ExitOK
+	case "table":
+		if err := cmdTable(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli table: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "robot":
+		if err := cmdRobot(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli robot: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "audit":
+		if err := cmdAudit(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli audit: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
 	case "config":
 		if err := cmdConfig(os.Stdout, args[1:]); err != nil {
 			fmt.Fprintf(os.Stderr, "hydra-cli config: %v\n", err)
@@ -180,6 +198,22 @@ COMMANDS:
     jog <robot> <axis> <amount> [--absolute]
                           Move one axis (x y z a b c). A step above the limit
                           of the robot's model is refused before it is sent.
+    table <robot> <x> <y> [--rz N] [--relative]
+                          Move the XY table of a robot in one atomic request
+                          (absolute positions unless --relative). The whole move
+                          is checked against the limits of the model before it
+                          is sent; the server applies all of it or none of it.
+    robot <robot> [--json]
+                          Read one robot (GET /api/robot/:id) with its revision.
+    audit [--limit N] [--type T] [--robot ID] [--verify] [--export FILE] [--json]
+                          Read the audit record (administrators only): the
+                          newest lines, with the chain of SHA-256 hashes checked
+                          here and, with --verify, by the server over the whole
+                          record. --export saves the lines as stored (.jsonl).
+
+    claim, release, jog and table also take --if-match REVISION (a revision
+    printed by robot or by an earlier command) or --if-match current: the
+    server then refuses the write (exit code 8) if the robot changed since.
     config validate --config PATH
                           Load and schema-validate a local config file.
     config apply --config PATH [--dry-run]

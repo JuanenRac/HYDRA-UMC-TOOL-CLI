@@ -36,6 +36,46 @@ import (
 
 const controllerEnv = "HYDRA_CLI_CONTROLLER_ID"
 
+// revisionPattern is what a revision looks like (the server gives a short hex fingerprint).
+var revisionPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,128}$`)
+
+// takeIfMatch removes `--if-match REVISION` from args. REVISION is a revision read with `hydra-cli robot` (or
+// printed by an earlier command), or "current", which reads the robot first and sends the revision it has now.
+func takeIfMatch(args []string) (string, []string, error) {
+	value, rest, err := takeFlag(args, "--if-match")
+	if err != nil {
+		return "", nil, err
+	}
+	if value != "" && value != "current" && !revisionPattern.MatchString(value) {
+		return "", nil, newCliError(ExitUsageError, fmt.Errorf("--if-match needs a revision (letters, digits, - and _) or \"current\", got %q", value))
+	}
+	return value, rest, nil
+}
+
+// resolveIfMatch turns "current" into the revision the server reports for the robot right now.
+func resolveIfMatch(client *http.Client, server, controllerID string, robotID int, ifMatch string) (string, error) {
+	if ifMatch != "current" {
+		return ifMatch, nil
+	}
+	resp, err := sendAuthenticated(client, server, http.MethodGet, fmt.Sprintf("/api/robot/%d", robotID), nil, controllerID)
+	if err != nil {
+		return "", err
+	}
+	if !okStatus(resp.Status) {
+		return "", refusalError("Reading the robot", resp)
+	}
+	if rev := resp.revision(); rev != "" {
+		return rev, nil
+	}
+	return "", newCliError(ExitServerError, errors.New("the server did not report a revision for this robot (an older server?); nothing was sent"))
+}
+
+// printRevision tells the revision a successful write left the robot at, so a script can pass it to --if-match.
+func printRevision(w io.Writer, r controlResponse) {
+	if rev := r.revision(); rev != "" {
+		fmt.Fprintf(w, "Revision: %s\n", rev)
+	}
+}
 var controllerIDPattern = regexp.MustCompile(`^[A-Za-z0-9._:-]{1,64}$`)
 
 // defaultControllerID names this CLI on this host with only the characters the
@@ -130,6 +170,18 @@ func (r controlResponse) code() string {
 	return parsed.Code
 }
 
+// revision returns the revision of the robot the answer carries ("" when none).
+func (r controlResponse) revision() string {
+	var parsed struct {
+		Revision string `json:"revision"`
+	}
+	_ = json.Unmarshal(r.Body, &parsed)
+	if revisionPattern.MatchString(parsed.Revision) {
+		return parsed.Revision
+	}
+	return ""
+}
+
 func (r controlResponse) detail() string {
 	var parsed struct {
 		Error string `json:"error"`
@@ -142,6 +194,13 @@ func (r controlResponse) detail() string {
 
 // sendAuthenticated sends one request with the credential and the controller id.
 func sendAuthenticated(client *http.Client, server, method, path string, payload any, controllerID string) (controlResponse, error) {
+	return sendConditional(client, server, method, path, payload, controllerID, "")
+}
+
+// sendConditional is sendAuthenticated with an If-Match: the revision of the
+// robot the caller read, so the server refuses (412) a write to a robot that
+// changed in between.
+func sendConditional(client *http.Client, server, method, path string, payload any, controllerID, ifMatch string) (controlResponse, error) {
 	token, err := resolveToken(client, server)
 	if err != nil {
 		return controlResponse{}, err
@@ -163,6 +222,9 @@ func sendAuthenticated(client *http.Client, server, method, path string, payload
 	}
 	if controllerID != "" {
 		req.Header.Set("X-Controller-Id", controllerID)
+	}
+	if ifMatch != "" {
+		req.Header.Set("If-Match", `"`+ifMatch+`"`)
 	}
 	if token != "" {
 		warnIfInsecure(server)
@@ -190,6 +252,12 @@ func refusalError(what string, r controlResponse) error {
 		suffix = " (" + detail + ")"
 	}
 	switch {
+	case r.Status == http.StatusPreconditionFailed || r.code() == "revision-mismatch":
+		current := ""
+		if rev := r.revision(); rev != "" {
+			current = " (the robot is now at revision " + rev + ")"
+		}
+		return newCliError(ExitRefused, fmt.Errorf("%s refused: the robot changed since the revision you gave%s; nothing was applied. Read it again with `hydra-cli robot <robotId>` and repeat the command if it is still wanted", what, current))
 	case r.Status == http.StatusUnauthorized:
 		return newCliError(ExitAuthError, fmt.Errorf("%s failed: the login was refused or the token expired; sign in again%s", what, suffix))
 	case r.code() == "jog-not-armed":
@@ -317,8 +385,12 @@ func cmdClaim(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
+	ifMatch, rest, err := takeIfMatch(rest)
+	if err != nil {
+		return err
+	}
 	if len(rest) != 1 {
-		return newCliError(ExitUsageError, errors.New("usage: hydra-cli claim <robotId> [--ttl-ms N] [--force] [--reason TEXT] [--controller-id ID]"))
+		return newCliError(ExitUsageError, errors.New("usage: hydra-cli claim <robotId> [--ttl-ms N] [--force] [--reason TEXT] [--if-match REVISION|current] [--controller-id ID]"))
 	}
 	robotID, err := parseRobotID(rest[0])
 	if err != nil {
@@ -339,7 +411,11 @@ func cmdClaim(w io.Writer, args []string) error {
 		body["reason"] = reason
 	}
 	client := http.Client{Timeout: timeout}
-	resp, err := sendAuthenticated(&client, server, http.MethodPost, fmt.Sprintf("/api/robot/%d/claim", robotID), body, controllerID)
+	ifMatch, err = resolveIfMatch(&client, server, controllerID, robotID, ifMatch)
+	if err != nil {
+		return err
+	}
+	resp, err := sendConditional(&client, server, http.MethodPost, fmt.Sprintf("/api/robot/%d/claim", robotID), body, controllerID, ifMatch)
 	if err != nil {
 		return err
 	}
@@ -347,6 +423,7 @@ func cmdClaim(w io.Writer, args []string) error {
 		return refusalError("Reservation", resp)
 	}
 	fmt.Fprintf(w, "Robot %d is reserved for this program (controller %s).\n", robotID, controllerID)
+	printRevision(w, resp)
 	return nil
 }
 
@@ -360,8 +437,12 @@ func cmdRelease(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
+	ifMatch, rest, err := takeIfMatch(rest)
+	if err != nil {
+		return err
+	}
 	if len(rest) != 1 {
-		return newCliError(ExitUsageError, errors.New("usage: hydra-cli release <robotId> [--reason TEXT] [--controller-id ID]"))
+		return newCliError(ExitUsageError, errors.New("usage: hydra-cli release <robotId> [--reason TEXT] [--if-match REVISION|current] [--controller-id ID]"))
 	}
 	robotID, err := parseRobotID(rest[0])
 	if err != nil {
@@ -372,7 +453,11 @@ func cmdRelease(w io.Writer, args []string) error {
 		body["reason"] = reason
 	}
 	client := http.Client{Timeout: timeout}
-	resp, err := sendAuthenticated(&client, server, http.MethodPost, fmt.Sprintf("/api/robot/%d/release", robotID), body, controllerID)
+	ifMatch, err = resolveIfMatch(&client, server, controllerID, robotID, ifMatch)
+	if err != nil {
+		return err
+	}
+	resp, err := sendConditional(&client, server, http.MethodPost, fmt.Sprintf("/api/robot/%d/release", robotID), body, controllerID, ifMatch)
 	if err != nil {
 		return err
 	}
@@ -380,6 +465,7 @@ func cmdRelease(w io.Writer, args []string) error {
 		return refusalError("Release", resp)
 	}
 	fmt.Fprintf(w, "Robot %d is released.\n", robotID)
+	printRevision(w, resp)
 	return nil
 }
 
@@ -562,8 +648,12 @@ func cmdJog(w io.Writer, args []string) error {
 		return err
 	}
 	absolute, rest := takeSwitch(rest, "--absolute")
+	ifMatch, rest, err := takeIfMatch(rest)
+	if err != nil {
+		return err
+	}
 	if len(rest) != 3 {
-		return newCliError(ExitUsageError, errors.New("usage: hydra-cli jog <robotId> <axis> <amount> [--absolute] [--controller-id ID]"))
+		return newCliError(ExitUsageError, errors.New("usage: hydra-cli jog <robotId> <axis> <amount> [--absolute] [--if-match REVISION|current] [--controller-id ID]"))
 	}
 	robotID, err := parseRobotID(rest[0])
 	if err != nil {
@@ -592,8 +682,12 @@ func cmdJog(w io.Writer, args []string) error {
 	if absolute {
 		params["absolute"] = true
 	}
-	resp, err := sendAuthenticated(&client, server, http.MethodPost, fmt.Sprintf("/api/robot/%d/command", robotID),
-		map[string]any{"command": "jog", "params": params, "controllerId": controllerID}, controllerID)
+	ifMatch, err = resolveIfMatch(&client, server, controllerID, robotID, ifMatch)
+	if err != nil {
+		return err
+	}
+	resp, err := sendConditional(&client, server, http.MethodPost, fmt.Sprintf("/api/robot/%d/command", robotID),
+		map[string]any{"command": "jog", "params": params, "controllerId": controllerID}, controllerID, ifMatch)
 	if err != nil {
 		return err
 	}
@@ -619,5 +713,6 @@ func cmdJog(w io.Writer, args []string) error {
 		return newCliError(ExitRefused, errors.New("the server did not apply the jog (see the warnings above)"))
 	}
 	fmt.Fprintf(w, "Jog sent to robot %d: %s %g%s.\n", robotID, axis, amount, map[bool]string{true: " (absolute)", false: ""}[absolute])
+	printRevision(w, resp)
 	return nil
 }
