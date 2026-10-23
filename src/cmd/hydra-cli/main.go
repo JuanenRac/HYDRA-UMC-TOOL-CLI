@@ -66,6 +66,42 @@ func run(args []string) ExitCode {
 			return exitCodeFor(err)
 		}
 		return ExitOK
+	case "claims":
+		if err := cmdClaims(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli claims: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "claim":
+		if err := cmdClaim(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli claim: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "release":
+		if err := cmdRelease(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli release: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "limits":
+		if err := cmdLimits(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli limits: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "jog-arm":
+		if err := cmdJogArm(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli jog-arm: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "jog":
+		if err := cmdJog(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli jog: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
 	case "config":
 		if err := cmdConfig(os.Stdout, args[1:]); err != nil {
 			fmt.Fprintf(os.Stderr, "hydra-cli config: %v\n", err)
@@ -125,6 +161,25 @@ COMMANDS:
 	                      --json prints a structured report (checkId/severity/
 	                      status per check) instead of the DOCTOR=PASS line, for
 	                      scripts that need to act on individual results.
+    claims [--server URL] [--config PATH] [--json]
+                          List who reserves which robot (GET /api/claims).
+    claim <robot> [--ttl-ms N] [--force] [--reason TEXT]
+    release <robot> [--reason TEXT]
+                          Reserve a robot for this program, or release it. The
+                          reservation belongs to your account AND to this
+                          program's controller id (--controller-id ID or
+                          HYDRA_CLI_CONTROLLER_ID; default hydra-cli-<host>).
+                          --force is for administrators only.
+    limits [--robot ID] [--json]
+                          Read the safety limits the server holds (jog size,
+                          absolute jog range, bed temperature, jog arming).
+    jog-arm <robot> <on|off> [--ttl-ms N]
+                          Arm or disarm the jog of one robot. Needed only when
+                          the server requires it; ends by itself, with a stop
+                          or when the robot is released.
+    jog <robot> <axis> <amount> [--absolute]
+                          Move one axis (x y z a b c). A step above the limit
+                          of the robot's model is refused before it is sent.
     config validate --config PATH
                           Load and schema-validate a local config file.
     config apply --config PATH [--dry-run]
@@ -158,6 +213,8 @@ EXIT CODES:
     2  usage error            5  server error (bad status/response)
                               6  not implemented
                               7  authentication required or refused
+                              8  refused by the server's rules (reserved,
+                                 jog not armed, above a limit)
 
 Report issues at: https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI
 `, projectName, Version, defaultServerURL)

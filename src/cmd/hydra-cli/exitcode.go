@@ -48,6 +48,11 @@ const (
 	// from ExitServerError so a script can tell "set a credential" from "the
 	// server is broken".
 	ExitAuthError ExitCode = 7
+	// ExitRefused: the server understood the request and refused it by its
+	// own rules - the robot is reserved by another account or controller, the
+	// jog is not armed, or the value is above a safety limit. Nothing is wrong
+	// with the server or the login; the operator has to change what is asked.
+	ExitRefused ExitCode = 8
 )
 
 // CliError carries a real ExitCode alongside a normal Go error, so a

@@ -62,7 +62,7 @@ func cmdShell(out io.Writer, in io.Reader, args []string, dispatch runFunc) erro
 	}
 
 	fmt.Fprintf(out, "%s v%s interactive shell - target %s\n", projectName, Version, server)
-	fmt.Fprintln(out, "Type a command (version, status, robots, doctor, config ...), or exit/quit to leave.")
+	fmt.Fprintln(out, "Type a command (version, status, robots, claims, claim, release, limits, jog, doctor, config ...), or exit/quit to leave.")
 
 	scanner := bufio.NewScanner(in)
 	last := ExitOK // the exit code of the last dispatched command: it becomes the shell's own, like any shell

@@ -16,7 +16,7 @@
 
 ---
 
-**诚实核查 - 今天真正能运行的部分：** `version`、`status`、`robots`、`doctor`、`config validate`、`config apply --dry-run`，以及交互式 `shell`（`main.go`、`server.go`、`robots.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）都是真实可运行的 Go 代码，由 105 个通过的测试（`go test ./...`）验证——针对一个模拟服务器的真实 `net/http`/`httptest` 往返请求，加上真实的临时配置文件测试夹具，而不是桩代码。这些测试模拟的是一个 HYDRA-UMC-SERVER 实例；`status`、`robots` 和 `doctor`（包括登录）也已针对真实的 HYDRA-UMC-SERVER 进程运行过。`config apply` 在没有 `--dry-run` 时会诚实地返回 `ExitNotImplemented` 退出码，而不是伪装成功，因为它需要调用的车队写入端点在 HYDRA-UMC-SERVER 上还不存在。`deploy`、`flash-all` 和 `audit` 完全是愿景——在下文中标记为"planned"，在 `src/` 中完全不存在，连桩函数都没有。具体已经交付了什么，请参见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`doctor`、`config validate`、`config apply --dry-run`，以及交互式 `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）都是真实可运行的 Go 代码，由 127 个通过的测试（`go test ./...`）验证——针对一个模拟服务器的真实 `net/http`/`httptest` 往返请求，加上真实的临时配置文件测试夹具，而不是桩代码。这些测试模拟的是一个 HYDRA-UMC-SERVER 实例；`status`、`robots` 和 `doctor`（包括登录）也已针对真实的 HYDRA-UMC-SERVER 进程运行过。`config apply` 在没有 `--dry-run` 时会诚实地返回 `ExitNotImplemented` 退出码，而不是伪装成功，因为它需要调用的车队写入端点在 HYDRA-UMC-SERVER 上还不存在。`deploy`、`flash-all` 和 `audit` 完全是愿景——在下文中标记为"planned"，在 `src/` 中完全不存在，连桩函数都没有。具体已经交付了什么，请参见 `CHANGELOG.md`。
 
 ---
 
@@ -47,6 +47,8 @@ HYDRA-UMC 部署的命令行工具。
 * ✅ **`hydra-cli version`** —— 打印 CLI 自身的名称和版本。*（已实现）*
 * ✅ **`hydra-cli status [--server URL] [--config PATH]`** —— 查询实时 HYDRA-UMC-SERVER 的 `GET /api/hydra-info`，并打印其报告的身份信息。*（已实现）*
 * ✅ **`hydra-cli robots [--server URL] [--config PATH] [--json]`** —— 查询实时 HYDRA-UMC-SERVER 的 `GET /api/settings`，并打印其真实的控制器/机器人名单（名称、在线状态、型号、角色）。*（已实现）*
+* ✅ **`hydra-cli claims`、`claim <robot>`、`release <robot>`** —— 列出谁预留了哪台机器人（`GET /api/claims`），并预留或释放机器人。预留属于你的账户以及本程序的控制器 ID（`--controller-id`、`HYDRA_CLI_CONTROLLER_ID`，默认 `hydra-cli-<host>`），随每个请求发送。各种拒绝（其他账户、其他控制器、需要控制器 ID、点动未解锁）会被区分，并以退出码 `8` 结束。*（已实现）*
+* ✅ **`hydra-cli limits [--robot ID]`、`jog-arm <robot> <on|off>`、`jog <robot> <轴> <数值> [--absolute]`** —— 读取服务器保存的安全限值，解锁或锁定点动（仅在服务器要求时需要），并移动一个轴。超过该机器人型号限值的步长会在发送前被拒绝，读不到限值时不会发送任何内容；服务器的警告会被显示。*（已实现）*
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** —— 只读服务器契约诊断：验证 `/api/hydra-info` 和 `/api/settings`，并将已发布的控制器/机器人总数与名单进行核对。不发送命令，也不探测硬件。`--json` 会输出结构化报告(每项检查带 `checkId`/`severity`/`status`)而不是纯文本行,供脚本使用(见 [docs/DOCTOR.md](docs/DOCTOR.md))。*（已实现）*
 * ✅ **`hydra-cli completion <bash|zsh>`** — 输出适用于 shell 的 Tab 补全脚本。 *（已实现）*
 * ✅ **真实、稳定的退出码契约** —— `0` 正常，`1` 一般错误，`2` 用法错误，`3` 配置错误，`4` 网络错误，`5` 服务器错误，`6` 未实现，`7` 需要认证或认证被拒绝。每个命令都通过该契约对自身的失败进行分类，而不是简单地 `exit 1`，因此封装本 CLI 的脚本可以根据*失败原因*进行分支处理。*（已实现）*
@@ -96,10 +98,11 @@ HYDRA-UMC-TOOL-CLI/
 ├── src/                       # Go 模块
 │   ├── go.mod                 # 模块定义（github.com/JuanenRac/HYDRA-UMC-TOOL-CLI）
 │   └── cmd/hydra-cli/         # 二进制文件入口点
-│       ├── main.go            # 命令分发（version/help/status/robots/doctor/config/shell）
+│       ├── main.go            # 命令分发（version/help/status/robots/claims/limits/jog/doctor/config/shell）
 │       ├── server.go          # 共享的 --server/--config/HYDRA_CLI_SERVER 解析
 │       ├── auth.go            # 来自环境变量的凭据（令牌或登录），用于需要认证的读取
 │       ├── robots.go          # 真实的 GET /api/settings 客户端 + 名单打印
+│       ├── control.go         # 预留、安全限值和点动（claims/claim/release/limits/jog-arm/jog）
 │       ├── doctor.go          # 只读双端点契约诊断
 │       ├── config.go          # 真实的配置文件加载、校验、apply --dry-run
 │       ├── shell.go           # 基于同一命令表的交互式 REPL

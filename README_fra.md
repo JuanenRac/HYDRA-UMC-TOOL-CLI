@@ -16,7 +16,7 @@
 
 ---
 
-**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run`, et le `shell` interactif (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) sont du code Go réel et fonctionnel, vérifié par 105 tests qui passent (`go test ./...`) - de vrais échanges `net/http`/`httptest` contre un faux serveur, plus de vraies fixtures de fichiers de configuration temporaires, pas des stubs. Ces tests simulent une instance de HYDRA-UMC-SERVER ; `status`, `robots` et `doctor` (connexion comprise) ont aussi été exécutés contre un vrai processus HYDRA-UMC-SERVER. `config apply` sans `--dry-run` renvoie honnêtement le code de sortie `ExitNotImplemented` plutôt que de simuler un succès, car le endpoint d'écriture de flotte qu'il appellerait n'existe pas encore sur HYDRA-UMC-SERVER. `deploy`, `flash-all` et `audit` relèvent de la pure aspiration - marqués "planned" ci-dessous et totalement absents de `src/`, pas même une fonction stub. Voir `CHANGELOG.md` pour savoir exactement ce qui a été livré jusqu'à présent.
+**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** `version`, `status`, `robots`, `claims`, `claim`, `release`, `limits`, `jog-arm`, `jog`, `doctor`, `config validate`, `config apply --dry-run`, et le `shell` interactif (`main.go`, `server.go`, `robots.go`, `control.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) sont du code Go réel et fonctionnel, vérifié par 127 tests qui passent (`go test ./...`) - de vrais échanges `net/http`/`httptest` contre un faux serveur, plus de vraies fixtures de fichiers de configuration temporaires, pas des stubs. Ces tests simulent une instance de HYDRA-UMC-SERVER ; `status`, `robots` et `doctor` (connexion comprise) ont aussi été exécutés contre un vrai processus HYDRA-UMC-SERVER. `config apply` sans `--dry-run` renvoie honnêtement le code de sortie `ExitNotImplemented` plutôt que de simuler un succès, car le endpoint d'écriture de flotte qu'il appellerait n'existe pas encore sur HYDRA-UMC-SERVER. `deploy`, `flash-all` et `audit` relèvent de la pure aspiration - marqués "planned" ci-dessous et totalement absents de `src/`, pas même une fonction stub. Voir `CHANGELOG.md` pour savoir exactement ce qui a été livré jusqu'à présent.
 
 ---
 
@@ -43,6 +43,8 @@ L'objectif à long terme est de permettre des déploiements massifs de missions,
 * ✅ **`hydra-cli version`** — affiche le nom et la version du CLI. *(implémenté)*
 * ✅ **`hydra-cli status [--server URL] [--config PATH]`** — interroge le `GET /api/hydra-info` d'une instance HYDRA-UMC-SERVER active et affiche son identité déclarée. *(implémenté)*
 * ✅ **`hydra-cli robots [--server URL] [--config PATH] [--json]`** — interroge le `GET /api/settings` d'une instance HYDRA-UMC-SERVER active et affiche sa liste réelle de contrôleurs/robots (nom, statut en ligne, modèle, rôle). *(implémenté)*
+* ✅ **`hydra-cli claims`, `claim <robot>`, `release <robot>`** — liste qui réserve quel robot (`GET /api/claims`) et réserve ou libère un robot. La réservation appartient à votre compte et à l'identifiant de contrôleur de ce programme (`--controller-id`, `HYDRA_CLI_CONTROLLER_ID`, par défaut `hydra-cli-<host>`), envoyé avec chaque requête. Les refus (autre compte, autre contrôleur, identifiant requis, jog non armé) sont distingués et sortent avec le code `8`. *(implémenté)*
+* ✅ **`hydra-cli limits [--robot ID]`, `jog-arm <robot> <on|off>`, `jog <robot> <axe> <valeur> [--absolute]`** — lit les limites de sécurité que garde le serveur, arme ou désarme le jog (nécessaire seulement quand le serveur l'exige) et déplace un axe. Un pas supérieur à la limite du modèle du robot est refusé avant l'envoi, et rien n'est envoyé si la limite est illisible ; les avertissements du serveur sont affichés. *(implémenté)*
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** — diagnostic de contrat du serveur en lecture seule : valide `/api/hydra-info` et `/api/settings`, puis compare les totaux publiés de contrôleurs/robots avec la liste. N'envoie aucune commande et ne sonde aucun matériel. `--json` affiche un rapport structuré avec un `checkId`/`severity`/`status` par vérification au lieu de la ligne texte, pour les scripts (voir [docs/DOCTOR.md](docs/DOCTOR.md)). *(implémenté)*
 * ✅ **`hydra-cli completion <bash|zsh>`** — affiche un script de complétion pour le shell. *(implémenté)*
 * ✅ **Un contrat de codes de sortie réel et stable** — `0` ok, `1` erreur générale, `2` erreur d'usage, `3` erreur de configuration, `4` erreur réseau, `5` erreur serveur, `6` non implémenté, `7` authentification requise ou refusée. Chaque commande classe ses propres échecs à travers ce contrat plutôt qu'un simple `exit 1`, afin que les scripts encapsulant cette CLI puissent se brancher selon *pourquoi* elle a échoué. *(implémenté)*
@@ -92,10 +94,11 @@ HYDRA-UMC-TOOL-CLI/
 ├── src/                       # Module Go
 │   ├── go.mod                 # Définition du module (github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)
 │   └── cmd/hydra-cli/         # Point d'entrée du binaire
-│       ├── main.go            # Répartition des commandes (version/help/status/robots/doctor/config/shell)
+│       ├── main.go            # Répartition des commandes (version/help/status/robots/claims/limits/jog/doctor/config/shell)
 │       ├── server.go          # Résolution partagée de --server/--config/HYDRA_CLI_SERVER
 │       ├── auth.go            # Identifiants issus de l'environnement (jeton ou connexion) pour les lectures authentifiées
 │       ├── robots.go          # Vrai client GET /api/settings + affichage de la liste
+│       ├── control.go         # Réservations, limites de sécurité et jog (claims/claim/release/limits/jog-arm/jog)
 │       ├── doctor.go          # Diagnostic de contrat à deux endpoints, en lecture seule
 │       ├── config.go          # Chargement réel du fichier de configuration, validation, apply --dry-run
 │       ├── shell.go           # REPL interactif sur la même table de commandes

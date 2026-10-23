@@ -4,6 +4,10 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Reservations, safety limits and jog, the same contract as the other clients.** New commands: `claims` (who reserves which robot, `--json`), `claim <robot>` and `release <robot>`, `limits [--robot ID]` (the limits the server holds), `jog-arm <robot> <on|off>` and `jog <robot> <axis> <amount> [--absolute]`.
+- Every reservation, release, arming and jog request carries a controller id for the session (`--controller-id`, `HYDRA_CLI_CONTROLLER_ID`, default `hydra-cli-<host>`), so a reservation belongs to this program and not to the whole account.
+- The refusals of the server are told apart in plain messages: reserved by another account, by your account on another controller, controller id required, and jog not armed (with the command to arm it). They exit with the new code `8` (refused by the server's rules).
+- A jog above the relative or absolute limit of the robot's model is refused before it is sent, nothing is sent when the limits cannot be read, and the warnings of the server are printed and make the command fail. Tab completion and the interactive shell know the new commands.
 - Building no longer changes the version; raising it is the explicit `bump` command (`python tools/hydra_project_tool.py bump`). The build scripts only report the version they built, and CI fails if a build script runs a bump.
 
 ## [0.1.7] - An aligned robots table, JSON output and exit codes in scripts

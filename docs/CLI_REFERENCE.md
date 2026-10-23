@@ -96,6 +96,25 @@ COMMANDS:
 	                      --json prints a structured report (checkId/severity/
 	                      status per check) instead of the DOCTOR=PASS line, for
 	                      scripts that need to act on individual results.
+    claims [--server URL] [--config PATH] [--json]
+                          List who reserves which robot (GET /api/claims).
+    claim <robot> [--ttl-ms N] [--force] [--reason TEXT]
+    release <robot> [--reason TEXT]
+                          Reserve a robot for this program, or release it. The
+                          reservation belongs to your account AND to this
+                          program's controller id (--controller-id ID or
+                          HYDRA_CLI_CONTROLLER_ID; default hydra-cli-<host>).
+                          --force is for administrators only.
+    limits [--robot ID] [--json]
+                          Read the safety limits the server holds (jog size,
+                          absolute jog range, bed temperature, jog arming).
+    jog-arm <robot> <on|off> [--ttl-ms N]
+                          Arm or disarm the jog of one robot. Needed only when
+                          the server requires it; ends by itself, with a stop
+                          or when the robot is released.
+    jog <robot> <axis> <amount> [--absolute]
+                          Move one axis (x y z a b c). A step above the limit
+                          of the robot's model is refused before it is sent.
     config validate --config PATH
                           Load and schema-validate a local config file.
     config apply --config PATH [--dry-run]
@@ -129,6 +148,8 @@ EXIT CODES:
     2  usage error            5  server error (bad status/response)
                               6  not implemented
                               7  authentication required or refused
+                              8  refused by the server's rules (reserved,
+                                 jog not armed, above a limit)
 
 Report issues at: https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI
 ```
@@ -177,6 +198,49 @@ HYDRA-UMC Master Robot A8             no       Faze4 (6-DOF)            Idle
 
 If the server reports zero robots, `robots` prints
 `no robots reported by <server>` instead of an empty table.
+
+### `claims`, `claim <robot>`, `release <robot>`
+
+Who controls which robot (`GET /api/claims`), and reserving or releasing one
+(`POST /api/robot/:id/claim` and `release`). A reservation belongs to the
+account **and** to the controller id of this program, sent in the body and in
+the `X-Controller-Id` header of every request. The id comes from
+`--controller-id ID`, then `HYDRA_CLI_CONTROLLER_ID`, then `hydra-cli-<host>`
+(1 to 64 characters: letters, digits, `. _ : -`); inside `shell` it stays the
+same for the whole session.
+
+```
+hydra-cli claims [--json]
+hydra-cli claim 3 [--ttl-ms 60000] [--reason "bench"] [--force]
+hydra-cli release 3 [--reason "done"]
+```
+
+`--force` (administrators only) takes over a reservation held by someone else.
+The server's refusals are told apart and exit with code `8`: the robot is
+reserved by another account (`other-account`), by your account from another
+controller (`other-controller`), the reservation names a controller and the
+request named none (`controller-id-required`), or the server requires the id
+to reserve. An expired login is exit code `7`.
+
+### `limits [--robot ID] [--json]`
+
+Reads `GET /api/safety-limits`: the largest relative jog, the largest absolute
+jog, the highest bed target, whether the jog has to be armed, how long an
+arming lasts and whether a reservation has to name its controller. With
+`--robot ID` it also prints the values that apply to that robot's model and how
+long its jog stays armed.
+
+### `jog-arm <robot> <on|off> [--ttl-ms N]` and `jog <robot> <axis> <amount> [--absolute]`
+
+`jog-arm` arms or disarms the jog of one robot. It is only needed when the
+administrator turned on `jog.armRequired`; the arming ends by itself, with a
+stop or when the robot is released. `jog` moves one axis (`x y z a b c`). Before
+sending, the CLI reads the limits of the robot's model: a step above the
+relative limit, or a target above the absolute limit, is refused with exit code
+`8` and nothing is sent; if the limits cannot be read nothing is sent either.
+If the server refuses with `jog-not-armed`, the message names the `jog-arm`
+command. Warnings returned by the server are printed (`Warning (jog): ...`) and
+the command exits with code `8`, since the jog was not applied.
 
 ### `doctor [--server URL]`
 

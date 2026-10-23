@@ -16,7 +16,7 @@
 
 ---
 
-**Ehrlichkeitscheck - was heute wirklich funktioniert:** `version`, `status`, `robots`, `doctor`, `config validate`, `config apply --dry-run` und die interaktive `shell` (`main.go`, `server.go`, `robots.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) sind echter, funktionierender Go-Code, geprüft durch 105 bestandene Tests (`go test ./...`) - echte `net/http`/`httptest`-Round-Trips gegen einen simulierten Server plus echte Temp-Datei-Konfigurationsfixtures, keine Stubs. Diese Tests simulieren eine HYDRA-UMC-SERVER-Instanz; `status`, `robots` und `doctor` (einschließlich der Anmeldung) wurden zusätzlich gegen einen echten HYDRA-UMC-SERVER-Prozess ausgeführt. `config apply` gibt ohne `--dry-run` ehrlich den Exit-Code `ExitNotImplemented` zurück, statt einen Erfolg vorzutäuschen, weil der Fleet-Write-Endpunkt, den es aufrufen würde, auf HYDRA-UMC-SERVER noch nicht existiert. `deploy`, `flash-all` und `audit` sind reine Zukunftsmusik - unten als "planned" markiert und in `src/` vollständig abwesend, nicht einmal als Stub-Funktion. Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
+**Ehrlichkeitscheck - was heute wirklich funktioniert:** `version`, `status`, `robots`, `claims`, `claim`, `release`, `limits`, `jog-arm`, `jog`, `doctor`, `config validate`, `config apply --dry-run` und die interaktive `shell` (`main.go`, `server.go`, `robots.go`, `control.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) sind echter, funktionierender Go-Code, geprüft durch 127 bestandene Tests (`go test ./...`) - echte `net/http`/`httptest`-Round-Trips gegen einen simulierten Server plus echte Temp-Datei-Konfigurationsfixtures, keine Stubs. Diese Tests simulieren eine HYDRA-UMC-SERVER-Instanz; `status`, `robots` und `doctor` (einschließlich der Anmeldung) wurden zusätzlich gegen einen echten HYDRA-UMC-SERVER-Prozess ausgeführt. `config apply` gibt ohne `--dry-run` ehrlich den Exit-Code `ExitNotImplemented` zurück, statt einen Erfolg vorzutäuschen, weil der Fleet-Write-Endpunkt, den es aufrufen würde, auf HYDRA-UMC-SERVER noch nicht existiert. `deploy`, `flash-all` und `audit` sind reine Zukunftsmusik - unten als "planned" markiert und in `src/` vollständig abwesend, nicht einmal als Stub-Funktion. Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
 
 ---
 
@@ -43,6 +43,8 @@ Das langfristige Ziel sind massive Missionsausrollungen, parallele Firmware-Upda
 * ✅ **`hydra-cli version`** — gibt Name und Version des CLI selbst aus. *(implementiert)*
 * ✅ **`hydra-cli status [--server URL] [--config PATH]`** — fragt `GET /api/hydra-info` einer laufenden HYDRA-UMC-SERVER-Instanz ab und gibt deren gemeldete Identität aus. *(implementiert)*
 * ✅ **`hydra-cli robots [--server URL] [--config PATH] [--json]`** — fragt `GET /api/settings` einer laufenden HYDRA-UMC-SERVER-Instanz ab und gibt deren echte Controller-/Roboterliste aus (Name, Online-Status, Modell, Rolle). *(implementiert)*
+* ✅ **`hydra-cli claims`, `claim <robot>`, `release <robot>`** — listet auf, wer welchen Roboter reserviert (`GET /api/claims`), und reserviert oder gibt einen frei. Die Reservierung gehört zu deinem Konto und zur Controller-ID dieses Programms (`--controller-id`, `HYDRA_CLI_CONTROLLER_ID`, Standard `hydra-cli-<host>`), die bei jeder Anfrage mitgesendet wird. Ablehnungen (anderes Konto, anderer Controller, Controller-ID erforderlich, Jog nicht scharfgeschaltet) werden unterschieden und enden mit Code `8`. *(implementiert)*
+* ✅ **`hydra-cli limits [--robot ID]`, `jog-arm <robot> <on|off>`, `jog <robot> <Achse> <Betrag> [--absolute]`** — liest die Sicherheitsgrenzen des Servers, schaltet den Jog scharf oder aus (nur nötig, wenn der Server es verlangt) und bewegt eine Achse. Ein Schritt über der Grenze des Robotermodells wird abgelehnt, bevor er gesendet wird, und es wird nichts gesendet, wenn die Grenze nicht gelesen werden kann; die Warnungen des Servers werden ausgegeben. *(implementiert)*
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** — schreibgeschützte Server-Vertragsdiagnose: prüft `/api/hydra-info` und `/api/settings` und vergleicht veröffentlichte Controller-/Roboterzahlen mit der Liste. Sendet keine Befehle und prüft keine Hardware. `--json` gibt statt der Textzeile einen strukturierten Bericht mit `checkId`/`severity`/`status` pro Prüfung aus, für Skripte (siehe [docs/DOCTOR.md](docs/DOCTOR.md)). *(implementiert)*
 * ✅ **`hydra-cli completion <bash|zsh>`** — gibt ein Tab-Vervollständigungsskript für die Shell aus. *(implementiert)*
 * ✅ **Ein echter, stabiler Exit-Code-Vertrag** — `0` ok, `1` allgemeiner Fehler, `2` Nutzungsfehler, `3` Konfigurationsfehler, `4` Netzwerkfehler, `5` Serverfehler, `6` nicht implementiert, `7` Authentifizierung erforderlich oder abgelehnt. Jeder Befehl klassifiziert seine eigenen Fehlschläge über diesen Vertrag statt über ein bloßes `exit 1`, sodass Skripte, die dieses CLI umschließen, anhand des *Warum* eines Fehlschlags verzweigen können. *(implementiert)*
@@ -92,10 +94,11 @@ HYDRA-UMC-TOOL-CLI/
 ├── src/                       # Go-Modul
 │   ├── go.mod                 # Modul-Definition (github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)
 │   └── cmd/hydra-cli/         # Binary-Einstiegspunkt
-│       ├── main.go            # Befehls-Dispatch (version/help/status/robots/doctor/config/shell)
+│       ├── main.go            # Befehls-Dispatch (version/help/status/robots/claims/limits/jog/doctor/config/shell)
 │       ├── server.go          # Gemeinsame Auflösung von --server/--config/HYDRA_CLI_SERVER
 │       ├── auth.go            # Zugangsdaten aus der Umgebung (Token oder Anmeldung) für die authentifizierten Lesezugriffe
 │       ├── robots.go          # Echter GET /api/settings-Client + Listenausgabe
+│       ├── control.go         # Reservierungen, Sicherheitsgrenzen und Jog (claims/claim/release/limits/jog-arm/jog)
 │       ├── doctor.go          # Schreibgeschützte Zwei-Endpunkt-Vertragsdiagnose
 │       ├── config.go          # Echtes Laden, Validieren und apply --dry-run der Konfigurationsdatei
 │       ├── shell.go           # Interaktive REPL über dieselbe Befehlstabelle

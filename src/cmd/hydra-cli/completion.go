@@ -21,7 +21,7 @@ import (
 // topLevelCommands mirrors run()'s own case labels in main.go, minus the
 // flag aliases (-v/--version, -h/--help) a real user tab-completing a
 // bare word would not expect to see suggested.
-var topLevelCommands = []string{"version", "help", "status", "robots", "doctor", "config", "shell", "completion"}
+var topLevelCommands = []string{"version", "help", "status", "robots", "claims", "claim", "release", "limits", "jog-arm", "jog", "doctor", "config", "shell", "completion"}
 
 // configSubcommands mirrors config.go's own real switch.
 var configSubcommands = []string{"validate", "apply"}
