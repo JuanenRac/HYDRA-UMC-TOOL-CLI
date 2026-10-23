@@ -28,7 +28,7 @@
 |---|---|
 | Versão | `0.1.7` |
 | Maturidade | Funcional |
-| Testes | 132 (`go test ./...`) |
+| Testes | 140 (`go test ./...`) |
 | Tecnologia | Go / standard-library flag handling |
 | Destino | O PC de quem o usa |
 | Em hardware real | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |
@@ -40,6 +40,7 @@ O **HYDRA-UMC-TOOL-CLI** é o canivete suíço para programadores e administrado
 O objetivo a longo prazo são implementações massivas de missões, atualizações paralelas de firmware (CAN-OTA) e diagnósticos profundos do sistema diretamente a partir de um terminal ou de um pipeline de CI/CD. Hoje entrega a base real e funcional sobre a qual tudo o resto se constrói: a indicação da versão e um cliente HTTP em direto contra o HYDRA-UMC-SERVER.
 
 ### Funcionalidades principais:
+* 🔏 **Binários de release assinados (`hydra-sign`).** `go run ./src/cmd/hydra-sign sign --key PRIVADA.pem FICHEIRO...` escreve `FICHEIRO.sha256` (formato `sha256sum`) e `FICHEIRO.sig` (Ed25519 sobre o conteúdo do ficheiro, em base64); `verify --pub PUBLICA.pem FICHEIRO...` verifica ambos e só precisa da chave pública. A chave privada só é lida do ficheiro indicado e nunca é impressa nem copiada; `pubkey --key PRIVADA.pem` imprime a metade pública. Os testes usam chaves feitas para eles. A chave que assina uma release é uma escolha do processo de publicação.
 * ✅ **`hydra-cli version`** — imprime o nome e a versão da própria CLI. *(implementado)*
 * ✅ **`hydra-cli status [--server URL] [--config PATH]`** — consulta o `GET /api/hydra-info` de um HYDRA-UMC-SERVER em direto e imprime a identidade que ele reporta. *(implementado)*
 * ✅ **`hydra-cli robots [--server URL] [--config PATH] [--json]`** — consulta o `GET /api/settings` de um HYDRA-UMC-SERVER em direto e imprime a sua lista real de controladores/robôs (nome, estado ligado, modelo, papel). *(implementado)*

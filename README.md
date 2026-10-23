@@ -28,7 +28,7 @@
 |---|---|
 | Version | `0.1.7` |
 | Maturity | Functional |
-| Tests | 132 (`go test ./...`) |
+| Tests | 140 (`go test ./...`) |
 | Stack | Go / standard-library flag handling |
 | Target | The PC of the person using it |
 | On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |
@@ -40,6 +40,7 @@
 The long-term goal is massive deployments of missions, parallel firmware updates (CAN-OTA), and deep system diagnostics directly from a terminal or CI/CD pipeline. Today it ships the real, working foundation that everything else builds on: version reporting and a live HTTP client against HYDRA-UMC-SERVER.
 
 ### Key Features:
+* 🔏 **Signed release binaries (`hydra-sign`).** `go run ./src/cmd/hydra-sign sign --key PRIVATE.pem FILE...` writes `FILE.sha256` (the `sha256sum` format) and `FILE.sig` (Ed25519 over the contents of the file, base64); `verify --pub PUBLIC.pem FILE...` checks both and needs only the public key. The private key is only read from the file given, and is never printed or copied; `pubkey --key PRIVATE.pem` prints the public half. The tests use keys made for them. Which key signs a release is the release process's choice.
 * ✅ **`hydra-cli version`** — prints the CLI's own name and version. *(implemented)*
 * ✅ **`hydra-cli status [--server URL] [--config PATH]`** — queries a live HYDRA-UMC-SERVER's `GET /api/hydra-info` and prints its reported identity. *(implemented)*
 * ✅ **`hydra-cli robots [--server URL] [--config PATH] [--json]`** — queries a live HYDRA-UMC-SERVER's `GET /api/settings` and prints its real controller/robot roster (name, online status, model, role). *(implemented)*
