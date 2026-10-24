@@ -110,19 +110,37 @@ Pure-software CLI — no hardware, firmware or OS of its own; those folders are 
 HYDRA-UMC-TOOL-CLI/
 ├── src/                       # Go module
 │   ├── go.mod                 # Module definition (github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)
-│   └── cmd/hydra-cli/         # Binary entry point
-│       ├── main.go            # Command dispatch (version/help/status/robots/claims/limits/jog/doctor/config/shell)
-│       ├── server.go          # Shared --server/--config/HYDRA_CLI_SERVER resolution
-│       ├── auth.go            # Credential from the environment (token or login) for the authenticated reads
-│       ├── robots.go          # Real GET /api/settings client + roster printer
-│       ├── control.go         # Reservations, safety limits and jog (claims/claim/release/limits/jog-arm/jog)
-│       ├── record.go          # Robot revision, atomic table move and audit record (robot/table/audit)
-│       ├── doctor.go          # Read-only two-endpoint contract diagnostic
-│       ├── config.go          # Real config file loading, validation, apply --dry-run
-│       ├── shell.go           # Interactive REPL over the same command table
-│       ├── exitcode.go        # Real, stable ExitCode/CliError contract
-│       ├── *_test.go          # Real tests (net/http/httptest round-trips, temp-file fixtures)
-│       └── version.go         # const Version - odometer-bumped, kept in sync with the manifest
+│   ├── cmd/hydra-cli/         # Binary entry point
+│   │   ├── main.go            # Command dispatch (version, help, status, robots, doctor, claims, claim, release, limits, jog-arm, jog, table, robot, audit, config, shell, completion, login, logout, scan, fleet, stop, stop-all, metrics, manifest)
+│   │   ├── server.go          # Shared --server/--config/HYDRA_CLI_SERVER resolution
+│   │   ├── auth.go            # Credential from the environment (token or login) for the authenticated reads
+│   │   ├── robots.go          # Real GET /api/settings client + roster printer
+│   │   ├── control.go         # Reservations, safety limits and jog (claims/claim/release/limits/jog-arm/jog)
+│   │   ├── record.go          # Robot revision, atomic table move and audit record (robot/table/audit)
+│   │   ├── doctor.go          # Read-only two-endpoint contract diagnostic
+│   │   ├── config.go          # Real config file loading, validation, apply --dry-run
+│   │   ├── shell.go           # Interactive REPL over the same command table
+│   │   ├── exitcode.go        # Real, stable ExitCode/CliError contract
+│   │   ├── transport.go       # One HTTP client for every request, and the rules for credentials
+│   │   ├── session.go         # Sessions: login, logout and token reuse (a login is rate limited and leaves a 90-day refresh token)
+│   │   ├── emergency.go       # Stopping robots: stop and stop-all (a stop is never blocked by another account's reservation)
+│   │   ├── fleet.go           # Looking at many servers: scan finds them by their public identity page, fleet doctor runs the read-only doctor against each
+│   │   ├── metrics.go         # Reading the metrics of the server (GET /metrics) and showing the figures an operator looks at first
+│   │   ├── manifest.go        # manifest validate: checks hydra-umc.project.json files against the schema the SDK publishes
+│   │   ├── jsonschema.go      # A small JSON Schema checker for the part of JSON Schema the SDK schemas use
+│   │   ├── completion.go      # completion bash|zsh: prints a static shell completion script
+│   │   ├── usage.go           # <command> --help: the usage of that command alone, without touching the network or any file
+│   │   ├── schemas/           # project-manifest.schema.json: the manifest schema that manifest validate checks against
+│   │   ├── *_test.go          # Real tests (net/http/httptest round-trips, temp-file fixtures)
+│   │   └── version.go         # const Version - odometer-bumped, kept in sync with the manifest
+│   ├── cmd/hydra-sign/    # hydra-sign: signs and verifies the release binaries (SHA-256 digest file and Ed25519 signature)
+│   └── redact/            # Hides well-known secret shapes in text and JSON-like values (a port of the SDK's shared redaction, with its test vectors)
+├── tools/
+│   ├── build_test.py      # Non-versioning build/compile check
+│   ├── ci_validate.py     # Manifest/CHANGELOG/docs validation used by CI
+│   ├── _doc_policy.py     # Documentation rules shared by the family (a copy of HYDRA-UMC-SDK's, kept in sync)
+│   ├── _readme_parity.py  # Check that the eight READMEs share one structure (a copy of HYDRA-UMC-SDK's, kept in sync)
+│   └── hydra_project_tool.py # The same commands in every repository: validate, test, ci, version, status, bump
 ├── docs/                      # Documentation: CLI_REFERENCE.md and DOCTOR.md
 ├── build/                     # Compiled binaries (gitignored)
 ├── images/                    # Media and diagrams

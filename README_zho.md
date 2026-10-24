@@ -114,19 +114,37 @@ flowchart LR
 HYDRA-UMC-TOOL-CLI/
 ├── src/                       # Go 模块
 │   ├── go.mod                 # 模块定义（github.com/JuanenRac/HYDRA-UMC-TOOL-CLI）
-│   └── cmd/hydra-cli/         # 二进制文件入口点
-│       ├── main.go            # 命令分发（version/help/status/robots/claims/limits/jog/doctor/config/shell）
-│       ├── server.go          # 共享的 --server/--config/HYDRA_CLI_SERVER 解析
-│       ├── auth.go            # 来自环境变量的凭据（令牌或登录），用于需要认证的读取
-│       ├── robots.go          # 真实的 GET /api/settings 客户端 + 名单打印
-│       ├── control.go         # 预留、安全限值和点动（claims/claim/release/limits/jog-arm/jog）
-│       ├── record.go          # 机器人修订号、工作台原子移动和审计记录(robot/table/audit)
-│       ├── doctor.go          # 只读双端点契约诊断
-│       ├── config.go          # 真实的配置文件加载、校验、apply --dry-run
-│       ├── shell.go           # 基于同一命令表的交互式 REPL
-│       ├── exitcode.go        # 真实、稳定的 ExitCode/CliError 契约
-│       ├── *_test.go          # 真实测试（net/http/httptest 往返，临时文件测试夹具）
-│       └── version.go         # const Version —— 里程表式递增，与清单保持同步
+│   ├── cmd/hydra-cli/         # 二进制文件入口点
+│   │   ├── main.go            # 命令分发 (version、help、status、robots、doctor、claims、claim、release、limits、jog-arm、jog、table、robot、audit、config、shell、completion、login、logout、scan、fleet、stop、stop-all、metrics、manifest)
+│   │   ├── server.go          # 共享的 --server/--config/HYDRA_CLI_SERVER 解析
+│   │   ├── auth.go            # 来自环境变量的凭据（令牌或登录），用于需要认证的读取
+│   │   ├── robots.go          # 真实的 GET /api/settings 客户端 + 名单打印
+│   │   ├── control.go         # 预留、安全限值和点动（claims/claim/release/limits/jog-arm/jog）
+│   │   ├── record.go          # 机器人修订号、工作台原子移动和审计记录(robot/table/audit)
+│   │   ├── doctor.go          # 只读双端点契约诊断
+│   │   ├── config.go          # 真实的配置文件加载、校验、apply --dry-run
+│   │   ├── shell.go           # 基于同一命令表的交互式 REPL
+│   │   ├── exitcode.go        # 真实、稳定的 ExitCode/CliError 契约
+│   │   ├── transport.go       # 所有请求共用的 HTTP 客户端及凭据规则
+│   │   ├── session.go         # 会话: 登录、登出与令牌复用 (登录受速率限制,并留下有效期 90 天的刷新令牌)
+│   │   ├── emergency.go       # 停止机器人: stop 与 stop-all (停止从不被其他账户的预约阻挡)
+│   │   ├── fleet.go           # 查看多台服务器: scan 通过公开身份页面发现它们,fleet doctor 对每台运行只读的 doctor
+│   │   ├── metrics.go         # 读取服务器指标 (GET /metrics) 并显示运维人员最先看的数字
+│   │   ├── manifest.go        # manifest validate: 按 SDK 发布的模式校验 hydra-umc.project.json 文件
+│   │   ├── jsonschema.go      # 针对 SDK 模式所用 JSON Schema 子集的小型校验器
+│   │   ├── completion.go      # completion bash|zsh: 输出静态的 shell 补全脚本
+│   │   ├── usage.go           # <command> --help: 仅显示该命令的用法,不触及网络或任何文件
+│   │   ├── schemas/           # project-manifest.schema.json: manifest validate 所依据的清单模式
+│   │   ├── *_test.go          # 真实测试（net/http/httptest 往返，临时文件测试夹具）
+│   │   └── version.go         # const Version —— 里程表式递增，与清单保持同步
+│   ├── cmd/hydra-sign/    # hydra-sign: 对发布的二进制文件签名并验证 (SHA-256 摘要文件和 Ed25519 签名)
+│   └── redact/            # 隐藏文本和类 JSON 值中常见的机密形式 (SDK 共享脱敏的移植,附测试向量)
+├── tools/
+│   ├── build_test.py      # 不递增版本号的构建检查
+│   ├── ci_validate.py     # CI 使用的清单/CHANGELOG/文档校验
+│   ├── _doc_policy.py     # 家族共享的文档规则 (HYDRA-UMC-SDK 的副本,保持同步)
+│   ├── _readme_parity.py  # 检查八个 README 结构一致 (HYDRA-UMC-SDK 的副本,保持同步)
+│   └── hydra_project_tool.py # 每个仓库相同的命令: validate、test、ci、version、status、bump
 ├── docs/                      # 文档：CLI_REFERENCE.md 和 DOCTOR.md
 ├── build/                     # 编译后的二进制文件（已被 gitignore）
 ├── images/                    # 媒体与图表

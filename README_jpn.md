@@ -118,19 +118,37 @@ flowchart LR
 HYDRA-UMC-TOOL-CLI/
 ├── src/                       # Go モジュール
 │   ├── go.mod                 # モジュール定義（github.com/JuanenRac/HYDRA-UMC-TOOL-CLI）
-│   └── cmd/hydra-cli/         # バイナリのエントリポイント
-│       ├── main.go            # コマンドディスパッチ（version/help/status/robots/claims/limits/jog/doctor/config/shell）
-│       ├── server.go          # --server/--config/HYDRA_CLI_SERVER の共有解決処理
-│       ├── auth.go            # 認証付き読み取りのための、環境変数からの認証情報（トークンまたはログイン）
-│       ├── robots.go          # 実際の GET /api/settings クライアント + 一覧表示
-│       ├── control.go         # 予約・安全上限・ジョグ（claims/claim/release/limits/jog-arm/jog）
-│       ├── record.go          # ロボットのリビジョン、テーブルのアトミックな移動、監査記録(robot/table/audit)
-│       ├── doctor.go          # 読み取り専用の二つのエンドポイント契約診断
-│       ├── config.go          # 実際の設定ファイルの読み込み、検証、apply --dry-run
-│       ├── shell.go           # 同じコマンドテーブル上の対話型 REPL
-│       ├── exitcode.go        # 実際の、安定した ExitCode/CliError 契約
-│       ├── *_test.go          # 実際のテスト（net/http/httptest ラウンドトリップ、一時ファイルのフィクスチャ）
-│       └── version.go         # const Version - オドメーター式インクリメント、マニフェストと同期
+│   ├── cmd/hydra-cli/         # バイナリのエントリポイント
+│   │   ├── main.go            # コマンドの振り分け (version、help、status、robots、doctor、claims、claim、release、limits、jog-arm、jog、table、robot、audit、config、shell、completion、login、logout、scan、fleet、stop、stop-all、metrics、manifest)
+│   │   ├── server.go          # --server/--config/HYDRA_CLI_SERVER の共有解決処理
+│   │   ├── auth.go            # 認証付き読み取りのための、環境変数からの認証情報（トークンまたはログイン）
+│   │   ├── robots.go          # 実際の GET /api/settings クライアント + 一覧表示
+│   │   ├── control.go         # 予約・安全上限・ジョグ（claims/claim/release/limits/jog-arm/jog）
+│   │   ├── record.go          # ロボットのリビジョン、テーブルのアトミックな移動、監査記録(robot/table/audit)
+│   │   ├── doctor.go          # 読み取り専用の二つのエンドポイント契約診断
+│   │   ├── config.go          # 実際の設定ファイルの読み込み、検証、apply --dry-run
+│   │   ├── shell.go           # 同じコマンドテーブル上の対話型 REPL
+│   │   ├── exitcode.go        # 実際の、安定した ExitCode/CliError 契約
+│   │   ├── transport.go       # すべてのリクエスト共通の HTTP クライアントと認証情報の規則
+│   │   ├── session.go         # セッション: ログイン、ログアウト、トークンの再利用 (ログインにはレート制限があり、90日有効のリフレッシュトークンが残る)
+│   │   ├── emergency.go       # ロボットの停止: stop と stop-all (停止は他のアカウントの予約に妨げられない)
+│   │   ├── fleet.go           # 多数のサーバーを見る: scan が公開 ID ページで見つけ、fleet doctor が各サーバーに読み取り専用の doctor を実行
+│   │   ├── metrics.go         # サーバーのメトリクス (GET /metrics) を読み、オペレーターが最初に見る数値を表示
+│   │   ├── manifest.go        # manifest validate: hydra-umc.project.json を SDK が公開するスキーマで検査
+│   │   ├── jsonschema.go      # SDK のスキーマが使う範囲の JSON Schema を検査する小さなチェッカー
+│   │   ├── completion.go      # completion bash|zsh: 静的なシェル補完スクリプトを出力
+│   │   ├── usage.go           # <command> --help: そのコマンドだけの使い方 (ネットワークにもファイルにも触れない)
+│   │   ├── schemas/           # project-manifest.schema.json: manifest validate が検査に使うマニフェストスキーマ
+│   │   ├── *_test.go          # 実際のテスト（net/http/httptest ラウンドトリップ、一時ファイルのフィクスチャ）
+│   │   └── version.go         # const Version - オドメーター式インクリメント、マニフェストと同期
+│   ├── cmd/hydra-sign/    # hydra-sign: リリースバイナリの署名と検証 (SHA-256 ダイジェストファイルと Ed25519 署名)
+│   └── redact/            # テキストや JSON 風の値に含まれる既知の秘密情報の形を隠す (SDK 共通の伏せ字処理の移植、テストベクタ付き)
+├── tools/
+│   ├── build_test.py      # バージョンを増やさないビルドチェック
+│   ├── ci_validate.py     # CI が使用するマニフェスト/CHANGELOG/ドキュメント検証
+│   ├── _doc_policy.py     # ファミリー共通のドキュメント規則 (HYDRA-UMC-SDK のコピーで、同期を維持)
+│   ├── _readme_parity.py  # 8つの README が同じ構造であることの検査 (HYDRA-UMC-SDK のコピーで、同期を維持)
+│   └── hydra_project_tool.py # すべてのリポジトリで共通のコマンド: validate、test、ci、version、status、bump
 ├── docs/                      # ドキュメント：CLI_REFERENCE.md と DOCTOR.md
 ├── build/                     # コンパイル済みバイナリ（gitignore 対象）
 ├── images/                    # メディアと図表
