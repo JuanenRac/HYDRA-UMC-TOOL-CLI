@@ -5,7 +5,7 @@
 # GPL-3.0 - see LICENSE
 #
 # Applies the ecosystem-wide "odometer" version bump to this project's own
-# src/cmd/hydra-cli/version.go (`const Version = "X.Y.Z"`) on an explicit
+# src/cmd/hydra-cli/version.go (`var Version = "X.Y.Z"`) on an explicit
 # bump: PATCH goes up by 1; if that would push PATCH past 9, it resets to 0
 # and MINOR goes up by 1 instead (e.g. 0.0.9 -> 0.1.0). MAJOR is never touched
 # by this script - deliberate manual-only decision, same convention used
@@ -25,7 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 VERSION_FILE = ROOT / "src" / "cmd" / "hydra-cli" / "version.go"
 
-VERSION_RE = re.compile(r'^const Version = "(\d+)\.(\d+)\.(\d+)"\s*$', re.MULTILINE)
+VERSION_RE = re.compile(r'^(?:const|var) Version = "(\d+)\.(\d+)\.(\d+)"\s*$', re.MULTILINE)
 
 
 def bump(major: int, minor: int, patch: int) -> tuple[int, int, int]:
@@ -46,7 +46,7 @@ def main() -> int:
     text = VERSION_FILE.read_text(encoding="utf-8")
     match = VERSION_RE.search(text)
     if not match:
-        print(f'ERROR: no const Version = "X.Y.Z" line found in {VERSION_FILE}', file=sys.stderr)
+        print(f'ERROR: no Version = "X.Y.Z" line found in {VERSION_FILE}', file=sys.stderr)
         return 1
 
     old = tuple(int(part) for part in match.groups())
@@ -54,7 +54,7 @@ def main() -> int:
     old_str = ".".join(str(part) for part in old)
     new_str = ".".join(str(part) for part in new)
 
-    new_text = text[: match.start()] + f'const Version = "{new_str}"' + text[match.end():]
+    new_text = text[: match.start()] + f'var Version = "{new_str}"' + text[match.end():]
     VERSION_FILE.write_text(new_text, encoding="utf-8")
 
     print(f"Version bumped: {old_str} -> {new_str}")

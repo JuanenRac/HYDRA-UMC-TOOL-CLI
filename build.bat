@@ -62,7 +62,7 @@ echo [3/5] Compiling Go module (src/cmd/hydra-cli)...
 if not exist build mkdir build
 pushd src
 set "CGO_ENABLED=0"
-go build -trimpath -ldflags "-s -w" -o ..\build\hydra-cli.exe .\cmd\hydra-cli
+go build -trimpath -ldflags "-s -w -X main.Version=%HYDRA_UMC_VERSION_BUILT%" -o ..\build\hydra-cli.exe .\cmd\hydra-cli
 if errorlevel 1 (
     popd
     goto :error
@@ -125,7 +125,7 @@ set "OUT_DIR=%RELEASE_DIR%\%GOOS%-%GOARCH%"
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
 pushd src
 set "CGO_ENABLED=0"
-go build -trimpath -ldflags "-s -w" -o "..\%OUT_DIR%\%OUT_NAME%" .\cmd\hydra-cli
+go build -trimpath -ldflags "-s -w -X main.Version=%HYDRA_UMC_VERSION_BUILT%" -o "..\%OUT_DIR%\%OUT_NAME%" .\cmd\hydra-cli
 set "RESULT=%ERRORLEVEL%"
 popd
 if not "%RESULT%"=="0" (

@@ -57,7 +57,7 @@ BIN_NAME="hydra-cli"
 if [ "${OS:-}" = "Windows_NT" ]; then
     BIN_NAME="hydra-cli.exe"
 fi
-( cd src && CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o "../build/${BIN_NAME}" ./cmd/hydra-cli )
+( cd src && CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.Version=${HYDRA_UMC_VERSION_BUILT}" -o "../build/${BIN_NAME}" ./cmd/hydra-cli )
 echo "      Done. Binary: build/${BIN_NAME}"
 echo ""
 
@@ -84,7 +84,7 @@ for target in "linux amd64" "linux arm64" "windows amd64" "darwin amd64" "darwin
     [ "$goos" = "windows" ] && out_name="hydra-cli.exe"
     out_dir="$RELEASE_DIR/${goos}-${goarch}"
     mkdir -p "$out_dir"
-    ( cd src && CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags "-s -w" -o "../${out_dir}/${out_name}" ./cmd/hydra-cli )
+    ( cd src && CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags "-s -w -X main.Version=${HYDRA_UMC_VERSION_BUILT}" -o "../${out_dir}/${out_name}" ./cmd/hydra-cli )
     echo "      Built: ${out_dir}/${out_name}"
 done
 # A real, verifiable checksum per artifact - the same real integrity

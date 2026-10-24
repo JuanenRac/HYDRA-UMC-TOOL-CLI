@@ -44,7 +44,7 @@ HYDRA-UMC 部署的命令行工具。
 可用基础：版本报告以及针对 HYDRA-UMC-SERVER 的实时 HTTP 客户端。
 
 ### 关键特性：
-* 🔏 **已签名的发布二进制文件（`hydra-sign`）。** `go run ./src/cmd/hydra-sign sign --key 私钥.pem 文件...` 会写出 `文件.sha256`（`sha256sum` 格式）和 `文件.sig`（对文件内容的 Ed25519 签名，base64）；`verify --pub 公钥.pem 文件...` 校验两者，只需要公钥。私钥只从指定文件读取，绝不会被打印或复制；`pubkey --key 私钥.pem` 打印公钥部分。测试使用专为测试生成的密钥。用哪把密钥签署发布版由发布流程决定。
+* 🔏 **已签名的发布二进制文件（`hydra-sign`）。** `go run ./src/cmd/hydra-sign sign --key 私钥.pem 文件...` 会写出 `文件.sha256`（`sha256sum` 格式）和 `文件.sig`（对文件内容的 Ed25519 签名，base64）；`verify --pub 公钥.pem 文件...` 校验两者，只需要公钥。私钥只从指定文件读取，绝不会被打印或复制；`pubkey --key 私钥.pem` 打印公钥部分。测试使用专为测试生成的密钥。用哪把密钥签署发布版由发布流程决定。 发布流程会用 HYDRA 的发布密钥为每个发布的二进制文件签名，并附上 `.sha256` 和 `.sig` 文件；构建脚本根据项目清单设置二进制文件报告的版本。
 * ✅ **`hydra-cli version`** —— 打印 CLI 自身的名称和版本。*（已实现）*
 * ✅ **`hydra-cli status [--server URL] [--config PATH]`** —— 查询实时 HYDRA-UMC-SERVER 的 `GET /api/hydra-info`，并打印其报告的身份信息。*（已实现）*
 * ✅ **`hydra-cli robots [--server URL] [--config PATH] [--json]`** —— 查询实时 HYDRA-UMC-SERVER 的 `GET /api/settings`，并打印其真实的控制器/机器人名单（名称、在线状态、型号、角色）。*（已实现）*
