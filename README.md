@@ -26,9 +26,9 @@
 
 | | |
 |---|---|
-| Version | `0.1.7` |
+| Version | `0.1.8` |
 | Maturity | Functional |
-| Tests | 140 (`go test ./...`) |
+| Tests | 132 (`go test ./...`) |
 | Stack | Go / standard-library flag handling |
 | Target | The PC of the person using it |
 | On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |

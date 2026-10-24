@@ -26,9 +26,9 @@
 
 | | |
 |---|---|
-| Versão | `0.1.7` |
+| Versão | `0.1.8` |
 | Maturidade | Funcional |
-| Testes | 140 (`go test ./...`) |
+| Testes | 132 (`go test ./...`) |
 | Tecnologia | Go / standard-library flag handling |
 | Destino | O PC de quem o usa |
 | Em hardware real | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |

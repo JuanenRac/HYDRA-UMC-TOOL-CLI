@@ -26,9 +26,9 @@
 
 | | |
 |---|---|
-| Version | `0.1.7` |
+| Version | `0.1.8` |
 | Reifegrad | Funktionsfähig |
-| Tests | 140 (`go test ./...`) |
+| Tests | 132 (`go test ./...`) |
 | Technik | Go / standard-library flag handling |
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
