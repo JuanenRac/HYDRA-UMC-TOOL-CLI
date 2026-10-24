@@ -13,19 +13,17 @@
 //
 //	HYDRA_CLI_TOKEN                      a bearer token already issued by the server
 //	HYDRA_CLI_USER + HYDRA_CLI_PASSWORD  the CLI logs in (POST /api/login) for that run
+//	hydra-cli login                      a session saved to a file only the user can read (see session.go)
 //
-// The token wins when both are set.
+// The token wins when several are set, then the saved session. A credential is never sent over plain
+// http to another machine unless the operator allowed it (see transport.go).
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
-	"os"
 	"strings"
 )
 
@@ -67,77 +65,48 @@ func bodyReadError(server, what string, err error) error {
 	return newCliError(code, fmt.Errorf("reading %s from %s: %w", what, server, err))
 }
 
-// warnIfInsecure writes a warning to stderr when a credential is about to
-// travel over plain http to a host that is not this machine.
-func warnIfInsecure(server string) {
-	parsed, err := url.Parse(server)
-	if err != nil || parsed.Scheme != "http" {
-		return
-	}
-	switch parsed.Hostname() {
-	case "localhost", "127.0.0.1", "::1":
-		return
-	}
-	fmt.Fprintf(os.Stderr, "hydra-cli: warning: sending credentials over plain http to %s; use https when the network is not trusted\n", parsed.Host)
-}
-
-// resolveToken returns the bearer token for an authenticated read, logging in
-// when the environment holds a user and password instead of a token. It
-// returns "" (and no error) when no credential is configured, so a server that
-// does not require one keeps working.
-func resolveToken(client *http.Client, server string) (string, error) {
-	if token := strings.TrimSpace(os.Getenv(tokenEnv)); token != "" {
-		return token, nil
-	}
-	user, password := os.Getenv(userEnv), os.Getenv(passwordEnv)
-	if user == "" || password == "" {
-		return "", nil
-	}
-	warnIfInsecure(server)
-	payload, err := json.Marshal(map[string]string{"username": user, "password": password})
-	if err != nil {
-		return "", newCliError(ExitGeneralError, err)
-	}
-	resp, err := client.Post(strings.TrimRight(server, "/")+"/api/login", "application/json", bytes.NewReader(payload))
-	if err != nil {
-		return "", newCliError(ExitNetworkError, fmt.Errorf("could not reach %s: %w", server, err))
-	}
-	defer resp.Body.Close()
-	body, err := readBody(resp.Body)
-	if err != nil {
-		return "", bodyReadError(server, "the login response", err)
-	}
-	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
-		return "", newCliError(ExitAuthError, fmt.Errorf("%s refused the login for %s: check %s and %s", server, user, userEnv, passwordEnv))
-	}
-	if resp.StatusCode == http.StatusTooManyRequests {
-		return "", newCliError(ExitServerError, fmt.Errorf("%s/api/login is rate limited (HTTP 429): too many logins; wait and retry, or set %s to a token instead of logging in on every run", server, tokenEnv))
-	}
-	if resp.StatusCode != http.StatusOK {
-		return "", newCliError(ExitServerError, fmt.Errorf("%s/api/login replied with HTTP %d", server, resp.StatusCode))
-	}
-	var login struct {
-		Token string `json:"token"`
-	}
-	if err := json.Unmarshal(body, &login); err != nil || login.Token == "" {
-		return "", newCliError(ExitServerError, errors.New("the login response carried no token"))
-	}
-	return login.Token, nil
-}
-
 // getAuthenticated is GET path against server with the configured credential.
-// A 401/403 maps to ExitAuthError with a message that says what to set.
+// A 401/403 maps to ExitAuthError with a message that says what to set. When the
+// server says the access token ran out and the CLI can get a new one without a
+// person (a saved session with a refresh token, or the user and password of the
+// environment), it does so once and repeats the request.
 func getAuthenticated(client *http.Client, server, path string) (int, []byte, error) {
-	token, err := resolveToken(client, server)
+	cred, err := resolveCredential(client, server)
 	if err != nil {
 		return 0, nil, err
 	}
+	status, body, err := getWithToken(client, server, path, cred.token)
+	if err != nil {
+		return status, body, err
+	}
+	if cred.token != "" && shouldRecover(status, body) {
+		if next, ok := recoverCredential(client, server, cred); ok {
+			cred = next
+			status, body, err = getWithToken(client, server, path, cred.token)
+			if err != nil {
+				return status, body, err
+			}
+		}
+	}
+	if status == http.StatusUnauthorized || status == http.StatusForbidden {
+		if cred.token == "" {
+			return status, body, newCliError(ExitAuthError, fmt.Errorf("%s%s requires a login: set %s, or %s and %s, or run `hydra-cli login`", server, path, tokenEnv, userEnv, passwordEnv))
+		}
+		return status, body, newCliError(ExitAuthError, fmt.Errorf("%s%s refused the credential (HTTP %d): the token may be expired or invalid", server, path, status))
+	}
+	return status, body, nil
+}
+
+// getWithToken is one GET with the bearer token (none when empty), with a bounded read.
+func getWithToken(client *http.Client, server, path, token string) (int, []byte, error) {
 	req, err := http.NewRequest(http.MethodGet, strings.TrimRight(server, "/")+path, nil)
 	if err != nil {
 		return 0, nil, newCliError(ExitConfigError, fmt.Errorf("invalid server %q: %w", server, err))
 	}
 	if token != "" {
-		warnIfInsecure(server)
+		if err := requireSecureCredentials(server); err != nil {
+			return 0, nil, err
+		}
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
 	resp, err := client.Do(req)
@@ -148,12 +117,6 @@ func getAuthenticated(client *http.Client, server, path string) (int, []byte, er
 	body, err := readBody(resp.Body)
 	if err != nil {
 		return 0, nil, bodyReadError(server, "response", err)
-	}
-	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
-		if token == "" {
-			return resp.StatusCode, body, newCliError(ExitAuthError, fmt.Errorf("%s%s requires a login: set %s, or %s and %s", server, path, tokenEnv, userEnv, passwordEnv))
-		}
-		return resp.StatusCode, body, newCliError(ExitAuthError, fmt.Errorf("%s%s refused the credential (HTTP %d): the token may be expired or invalid", server, path, resp.StatusCode))
 	}
 	return resp.StatusCode, body, nil
 }

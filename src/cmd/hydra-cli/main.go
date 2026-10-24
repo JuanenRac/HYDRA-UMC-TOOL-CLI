@@ -15,6 +15,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -28,7 +29,10 @@ const projectName = "HYDRA-UMC-TOOL-CLI"
 const defaultServerURL = "http://localhost:3000"
 
 func main() {
-	os.Exit(int(run(os.Args[1:])))
+	code := run(os.Args[1:])
+	// the logins this run made with a user and a password are ended, so none is left on the server
+	endSessions()
+	os.Exit(int(code))
 }
 
 // run is main()'s real body, split out so it returns an ExitCode instead
@@ -54,7 +58,7 @@ func run(args []string) ExitCode {
 		printHelp()
 		return ExitOK
 	case "status":
-		if err := cmdStatus(args[1:]); err != nil {
+		if err := cmdStatusTo(os.Stdout, args[1:]); err != nil {
 			fmt.Fprintf(os.Stderr, "hydra-cli status: %v\n", err)
 			return exitCodeFor(err)
 		}
@@ -143,6 +147,54 @@ func run(args []string) ExitCode {
 			return exitCodeFor(err)
 		}
 		return ExitOK
+	case "login":
+		if err := cmdLogin(os.Stdout, os.Stdin, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli login: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "logout":
+		if err := cmdLogout(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli logout: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "scan":
+		if err := cmdScan(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli scan: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "fleet":
+		if err := cmdFleet(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli fleet: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "stop":
+		if err := cmdStop(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli stop: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "stop-all":
+		if err := cmdStopAll(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli stop-all: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "metrics":
+		if err := cmdMetrics(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli metrics: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "manifest":
+		if err := cmdManifest(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli manifest: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
 	default:
 		fmt.Fprintf(os.Stderr, "hydra-cli: unknown command %q\n\n", args[0])
 		printHelp()
@@ -167,7 +219,7 @@ USAGE:
 
 COMMANDS:
     version              Print the CLI version and exit.
-    status [--server URL] [--config PATH]
+    status [--server URL] [--config PATH] [--json]
                           Query a HYDRA-UMC-SERVER instance's /api/hydra-info
                           endpoint and print its reported identity/version.
     robots [--server URL] [--config PATH] [--json]
@@ -184,6 +236,23 @@ COMMANDS:
 	                      --json prints a structured report (checkId/severity/
 	                      status per check) instead of the DOCTOR=PASS line, for
 	                      scripts that need to act on individual results.
+    login [--user NAME] [--password-stdin]
+    logout
+                          Sign in once and keep the session in a file only you
+                          can read (every later command uses it and renews it by
+                          itself), or end it. Avoids a login on every run.
+    scan <network|address>... [--ports 3000,3443] [--json]
+                          Find HYDRA-UMC-SERVERs on a private network (reads the
+                          public /api/hydra-info only).
+    fleet doctor --servers FILE [--json]
+                          Run doctor against every server of a list at once.
+    stop <robot>          Send the stop command to one robot.
+    stop-all --yes        The global stop: every robot, valves and pumps off.
+    metrics [--all] [--json]
+                          Read the Prometheus metrics of the server (GET /metrics).
+    manifest validate [PATH...] [--workspace DIR] [--json]
+                          Check hydra-umc.project.json files against the schema of
+                          the SDK.
     claims [--server URL] [--config PATH] [--json]
                           List who reserves which robot (GET /api/claims).
     claim <robot> [--ttl-ms N] [--force] [--reason TEXT]
@@ -230,7 +299,7 @@ COMMANDS:
                           repeatedly against the same server without
                           restarting the process. exit/quit or Ctrl-D
                           to leave.
-    completion <bash|zsh>
+    completion <bash|zsh|fish|powershell>
                           Print a real completion script for the given
                           shell to stdout - eval "$(hydra-cli completion
                           bash)" (or source it from a completions
@@ -242,12 +311,17 @@ COMMANDS:
 
     Every live command above also reads a --config file's own "timeoutSec"
     as its HTTP request timeout (default 5s), the same value config
-    validate/apply already schema-validate.
+    validate/apply already schema-validate; --timeout SECONDS sets it for one run.
+
+    A password or a token is never sent over plain http to another machine:
+    use https (a private CA goes in HYDRA_CLI_CA_FILE, or "caFile" of the config
+    file), or set HYDRA_CLI_ALLOW_INSECURE=1 for a network you trust.
 
     robots and doctor read /api/settings, which the server only gives to a
-    logged-in account. Set HYDRA_CLI_TOKEN (a bearer token), or HYDRA_CLI_USER
-    and HYDRA_CLI_PASSWORD (the CLI logs in for that run); they are read from
-    the environment, never from a flag.
+    logged-in account. Set HYDRA_CLI_TOKEN (a bearer token), run "hydra-cli
+    login", or set HYDRA_CLI_USER and HYDRA_CLI_PASSWORD (the CLI logs in for that
+    run and ends that login when it exits); they are read from the environment,
+    never from a flag.
 
 EXIT CODES:
     0  ok                     3  config error
@@ -278,15 +352,21 @@ type hydraInfo struct {
 // resolution (--server/--config/HYDRA_CLI_SERVER/default) is shared with
 // `robots`/`doctor`/`shell` via resolveTarget (see server.go).
 func cmdStatus(args []string) error {
+	return cmdStatusTo(os.Stdout, args)
+}
+
+// cmdStatusTo is cmdStatus writing to w, with --json for scripts.
+func cmdStatusTo(w io.Writer, args []string) error {
 	server, timeout, rest, err := resolveTarget(args)
 	if err != nil {
 		return err
 	}
+	jsonOutput, rest := takeSwitch(rest, "--json")
 	if err := rejectExtraArgs("status", rest); err != nil {
 		return err
 	}
 
-	client := http.Client{Timeout: timeout}
+	client := newClient(timeout)
 	resp, err := client.Get(server + "/api/hydra-info")
 	if err != nil {
 		return newCliError(ExitNetworkError, fmt.Errorf("could not reach %s: %w", server, err))
@@ -311,19 +391,34 @@ func cmdStatus(args []string) error {
 		return newCliError(ExitServerError, fmt.Errorf("%s answered /api/hydra-info without an appVersion: it does not look like a HYDRA-UMC-SERVER", server))
 	}
 
-	fmt.Printf("server:      %s\n", server)
+	if jsonOutput {
+		encoded, err := json.MarshalIndent(map[string]any{
+			"server":           server,
+			"product":          printable(info.Product),
+			"hostname":         printable(info.Hostname),
+			"appVersion":       printable(info.AppVersion),
+			"remoteApiVersion": info.RemoteAPIVersion,
+			"status":           printable(info.Status),
+		}, "", "  ")
+		if err != nil {
+			return newCliError(ExitGeneralError, err)
+		}
+		_, err = fmt.Fprintln(w, string(encoded))
+		return err
+	}
+	fmt.Fprintf(w, "server:      %s\n", server)
 	if info.Product != "" {
-		fmt.Printf("product:     %s\n", printable(info.Product))
+		fmt.Fprintf(w, "product:     %s\n", printable(info.Product))
 	}
 	if info.Hostname != "" {
-		fmt.Printf("hostname:    %s\n", printable(info.Hostname))
+		fmt.Fprintf(w, "hostname:    %s\n", printable(info.Hostname))
 	}
-	fmt.Printf("appVersion:  %s\n", printable(info.AppVersion))
+	fmt.Fprintf(w, "appVersion:  %s\n", printable(info.AppVersion))
 	if info.RemoteAPIVersion != 0 {
-		fmt.Printf("remoteApiVersion: %d\n", info.RemoteAPIVersion)
+		fmt.Fprintf(w, "remoteApiVersion: %d\n", info.RemoteAPIVersion)
 	}
 	if info.Status != "" {
-		fmt.Printf("status:      %s\n", printable(info.Status))
+		fmt.Fprintf(w, "status:      %s\n", printable(info.Status))
 	}
 	return nil
 }

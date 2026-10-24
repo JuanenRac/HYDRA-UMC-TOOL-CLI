@@ -201,45 +201,63 @@ func sendAuthenticated(client *http.Client, server, method, path string, payload
 // robot the caller read, so the server refuses (412) a write to a robot that
 // changed in between.
 func sendConditional(client *http.Client, server, method, path string, payload any, controllerID, ifMatch string) (controlResponse, error) {
-	token, err := resolveToken(client, server)
+	cred, err := resolveCredential(client, server)
 	if err != nil {
 		return controlResponse{}, err
 	}
-	var reader io.Reader
+	var encoded []byte
 	if payload != nil {
-		encoded, err := json.Marshal(payload)
+		encoded, err = json.Marshal(payload)
 		if err != nil {
 			return controlResponse{}, newCliError(ExitGeneralError, err)
 		}
-		reader = bytes.NewReader(encoded)
 	}
-	req, err := http.NewRequest(method, strings.TrimRight(server, "/")+path, reader)
+	send := func(token string) (controlResponse, error) {
+		var reader io.Reader
+		if encoded != nil {
+			reader = bytes.NewReader(encoded)
+		}
+		req, err := http.NewRequest(method, strings.TrimRight(server, "/")+path, reader)
+		if err != nil {
+			return controlResponse{}, newCliError(ExitConfigError, fmt.Errorf("invalid server %q: %w", server, err))
+		}
+		if payload != nil {
+			req.Header.Set("Content-Type", "application/json")
+		}
+		if controllerID != "" {
+			req.Header.Set("X-Controller-Id", controllerID)
+		}
+		if ifMatch != "" {
+			req.Header.Set("If-Match", `"`+ifMatch+`"`)
+		}
+		if token != "" {
+			if err := requireSecureCredentials(server); err != nil {
+				return controlResponse{}, err
+			}
+			req.Header.Set("Authorization", "Bearer "+token)
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			return controlResponse{}, newCliError(ExitNetworkError, fmt.Errorf("could not reach %s: %w", server, err))
+		}
+		defer resp.Body.Close()
+		body, err := readBody(resp.Body)
+		if err != nil {
+			return controlResponse{}, bodyReadError(server, "response", err)
+		}
+		return controlResponse{Status: resp.StatusCode, Body: body}, nil
+	}
+	answer, err := send(cred.token)
 	if err != nil {
-		return controlResponse{}, newCliError(ExitConfigError, fmt.Errorf("invalid server %q: %w", server, err))
+		return answer, err
 	}
-	if payload != nil {
-		req.Header.Set("Content-Type", "application/json")
+	// the access token ran out and a new one can be had without a person: once, and the same request again
+	if cred.token != "" && shouldRecover(answer.Status, answer.Body) {
+		if next, ok := recoverCredential(client, server, cred); ok {
+			return send(next.token)
+		}
 	}
-	if controllerID != "" {
-		req.Header.Set("X-Controller-Id", controllerID)
-	}
-	if ifMatch != "" {
-		req.Header.Set("If-Match", `"`+ifMatch+`"`)
-	}
-	if token != "" {
-		warnIfInsecure(server)
-		req.Header.Set("Authorization", "Bearer "+token)
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return controlResponse{}, newCliError(ExitNetworkError, fmt.Errorf("could not reach %s: %w", server, err))
-	}
-	defer resp.Body.Close()
-	body, err := readBody(resp.Body)
-	if err != nil {
-		return controlResponse{}, bodyReadError(server, "response", err)
-	}
-	return controlResponse{Status: resp.StatusCode, Body: body}, nil
+	return answer, nil
 }
 
 // refusalError turns a non-2xx answer into an error with a message that says
@@ -320,7 +338,7 @@ func cmdClaims(w io.Writer, args []string) error {
 	if err := rejectExtraArgs("claims", rest); err != nil {
 		return err
 	}
-	client := http.Client{Timeout: timeout}
+	client := newClient(timeout)
 	resp, err := sendAuthenticated(&client, server, http.MethodGet, "/api/claims", nil, controllerID)
 	if err != nil {
 		return err
@@ -410,7 +428,7 @@ func cmdClaim(w io.Writer, args []string) error {
 	if reason != "" {
 		body["reason"] = reason
 	}
-	client := http.Client{Timeout: timeout}
+	client := newClient(timeout)
 	ifMatch, err = resolveIfMatch(&client, server, controllerID, robotID, ifMatch)
 	if err != nil {
 		return err
@@ -452,7 +470,7 @@ func cmdRelease(w io.Writer, args []string) error {
 	if reason != "" {
 		body["reason"] = reason
 	}
-	client := http.Client{Timeout: timeout}
+	client := newClient(timeout)
 	ifMatch, err = resolveIfMatch(&client, server, controllerID, robotID, ifMatch)
 	if err != nil {
 		return err
@@ -544,7 +562,7 @@ func cmdLimits(w io.Writer, args []string) error {
 		}
 		robotID = &id
 	}
-	client := http.Client{Timeout: timeout}
+	client := newClient(timeout)
 	view, raw, err := fetchSafety(&client, server, controllerID, robotID)
 	if err != nil {
 		return err
@@ -608,7 +626,7 @@ func cmdJogArm(w io.Writer, args []string) error {
 		}
 		body["ttlMs"] = ttl
 	}
-	client := http.Client{Timeout: timeout}
+	client := newClient(timeout)
 	resp, err := sendAuthenticated(&client, server, http.MethodPost, fmt.Sprintf("/api/robot/%d/jog-arm", robotID), body, controllerID)
 	if err != nil {
 		return err
@@ -667,7 +685,7 @@ func cmdJog(w io.Writer, args []string) error {
 	if convErr != nil || math.IsNaN(amount) || math.IsInf(amount, 0) {
 		return newCliError(ExitUsageError, fmt.Errorf("the amount must be a finite number, got %q", rest[2]))
 	}
-	client := http.Client{Timeout: timeout}
+	client := newClient(timeout)
 	view, _, err := fetchSafety(&client, server, controllerID, &robotID)
 	if err != nil {
 		return err

@@ -14,6 +14,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // doctorInfo is the published, read-only subset of /api/hydra-info needed for
@@ -91,64 +92,12 @@ func cmdDoctor(w io.Writer, args []string) error {
 		return newCliError(ExitUsageError, fmt.Errorf("doctor does not accept arguments: %s", strings.Join(filtered, " ")))
 	}
 
-	report := doctorReport{Server: server}
-	client := http.Client{Timeout: timeout}
-
-	var info doctorInfo
-	if err := getJSON(&client, server, "/api/hydra-info", &info); err != nil {
-		report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-reachable", Severity: "critical", Status: "fail", Message: err.Error()})
+	client := newClient(timeout)
+	report, info, crossCheckStatus, err := diagnose(&client, server)
+	if err != nil {
 		return finishDoctor(w, jsonOutput, report, err)
 	}
-	report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-reachable", Severity: "critical", Status: "pass"})
-
-	if strings.TrimSpace(info.AppVersion) == "" {
-		err := newCliError(ExitServerError, fmt.Errorf("%s returned /api/hydra-info without appVersion", server))
-		report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-has-app-version", Severity: "critical", Status: "fail", Message: err.Error()})
-		return finishDoctor(w, jsonOutput, report, err)
-	}
-	if info.SchemaVersion != supportedSchemaVersion {
-		err := newCliError(ExitServerError, fmt.Errorf("%s reports schema_version %q for /api/hydra-info; this CLI understands %q", server, info.SchemaVersion, supportedSchemaVersion))
-		report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-schema-version", Severity: "critical", Status: "fail", Message: err.Error()})
-		return finishDoctor(w, jsonOutput, report, err)
-	}
-	report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-schema-version", Severity: "critical", Status: "pass"})
-	report.AppVersion = info.AppVersion
-	report.SchemaVersion = info.SchemaVersion
-	report.RemoteAPIVersion = info.RemoteAPIVersion
-	report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-has-app-version", Severity: "critical", Status: "pass"})
-
-	var settings settingsResponse
-	if err := getJSON(&client, server, "/api/settings", &settings); err != nil {
-		report.Checks = append(report.Checks, doctorCheck{CheckID: "settings-reachable", Severity: "critical", Status: "fail", Message: err.Error()})
-		return finishDoctor(w, jsonOutput, report, err)
-	}
-	report.Checks = append(report.Checks, doctorCheck{CheckID: "settings-reachable", Severity: "critical", Status: "pass"})
-
-	actualControllers := len(settings.Controllers)
-	actualRobots := robotCount(settings)
-	report.Controllers = actualControllers
-	report.Robots = actualRobots
-
-	if info.ControllerCount != nil && *info.ControllerCount != actualControllers {
-		err := newCliError(ExitServerError, fmt.Errorf("controller count mismatch: /api/hydra-info reports %d but /api/settings contains %d", *info.ControllerCount, actualControllers))
-		report.Checks = append(report.Checks, doctorCheck{CheckID: "controller-count-cross-check", Severity: "warning", Status: "fail", Message: err.Error()})
-		return finishDoctor(w, jsonOutput, report, err)
-	}
-	if info.RobotCount != nil && *info.RobotCount != actualRobots {
-		err := newCliError(ExitServerError, fmt.Errorf("robot count mismatch: /api/hydra-info reports %d but /api/settings contains %d", *info.RobotCount, actualRobots))
-		report.Checks = append(report.Checks, doctorCheck{CheckID: "robot-count-cross-check", Severity: "warning", Status: "fail", Message: err.Error()})
-		return finishDoctor(w, jsonOutput, report, err)
-	}
-
-	crossCheckStatus := "pass"
-	if info.ControllerCount == nil || info.RobotCount == nil {
-		crossCheckStatus = "not-reported"
-	}
-	report.Checks = append(report.Checks,
-		doctorCheck{CheckID: "controller-count-cross-check", Severity: "warning", Status: crossCheckStatus},
-		doctorCheck{CheckID: "robot-count-cross-check", Severity: "warning", Status: crossCheckStatus},
-	)
-	report.OK = true
+	actualControllers, actualRobots := report.Controllers, report.Robots
 
 	if jsonOutput {
 		return writeDoctorJSON(w, report)
@@ -165,6 +114,92 @@ func cmdDoctor(w io.Writer, args []string) error {
 	fmt.Fprintf(w, " countCrossCheck=%s", crossCheckStatus)
 	fmt.Fprintln(w)
 	return nil
+}
+
+// doctorRecheckDelay is how long a count mismatch waits before it is read once more (a variable so a test does not wait).
+var doctorRecheckDelay = time.Second
+
+// diagnose runs the read-only checks against one server and returns the report (with every check that ran, also when
+// one failed), the identity it read and the state of the count cross-check. `doctor` and `fleet doctor` both use it.
+func diagnose(client *http.Client, server string) (report doctorReport, info doctorInfo, crossCheckStatus string, err error) {
+	report = doctorReport{Server: server}
+
+	if err := getJSON(client, server, "/api/hydra-info", &info); err != nil {
+		report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-reachable", Severity: "critical", Status: "fail", Message: err.Error()})
+		return report, info, "", err
+	}
+	report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-reachable", Severity: "critical", Status: "pass"})
+
+	if strings.TrimSpace(info.AppVersion) == "" {
+		err := newCliError(ExitServerError, fmt.Errorf("%s returned /api/hydra-info without appVersion", server))
+		report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-has-app-version", Severity: "critical", Status: "fail", Message: err.Error()})
+		return report, info, "", err
+	}
+	if info.SchemaVersion != supportedSchemaVersion {
+		err := newCliError(ExitServerError, fmt.Errorf("%s reports schema_version %q for /api/hydra-info; this CLI understands %q", server, info.SchemaVersion, supportedSchemaVersion))
+		report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-schema-version", Severity: "critical", Status: "fail", Message: err.Error()})
+		return report, info, "", err
+	}
+	report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-schema-version", Severity: "critical", Status: "pass"})
+	report.AppVersion = info.AppVersion
+	report.SchemaVersion = info.SchemaVersion
+	report.RemoteAPIVersion = info.RemoteAPIVersion
+	report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-has-app-version", Severity: "critical", Status: "pass"})
+
+	// The count of /api/hydra-info comes from memory and /api/settings is read from disk, and the write to disk is
+	// deferred: right after a robot was added the two can differ for a moment. A mismatch is read once more after a short
+	// wait before it is declared.
+	var settings settingsResponse
+	var mismatch error
+	var mismatchCheck string
+	for attempt := 0; attempt < 2; attempt++ {
+		if attempt > 0 {
+			time.Sleep(doctorRecheckDelay)
+			info = doctorInfo{}
+			if err := getJSON(client, server, "/api/hydra-info", &info); err != nil {
+				report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-reachable", Severity: "critical", Status: "fail", Message: err.Error()})
+				return report, info, "", err
+			}
+		}
+		settings = settingsResponse{}
+		if err := getJSON(client, server, "/api/settings", &settings); err != nil {
+			report.Checks = append(report.Checks, doctorCheck{CheckID: "settings-reachable", Severity: "critical", Status: "fail", Message: err.Error()})
+			return report, info, "", err
+		}
+		if attempt == 0 {
+			report.Checks = append(report.Checks, doctorCheck{CheckID: "settings-reachable", Severity: "critical", Status: "pass"})
+		}
+		actualControllers := len(settings.Controllers)
+		actualRobots := robotCount(settings)
+		report.Controllers = actualControllers
+		report.Robots = actualRobots
+		mismatch, mismatchCheck = nil, ""
+		if info.ControllerCount != nil && *info.ControllerCount != actualControllers {
+			mismatch = newCliError(ExitServerError, fmt.Errorf("controller count mismatch: /api/hydra-info reports %d but /api/settings contains %d", *info.ControllerCount, actualControllers))
+			mismatchCheck = "controller-count-cross-check"
+		} else if info.RobotCount != nil && *info.RobotCount != actualRobots {
+			mismatch = newCliError(ExitServerError, fmt.Errorf("robot count mismatch: /api/hydra-info reports %d but /api/settings contains %d", *info.RobotCount, actualRobots))
+			mismatchCheck = "robot-count-cross-check"
+		}
+		if mismatch == nil {
+			break
+		}
+	}
+	if mismatch != nil {
+		report.Checks = append(report.Checks, doctorCheck{CheckID: mismatchCheck, Severity: "warning", Status: "fail", Message: mismatch.Error()})
+		return report, info, "", mismatch
+	}
+
+	crossCheckStatus = "pass"
+	if info.ControllerCount == nil || info.RobotCount == nil {
+		crossCheckStatus = "not-reported"
+	}
+	report.Checks = append(report.Checks,
+		doctorCheck{CheckID: "controller-count-cross-check", Severity: "warning", Status: crossCheckStatus},
+		doctorCheck{CheckID: "robot-count-cross-check", Severity: "warning", Status: crossCheckStatus},
+	)
+	report.OK = true
+	return report, info, crossCheckStatus, nil
 }
 
 // finishDoctor centralizes the JSON-vs-plain-text choice on every early

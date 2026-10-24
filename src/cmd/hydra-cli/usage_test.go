@@ -42,7 +42,7 @@ func TestEveryCommandOfTheDispatcherHasAUsage(t *testing.T) {
 		t.Fatal(err)
 	}
 	text := string(source)
-	for _, name := range []string{"version", "status", "robots", "doctor", "claims", "claim", "release", "limits", "jog-arm", "jog", "table", "robot", "audit", "config", "shell", "completion"} {
+	for _, name := range []string{"version", "status", "robots", "doctor", "claims", "claim", "release", "limits", "jog-arm", "jog", "table", "robot", "audit", "config", "shell", "completion", "login", "logout", "scan", "fleet", "stop", "stop-all", "metrics", "manifest"} {
 		if !strings.Contains(text, `case "`+name+`"`) && name != "version" {
 			t.Fatalf("the dispatcher has no %q", name)
 		}
@@ -50,14 +50,14 @@ func TestEveryCommandOfTheDispatcherHasAUsage(t *testing.T) {
 			t.Fatalf("%q has no usage text", name)
 		}
 	}
-	if len(commandUsage) != 16 {
-		t.Fatalf("%d usage texts for 16 commands: %v", len(commandUsage), commandNames())
+	if len(commandUsage) != 24 {
+		t.Fatalf("%d usage texts for 24 commands: %v", len(commandUsage), commandNames())
 	}
 }
 
 func TestEveryOptionOfAUsageIsOneTheCommandReallyReads(t *testing.T) {
 	sources := ""
-	for _, file := range []string{"control.go", "record.go", "robots.go", "doctor.go", "server.go", "config.go", "shell.go", "main.go"} {
+	for _, file := range []string{"control.go", "record.go", "robots.go", "doctor.go", "server.go", "config.go", "shell.go", "main.go", "session.go", "fleet.go", "emergency.go", "metrics.go", "manifest.go"} {
 		data, err := os.ReadFile(file)
 		if err != nil {
 			t.Fatal(err)

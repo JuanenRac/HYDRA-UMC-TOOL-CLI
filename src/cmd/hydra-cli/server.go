@@ -37,8 +37,7 @@ const defaultRequestTimeout = 5 * time.Second
 // rest of a `shell` session - see shell.go - or by an operator's own
 // shell), then defaultServerURL. Precedence for the timeout: a --config
 // file's own "timeoutSec", then HYDRA_CLI_TIMEOUT_SEC (the same session
-// mechanism), then defaultRequestTimeout - there is no standalone
-// --timeout flag today, only a config file sets one explicitly.
+// mechanism), then defaultRequestTimeout; an explicit --timeout SECONDS wins over all of them.
 // Returns args with --server/--config and their values removed, so
 // callers keep parsing their own remaining flags unaware of either. A
 // malformed/invalid --config file surfaces as the same real
@@ -53,17 +52,20 @@ func resolveTarget(args []string) (server string, timeout time.Duration, rest []
 		timeout = envTimeout
 	}
 
-	var explicitServer, configPath string
+	var explicitServer, configPath, explicitTimeout string
 	rest = make([]string, 0, len(args))
 	for i := 0; i < len(args); i++ {
-		if args[i] == "--server" || args[i] == "--config" {
+		if args[i] == "--server" || args[i] == "--config" || args[i] == "--timeout" {
 			if i+1 >= len(args) {
 				return "", 0, nil, newCliError(ExitUsageError, fmt.Errorf("%s needs a value", args[i]))
 			}
-			if args[i] == "--server" {
+			switch args[i] {
+			case "--server":
 				explicitServer = args[i+1]
-			} else {
+			case "--config":
 				configPath = args[i+1]
+			default:
+				explicitTimeout = args[i+1]
 			}
 			i++
 			continue
@@ -71,6 +73,9 @@ func resolveTarget(args []string) (server string, timeout time.Duration, rest []
 		rest = append(rest, args[i])
 	}
 
+	// the options of the transport and the session file: the environment, replaced by what a --config file says
+	settings := settingsFromEnvironment()
+	activeTokenFile = ""
 	if configPath != "" {
 		cfg, loadErr := loadConfig(configPath)
 		if loadErr != nil {
@@ -78,7 +83,25 @@ func resolveTarget(args []string) (server string, timeout time.Duration, rest []
 		}
 		server = cfg.Server
 		timeout = time.Duration(cfg.TimeoutSec) * time.Second
+		if cfg.CAFile != "" {
+			settings.CAFile = cfg.CAFile
+		}
+		if cfg.AllowInsecure != nil {
+			settings.AllowInsecure = *cfg.AllowInsecure
+		}
+		activeTokenFile = cfg.TokenFile
 	}
+	if explicitTimeout != "" {
+		seconds, convErr := strconv.Atoi(explicitTimeout)
+		if convErr != nil || seconds <= 0 || seconds > 3600 {
+			return "", 0, nil, newCliError(ExitUsageError, fmt.Errorf("--timeout must be a whole number of seconds from 1 to 3600, got %q", explicitTimeout))
+		}
+		timeout = time.Duration(seconds) * time.Second
+	}
+	if err := checkTransportSettings(settings); err != nil {
+		return "", 0, nil, err
+	}
+	activeTransport = settings
 
 	if explicitServer != "" {
 		server = explicitServer

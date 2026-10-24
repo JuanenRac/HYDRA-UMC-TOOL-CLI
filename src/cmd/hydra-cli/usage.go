@@ -18,6 +18,7 @@ import (
 // serverOptions are the three ways to point a command at a server, shared by every live command.
 const serverOptions = `    --server URL    the server (default: HYDRA_CLI_SERVER, then a --config file's "server", then ` + defaultServerURL + `)
     --config PATH   a config file (see: hydra-cli config validate --help)
+    --timeout SECONDS   how long to wait for the server (1 to 3600; default: the config file's "timeoutSec", then HYDRA_CLI_TIMEOUT_SEC, then 5)
 `
 
 var commandUsage = map[string]string{
@@ -25,12 +26,13 @@ var commandUsage = map[string]string{
 
 Print the CLI version and exit.
 `,
-	"status": `USAGE: hydra-cli status [--server URL] [--config PATH]
+	"status": `USAGE: hydra-cli status [--server URL] [--config PATH] [--json]
 
 Query a HYDRA-UMC-SERVER's /api/hydra-info and print its reported identity and version.
 
 OPTIONS:
-` + serverOptions,
+` + serverOptions + `    --json          print the identity as JSON
+`,
 	"robots": `USAGE: hydra-cli robots [--server URL] [--config PATH] [--json]
 
 Print the controller and robot roster the server reports (/api/settings). Needs HYDRA_CLI_TOKEN, or
@@ -142,9 +144,90 @@ Ctrl-D to leave.
 
 OPTIONS:
 ` + serverOptions,
-	"completion": `USAGE: hydra-cli completion <bash|zsh>
+	"completion": `USAGE: hydra-cli completion <bash|zsh|fish|powershell>
 
 Print a completion script for the shell to stdout: eval "$(hydra-cli completion bash)" enables tab-completion.
+For fish: hydra-cli completion fish | source. For PowerShell: hydra-cli completion powershell | Out-String | Invoke-Expression.
+`,
+	"login": `USAGE: hydra-cli login [--user NAME] [--password-stdin]
+
+Sign in once and save the session (the token and its refresh token) in a file only you can read. Every later command
+uses it and renews it by itself, so no command logs in again. The file is HYDRA_CLI_TOKEN_FILE, the "tokenFile" of a
+--config file, or hydra-cli/session.json in your configuration directory. The password is read from the environment
+(HYDRA_CLI_PASSWORD) or, with --password-stdin, from the first line of the standard input: never from an option.
+
+OPTIONS:
+    --user NAME     the account (default: HYDRA_CLI_USER)
+    --password-stdin  read the password from the standard input
+` + serverOptions,
+	"logout": `USAGE: hydra-cli logout
+
+End the saved session: the server revokes the refresh token and the session file is removed.
+
+OPTIONS:
+` + serverOptions,
+	"scan": `USAGE: hydra-cli scan <network|address>... [--ports 3000,3443] [--scheme http|https] [--json]
+
+Find HYDRA-UMC-SERVERs: every address is asked for /api/hydra-info (public; no credential is sent). Only private networks
+are scanned unless --allow-public-range is given, and no more than --max-hosts addresses.
+
+OPTIONS:
+    --ports LIST        ports to try, separated by commas (default 3000)
+    --scheme SCHEME     http or https (default http)
+    --concurrency N     probes at once, 1 to 256 (default 64)
+    --max-hosts N       most addresses to probe, up to 65536 (default 1024)
+    --probe-timeout-ms N  how long to wait for one address, 50 to 10000 (default 800)
+    --allow-public-range  allow addresses that are not on a private network
+    --json              print the servers found as JSON
+`,
+	"fleet": `USAGE: hydra-cli fleet doctor --servers FILE [--concurrency N] [--json]
+
+Run the read-only doctor against every server of a list at once and give one answer. The file has one server URL per
+line; blank lines and lines starting with # are skipped. Exit 0 when every server passes; otherwise the exit code the
+failures share, or 1 when they differ.
+
+OPTIONS:
+    --servers FILE    the list of servers
+    --concurrency N   servers at once, 1 to 64 (default 8)
+    --json            print one report per server
+    --config PATH     a config file for the timeout and the transport options
+    --timeout SECONDS how long to wait for each server
+`,
+	"stop": `USAGE: hydra-cli stop <robot> [--controller-id ID]
+
+Send the stop command to one robot. The server lets it through even when another account reserved the robot.
+This is a software command, not the emergency stop of the cell.
+
+OPTIONS:
+    --controller-id ID   the controller id of this program (default: HYDRA_CLI_CONTROLLER_ID, then hydra-cli-<host>)
+` + serverOptions,
+	"stop-all": `USAGE: hydra-cli stop-all --yes [--json]
+
+The global stop: every robot of the server, whoever reserved it, and every valve and pump switched off. It reaches robots
+of other accounts, so it asks for --yes. This is a software command, not the emergency stop of the cell.
+
+OPTIONS:
+    --yes           confirm (without it nothing is sent)
+    --json          print the answer of the server as JSON
+` + serverOptions,
+	"metrics": `USAGE: hydra-cli metrics [--all] [--json]
+
+Read GET /metrics of the server and show uptime, clients, commands sent, login failures, CPU load, memory and temperature.
+
+OPTIONS:
+    --all           show every sample
+    --json          print the samples as JSON
+` + serverOptions,
+	"manifest": `USAGE: hydra-cli manifest validate [PATH...] [--workspace DIR] [--schema FILE] [--json]
+
+Check hydra-umc.project.json files against the schema of the SDK (embedded in this build). PATH is a manifest or a
+repository directory; --workspace DIR checks every HYDRA-UMC-* and URTC-* directory in DIR; with neither, the
+current directory. A manifest whose name is not the name of its directory fails too. Exit 3 when any fails.
+
+OPTIONS:
+    --workspace DIR  check every repository in DIR
+    --schema FILE    use another schema file
+    --json           print the verdicts as JSON
 `,
 }
 

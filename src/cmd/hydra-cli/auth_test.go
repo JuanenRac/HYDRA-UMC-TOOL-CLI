@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -62,6 +63,8 @@ func newGuardedServer(t *testing.T, logins *int32, sawAuthOnInfo *int32) *httpte
 
 func clearCredentials(t *testing.T) {
 	t.Helper()
+	resetSessions()
+	t.Setenv(tokenFileEnv, filepath.Join(t.TempDir(), "no-session.json"))
 	t.Setenv(tokenEnv, "")
 	t.Setenv(userEnv, "")
 	t.Setenv(passwordEnv, "")

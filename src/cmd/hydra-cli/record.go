@@ -48,7 +48,7 @@ func cmdRobot(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	client := http.Client{Timeout: timeout}
+	client := newClient(timeout)
 	resp, err := sendAuthenticated(&client, server, http.MethodGet, fmt.Sprintf("/api/robot/%d", robotID), nil, controllerID)
 	if err != nil {
 		return err
@@ -154,7 +154,7 @@ func cmdTable(w io.Writer, args []string) error {
 		params["rz"] = rz
 		values = append(values, rz)
 	}
-	client := http.Client{Timeout: timeout}
+	client := newClient(timeout)
 	view, _, err := fetchSafety(&client, server, controllerID, &robotID)
 	if err != nil {
 		return err
@@ -354,7 +354,7 @@ func cmdAudit(w io.Writer, args []string) error {
 		}
 		robotID = &id
 	}
-	client := http.Client{Timeout: timeout}
+	client := newClient(timeout)
 	if exportPath != "" {
 		resp, err := sendAuthenticated(&client, server, http.MethodGet, "/api/audit"+auditQuery(limit, kind, robotID, false, "jsonl"), nil, controllerID)
 		if err != nil {

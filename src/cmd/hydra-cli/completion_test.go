@@ -45,7 +45,7 @@ func TestCmdCompletion_ZshListsEveryRealTopLevelCommand(t *testing.T) {
 
 func TestCmdCompletion_RejectsAnUnsupportedShellAsUsageError(t *testing.T) {
 	var buf bytes.Buffer
-	err := cmdCompletion(&buf, []string{"fish"})
+	err := cmdCompletion(&buf, []string{"tcsh"})
 	if err == nil {
 		t.Fatal("expected an error for an unsupported shell, got nil")
 	}

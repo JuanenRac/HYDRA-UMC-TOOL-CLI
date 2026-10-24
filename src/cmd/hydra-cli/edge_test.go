@@ -277,8 +277,10 @@ func TestParsePositiveSeconds_Table(t *testing.T) {
 
 // ----- credentials
 
-func TestWarnIfInsecure_OnlyForPlainHTTPAwayFromThisMachine(t *testing.T) {
-	cases := map[string]bool{
+func TestRequireSecureCredentials_RefusesPlainHTTPAwayFromThisMachine(t *testing.T) {
+	t.Setenv(allowInsecureEnv, "")
+	activeTransport = transportSettings{}
+	cases := map[string]bool{ // true: refused
 		"http://10.0.0.5:3000":  true,
 		"http://example.org":    true,
 		"https://example.org":   false,
@@ -287,11 +289,28 @@ func TestWarnIfInsecure_OnlyForPlainHTTPAwayFromThisMachine(t *testing.T) {
 		"http://[::1]:3000":     false,
 		"%zz":                   false,
 	}
-	for server, wantWarning := range cases {
-		out := captureStderr(t, func() { warnIfInsecure(server) })
-		if got := out != ""; got != wantWarning {
-			t.Errorf("warnIfInsecure(%q): warning = %v (%q), want %v", server, got, out, wantWarning)
+	for server, wantRefused := range cases {
+		err := requireSecureCredentials(server)
+		if got := err != nil; got != wantRefused {
+			t.Errorf("requireSecureCredentials(%q) = %v, want refused = %v", server, err, wantRefused)
 		}
+		if err != nil && exitCodeFor(err) != ExitConfigError {
+			t.Errorf("requireSecureCredentials(%q): exit code %d, want ExitConfigError", server, exitCodeFor(err))
+		}
+	}
+}
+
+func TestRequireSecureCredentials_AllowedByTheOperatorOnlyWarns(t *testing.T) {
+	activeTransport = transportSettings{AllowInsecure: true}
+	defer func() { activeTransport = transportSettings{} }()
+	var err error
+	out := captureStderr(t, func() { err = requireSecureCredentials("http://10.0.0.5:3000") })
+	if err != nil || !strings.Contains(out, "warning") {
+		t.Fatalf("allowed insecure: err = %v, stderr = %q, want a warning and no refusal", err, out)
+	}
+	quiet := captureStderr(t, func() { _ = requireSecureCredentials("http://127.0.0.1:3000") })
+	if quiet != "" {
+		t.Fatalf("this machine needs no warning, got %q", quiet)
 	}
 }
 
@@ -406,7 +425,7 @@ func TestRun_EveryCommandIsRoutedWithItsOwnExitCode(t *testing.T) {
 		{[]string{"status", "--server", "ftp://x"}, ExitUsageError},
 		{[]string{"robots", "--config", badCfg}, ExitConfigError},
 		{[]string{"doctor", "--server", "http://127.0.0.1:1"}, ExitNetworkError},
-		{[]string{"completion", "fish"}, ExitUsageError},
+		{[]string{"completion", "tcsh"}, ExitUsageError},
 		{[]string{"completion"}, ExitUsageError},
 		{[]string{"Status"}, ExitUsageError},
 		{[]string{""}, ExitUsageError},

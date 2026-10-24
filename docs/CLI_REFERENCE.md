@@ -362,3 +362,13 @@ $ echo $?
 roadmap but are not built yet — each needs a fleet write/CAN-OTA/write
 endpoint on HYDRA-UMC-SERVER that doesn't exist. `config apply` without
 `--dry-run` (above) is the current, honest placeholder for the same gap.
+
+## Sessions, credentials and the newer commands
+
+- `login [--user NAME] [--password-stdin]`, `logout`: see the CHANGELOG; the credential is looked for in this order: `HYDRA_CLI_TOKEN`, the saved session of the server, `HYDRA_CLI_USER` + `HYDRA_CLI_PASSWORD`.
+- Credentials are refused over plain http to another machine unless `HYDRA_CLI_ALLOW_INSECURE=1` (or `allowInsecure` in the config file); `HYDRA_CLI_CA_FILE` (or `caFile`) trusts a private CA. The config file also accepts `tokenFile`.
+- `--timeout SECONDS` (1 to 3600) on every live command.
+- `scan <network|address>... [--ports 3000,3443] [--scheme http|https] [--concurrency N] [--max-hosts N] [--probe-timeout-ms N] [--allow-public-range] [--json]`: private networks only unless allowed, at most 1024 addresses by default.
+- `fleet doctor --servers FILE [--concurrency N] [--json]`: exit 0 when all pass, otherwise the code the failures share, or 1.
+- `stop <robot>`, `stop-all --yes [--json]`: software stops, not the emergency stop of the cell.
+- `metrics [--all] [--json]`, `manifest validate [PATH...] [--workspace DIR] [--schema FILE] [--json]`, `status --json`, `completion <bash|zsh|fish|powershell>`.

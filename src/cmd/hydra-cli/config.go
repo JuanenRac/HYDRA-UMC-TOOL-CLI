@@ -30,6 +30,13 @@ import (
 type Config struct {
 	Server     string `json:"server"`
 	TimeoutSec int    `json:"timeoutSec"`
+	// CAFile is a PEM file of the certificate authority of an https server (added to the system roots).
+	CAFile string `json:"caFile,omitempty"`
+	// AllowInsecure lets a credential travel over plain http to another machine (a warning instead of a refusal).
+	// Unset, the environment decides (HYDRA_CLI_ALLOW_INSECURE); the default is to refuse.
+	AllowInsecure *bool `json:"allowInsecure,omitempty"`
+	// TokenFile is where `hydra-cli login` saves the session (default: hydra-cli/session.json in the user config directory).
+	TokenFile string `json:"tokenFile,omitempty"`
 }
 
 // validateConfig is the real schema check, split out from loadConfig so
@@ -45,6 +52,11 @@ func validateConfig(cfg Config) error {
 	}
 	if cfg.TimeoutSec <= 0 {
 		return fmt.Errorf(`"timeoutSec" must be a positive integer, got %d`, cfg.TimeoutSec)
+	}
+	if cfg.CAFile != "" {
+		if _, err := loadCAPool(cfg.CAFile); err != nil {
+			return fmt.Errorf(`"caFile": %w`, err)
+		}
 	}
 	return nil
 }
@@ -115,6 +127,15 @@ func cmdConfigValidate(w io.Writer, path string) error {
 		return err
 	}
 	fmt.Fprintf(w, "config %s is valid: server=%s timeoutSec=%d\n", path, cfg.Server, cfg.TimeoutSec)
+	if cfg.CAFile != "" {
+		fmt.Fprintf(w, "  caFile:        %s\n", cfg.CAFile)
+	}
+	if cfg.AllowInsecure != nil {
+		fmt.Fprintf(w, "  allowInsecure: %t\n", *cfg.AllowInsecure)
+	}
+	if cfg.TokenFile != "" {
+		fmt.Fprintf(w, "  tokenFile:     %s\n", cfg.TokenFile)
+	}
 	return nil
 }
 

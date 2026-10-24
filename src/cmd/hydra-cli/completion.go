@@ -21,14 +21,21 @@ import (
 // topLevelCommands mirrors run()'s own case labels in main.go, minus the
 // flag aliases (-v/--version, -h/--help) a real user tab-completing a
 // bare word would not expect to see suggested.
-var topLevelCommands = []string{"version", "help", "status", "robots", "claims", "claim", "release", "limits", "jog-arm", "jog", "table", "robot", "audit", "doctor", "config", "shell", "completion"}
+var topLevelCommands = []string{"version", "help", "status", "robots", "claims", "claim", "release", "limits", "jog-arm", "jog", "table", "robot", "audit", "doctor", "config", "shell", "completion", "login", "logout", "scan", "fleet", "stop", "stop-all", "metrics", "manifest"}
 
 // configSubcommands mirrors config.go's own real switch.
 var configSubcommands = []string{"validate", "apply"}
 
+// fleetSubcommands and manifestSubcommands mirror the switches of fleet.go and manifest.go.
+var fleetSubcommands = []string{"doctor"}
+var manifestSubcommands = []string{"validate"}
+
+// commonOptions are read by resolveTarget or are shared by many commands.
+var commonOptions = []string{"--server", "--config", "--timeout", "--json", "--help"}
+
 func cmdCompletion(w io.Writer, args []string) error {
 	if len(args) != 1 {
-		return newCliError(ExitUsageError, fmt.Errorf("usage: hydra-cli completion <bash|zsh>"))
+		return newCliError(ExitUsageError, fmt.Errorf("usage: hydra-cli completion <bash|zsh|fish|powershell>"))
 	}
 	switch args[0] {
 	case "bash":
@@ -37,9 +44,51 @@ func cmdCompletion(w io.Writer, args []string) error {
 	case "zsh":
 		writeZshCompletion(w)
 		return nil
+	case "fish":
+		writeFishCompletion(w)
+		return nil
+	case "powershell":
+		writePowerShellCompletion(w)
+		return nil
 	default:
-		return newCliError(ExitUsageError, fmt.Errorf("unsupported shell %q - expected \"bash\" or \"zsh\"", args[0]))
+		return newCliError(ExitUsageError, fmt.Errorf("unsupported shell %q - expected \"bash\", \"zsh\", \"fish\" or \"powershell\"", args[0]))
 	}
+}
+
+func writeFishCompletion(w io.Writer) {
+	fmt.Fprintf(w, `# fish completion for hydra-cli: hydra-cli completion fish | source
+complete -c hydra-cli -f
+complete -c hydra-cli -n "__fish_use_subcommand" -a "%s"
+complete -c hydra-cli -n "__fish_seen_subcommand_from config" -a "%s"
+complete -c hydra-cli -n "__fish_seen_subcommand_from fleet" -a "%s"
+complete -c hydra-cli -n "__fish_seen_subcommand_from manifest" -a "%s"
+`, joinWords(topLevelCommands), joinWords(configSubcommands), joinWords(fleetSubcommands), joinWords(manifestSubcommands))
+	for _, option := range commonOptions {
+		fmt.Fprintf(w, "complete -c hydra-cli -l %s\n", option[2:])
+	}
+}
+
+func writePowerShellCompletion(w io.Writer) {
+	fmt.Fprintf(w, `# PowerShell completion for hydra-cli: hydra-cli completion powershell | Out-String | Invoke-Expression
+Register-ArgumentCompleter -Native -CommandName hydra-cli -ScriptBlock {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    $words = $commandAst.CommandElements | ForEach-Object { $_.ToString() }
+    $candidates = if ($words.Count -le 1 -or ($words.Count -eq 2 -and $wordToComplete)) {
+        '%s' -split ' '
+    } elseif ($words[1] -eq 'config') {
+        '%s' -split ' '
+    } elseif ($words[1] -eq 'fleet') {
+        '%s' -split ' '
+    } elseif ($words[1] -eq 'manifest') {
+        '%s' -split ' '
+    } else {
+        '%s' -split ' '
+    }
+    $candidates | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+    }
+}
+`, joinWords(topLevelCommands), joinWords(configSubcommands), joinWords(fleetSubcommands), joinWords(manifestSubcommands), joinWords(commonOptions))
 }
 
 func writeBashCompletion(w io.Writer) {
@@ -55,17 +104,31 @@ func writeBashCompletion(w io.Writer) {
         COMPREPLY=($(compgen -W "%s" -- "$cur"))
         return 0
     fi
+    if [ "${COMP_WORDS[1]}" = "fleet" ] && [ "$COMP_CWORD" -eq 2 ]; then
+        COMPREPLY=($(compgen -W "%s" -- "$cur"))
+        return 0
+    fi
+    if [ "${COMP_WORDS[1]}" = "manifest" ] && [ "$COMP_CWORD" -eq 2 ]; then
+        COMPREPLY=($(compgen -W "%s" -- "$cur"))
+        return 0
+    fi
+    case "$cur" in
+        -*) COMPREPLY=($(compgen -W "%s" -- "$cur")) ;;
+    esac
 }
 complete -F _hydra_cli_complete hydra-cli
-`, joinWords(topLevelCommands), joinWords(configSubcommands))
+`, joinWords(topLevelCommands), joinWords(configSubcommands), joinWords(fleetSubcommands), joinWords(manifestSubcommands), joinWords(commonOptions))
 }
 
 func writeZshCompletion(w io.Writer) {
 	fmt.Fprintf(w, `#compdef hydra-cli
 _hydra_cli() {
-    local -a top_level config_sub
+    local -a top_level config_sub fleet_sub manifest_sub options
     top_level=(%s)
     config_sub=(%s)
+    fleet_sub=(%s)
+    manifest_sub=(%s)
+    options=(%s)
     if (( CURRENT == 2 )); then
         compadd -a top_level
         return
@@ -74,9 +137,20 @@ _hydra_cli() {
         compadd -a config_sub
         return
     fi
+    if [[ ${words[2]} == "fleet" && $CURRENT -eq 3 ]]; then
+        compadd -a fleet_sub
+        return
+    fi
+    if [[ ${words[2]} == "manifest" && $CURRENT -eq 3 ]]; then
+        compadd -a manifest_sub
+        return
+    fi
+    if [[ ${words[CURRENT]} == -* ]]; then
+        compadd -a options
+    fi
 }
 compdef _hydra_cli hydra-cli
-`, joinWords(topLevelCommands), joinWords(configSubcommands))
+`, joinWords(topLevelCommands), joinWords(configSubcommands), joinWords(fleetSubcommands), joinWords(manifestSubcommands), joinWords(commonOptions))
 }
 
 func joinWords(words []string) string {

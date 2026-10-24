@@ -82,7 +82,7 @@ func cmdRobots(w io.Writer, args []string) error {
 		return err
 	}
 
-	client := http.Client{Timeout: timeout}
+	client := newClient(timeout)
 	status, body, err := getAuthenticated(&client, server, "/api/settings")
 	if err != nil {
 		return err
