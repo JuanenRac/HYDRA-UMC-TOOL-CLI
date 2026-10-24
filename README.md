@@ -33,6 +33,19 @@
 | Target | The PC of the person using it |
 | On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |
 
+## 🚦 Project status
+
+Each line is one part of this repository and the light says how far it is today. It is written from what the repository can show (tests, builds, runs), not from what is planned.
+
+🟢 Done and verified · 🟡 Works, with known limits · 🟠 Partly done or not verified yet · 🔴 Not done or not working
+
+| Area | State | What it means here |
+|---|---|---|
+| Software | 🟡 | Works for its main purpose; the honesty check above lists what is still missing |
+| Tests | 🟢 | 132 automated tests, run on every change |
+| Real hardware | 🟠 | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |
+| Documentation | 🟢 | README in eight languages, checked against the manifest on every change |
+
 ## 1. 🛠️ TECHNICAL OVERVIEW
 
 **HYDRA-UMC-TOOL-CLI** is the Swiss Army knife for developers and system administrators of the HYDRA-UMC ecosystem. It is a single static Go binary providing command-line tools to query, update, and audit HYDRA-UMC deployments.
