@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The layout of the README is checked in the CI:** the validator runs `tools/universal_readme_check.py` and lists, as a warning, what differs from the universal layout of the README.
 - CI runs `staticcheck` next to `go vet` and the race tests; the one finding (a helper that nothing called) is removed.
 
 ## [0.1.8] - Sessions that do not log in on every run and credentials never travel over plain http to another machine
