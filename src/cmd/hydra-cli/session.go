@@ -232,12 +232,6 @@ func resolveCredential(client *http.Client, server string) (credential, error) {
 	return credential{token: result.Token, source: sourceEnvLogin}, nil
 }
 
-// resolveToken is resolveCredential for callers that only need the token.
-func resolveToken(client *http.Client, server string) (string, error) {
-	cred, err := resolveCredential(client, server)
-	return cred.token, err
-}
-
 // shouldRecover says whether an answer means "the access token ran out" (worth one refresh), as opposed to a
 // refusal by role, which a new token would not change.
 func shouldRecover(status int, body []byte) bool {
