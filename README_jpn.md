@@ -1,17 +1,26 @@
+<!-- =============================================================================
+HYDRA-UMC-TOOL-CLI - Command-line interface for fleet DevOps
+Copyright (C) JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+GPL-3.0-or-later - see LICENSE
+============================================================================= -->
+
 <p align="center">
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-TOOL-CLI banner" width="100%">
 </p>
 
-# 💻 HYDRA-UMC-TOOL-CLI
+# 🛠️ HYDRA-UMC-TOOL-CLI
 
 <p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | 🇯🇵 <b>日本語</b> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 🛠️ フリート DevOps と自動化のためのコマンドラインインターフェース
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
-  <img src="https://img.shields.io/badge/Language-Go-00ADD8.svg" alt="Go">
-  <img src="https://img.shields.io/badge/Feature-Fleet%20DevOps-blue.svg" alt="DevOps">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
+  <img src="https://img.shields.io/badge/Language-Go-00ADD8.svg" alt="Language">
+  <img src="https://img.shields.io/badge/Feature-Fleet%20DevOps-blue.svg" alt="Feature">
+  <img src="https://img.shields.io/badge/Tests-219%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.1.8-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
@@ -22,16 +31,20 @@
 
 > **安全性とセキュリティの現状:** このエコシステムは認証された安全システムではありません。ハードウェアの E-STOP 経路、ファームウェアが強制する制限やインターロック、検証済みの動作コマンドはまだありません。ファームウェアイメージは CRC32 と共有鍵の HMAC-SHA256 で検査しており、非対称署名ではありません。TLS と相互 TLS は任意で、既定では無効です。独自基板はまだ実装も試験もされていません。ここに書かれた内容を人の安全のために頼る前に、[セキュリティベースライン](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)と[脅威モデル](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)をお読みください。
 
+---
+
 ## 📋 ひと目で
 
 | | |
 |---|---|
 | バージョン | `0.1.8` |
 | 成熟度 | 機能する |
-| テスト | 132 (`go test ./...`) |
+| テスト | 219 (`go test ./...`) |
 | 技術 | Go / standard-library flag handling |
 | 対象 | 利用者の PC |
 | 実機での確認 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
+
+**移動：** [概要](#-概要) · [アーキテクチャ](#-アーキテクチャ) · [セキュリティと安全](#-セキュリティと安全) · [設定](#-設定) · [クイックスタート](#-クイックスタート) · [テスト](#-テスト) · [トラブルシューティング](#-トラブルシューティング) · [リポジトリの構成](#-リポジトリの構成) · [関連プロジェクト](#-関連プロジェクト)
 
 ## 🚦 プロジェクトの状況
 
@@ -42,11 +55,11 @@
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟡 | 主な目的では動作します。足りない点は上の正直さの確認に書かれています |
-| テスト | 🟢 | 自動テスト 132 件。変更のたびに実行されます |
+| テスト | 🟢 | 自動テスト 219 件。変更のたびに実行されます |
 | 実機 | 🟠 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
 | ドキュメント | 🟢 | 8 言語の README。変更のたびにマニフェストと照合されます |
 
-## 1. 🛠️ 技術概要
+## 🎯 概要
 
 **HYDRA-UMC-TOOL-CLI** は、HYDRA-UMC エコシステムの開発者およびシステム
 管理者向けの十徳ナイフです。HYDRA-UMC デプロイメントを照会、更新、
@@ -81,9 +94,18 @@
 * 🚧 **`hydra-cli flash-all`** — コントローラーと URTC ヘッド向けの並列ファームウェア更新。*（計画中）*
 * 🚧 **`hydra-cli audit`** — CAN バスの健全性とセンサー検証のための自動診断スイート。*（計画中）*
 
----
+## 🧩 HYDRA-UMC での役割
 
-## 2. 🔄 CLI ワークフロー
+**HYDRA-UMC-TOOL-CLI** は `hydra-cli` です。共有ライブラリに依存しない 1 つの Go バイナリで、`HYDRA-UMC-SERVER` と通信します。状態、ロボット、制限、サーバーを診断する doctor、ジョグとソフトウェア停止、プライベートネットワークのスキャン、フリート確認、マニフェストと設定ファイルの検証、対話シェルを備えます。リリースバイナリに署名して検証する `hydra-sign` も含みます。
+
+## 🏛️ アーキテクチャ
+
+<p align="center">
+  <img src="images/architecture.svg" alt="HYDRA-UMC-TOOL-CLI architecture" width="100%">
+</p>
+
+<details>
+<summary>図のテキスト版（Mermaid）</summary>
 
 ```mermaid
 flowchart LR
@@ -95,9 +117,9 @@ flowchart LR
     CLI -- "completion" --> SHELL["bash / zsh"]
 ```
 
----
+</details>
 
-## 3. 🧱 アーキテクチャと設計上の決定
+### アーキテクチャと設計上の決定
 
 * **`src/` がフラットなレイアウトではなく `cmd/hydra-cli/` サブパスを持つ理由。** 標準的な Go CLI の慣例（`cmd/<binary-name>/` エントリポイント、CLI が単一コマンドを超えて成長した際の将来の `internal/`/`pkg/` パッケージのための余地）に従っています——これはこのエコシステム独自の発明ではなく、マルチコマンド CLI に対する Go コミュニティ全体の慣例です。
 * **HYDRA-UMC-SERVER 自身の REST API に直接スクリプトを書くのではなく、CLI を採用した理由。** フリート規模の操作（1 台だけでなく多数の CM5 にわたるインストール/更新）には、リトライ、並列性、一貫した UX といった、その場しのぎの curl スクリプトでは提供できない真のオーケストレーションが必要です。これは、後に HYDRA-UMC-UPDATER がエコシステムチェックアウトのレベルで適用するのと同じ理由です。
@@ -107,61 +129,47 @@ flowchart LR
 * **`--dry-run` を指定しない `config apply` が、黙って何もしない代わりに「未実装」を返す理由。** これが呼び出すはずの HYDRA-UMC-SERVER 上のライブ書き込みエンドポイントは、実際にはまだ存在しません（`deploy`/`flash-all` が塞き止められているのと同じギャップです）——専用の `ExitNotImplemented` 終了コードは、呼び出し元に「これは本物のギャップであり、バグではない」ことを伝えます。誤解を招くような、成功したように見える無操作にはしません。
 * **すべてのコマンドのエラーが、場当たり的な `os.Exit` 呼び出しではなく、単一の `CliError`/`ExitCode` 型を通じて流れるようになった理由。** 安定した、文書化された終了コード契約は、コードを割り当てる場所が一つしかない場合にのみ安定を保てます——`exitCodeFor()`（`exitcode.go`）がその場所であり、各コマンド関数は自ら `os.Exit` を呼び出す代わりに、慣用的でラップ可能な `error` 値を返し続けます。
 
----
+## 🔒 セキュリティと安全
 
-## 📂 リポジトリ構成
+| 脅威 | 防御 | 場所 |
+|---|---|---|
+| プロセス一覧やシェル履歴に残るパスワードやトークン | 認証情報は環境変数（`HYDRA_CLI_TOKEN`、または `HYDRA_CLI_USER` と `HYDRA_CLI_PASSWORD`）か保存済みセッションから取り、オプションでは受け取りません | `auth.go` |
+| 他のユーザーに読まれる、または書きかけの保存済みセッション | ファイルはモード 0600 の一時ファイルに書かれて元のファイルの上に名前変更され、フォルダーはモード 0700 で作られます | `session.go` |
+| 別のマシンへ平文で送られる認証情報 | `HYDRA_CLI_ALLOW_INSECURE=1` でない限り、他のマシンへの平文 `http://` では拒否されます。`HYDRA_CLI_CA_FILE` は `https://` のプライベート認証局を信頼します | `transport.go` |
+| インターネットへ出てしまうスキャン、または誤った stop-all | `scan` は `--allow-public-range` が無い限りプライベートネットワークに留まり、既定では最大 1024 アドレスです。`stop-all` には `--yes` が必要です | `fleet.go`, `emergency.go` |
 
-純粋なソフトウェア CLI——独自のハードウェア/ファームウェア/OS を持たず、
-テンプレートから省略されており、リポジトリ構造ポリシーに従っています。
+**絶対にしないこと：** 非常停止の代わりになること。`stop` と `stop-all` はサーバー、ネットワーク、ログインを必要とするソフトウェア命令で、機械を止めるのはセルの物理的な非常停止です。
 
-```text
-HYDRA-UMC-TOOL-CLI/
-├── src/                       # Go モジュール
-│   ├── go.mod                 # モジュール定義（github.com/JuanenRac/HYDRA-UMC-TOOL-CLI）
-│   ├── cmd/hydra-cli/         # バイナリのエントリポイント
-│   │   ├── main.go            # コマンドの振り分け (version、help、status、robots、doctor、claims、claim、release、limits、jog-arm、jog、table、robot、audit、config、shell、completion、login、logout、scan、fleet、stop、stop-all、metrics、manifest)
-│   │   ├── server.go          # --server/--config/HYDRA_CLI_SERVER の共有解決処理
-│   │   ├── auth.go            # 認証付き読み取りのための、環境変数からの認証情報（トークンまたはログイン）
-│   │   ├── robots.go          # 実際の GET /api/settings クライアント + 一覧表示
-│   │   ├── control.go         # 予約・安全上限・ジョグ（claims/claim/release/limits/jog-arm/jog）
-│   │   ├── record.go          # ロボットのリビジョン、テーブルのアトミックな移動、監査記録(robot/table/audit)
-│   │   ├── doctor.go          # 読み取り専用の二つのエンドポイント契約診断
-│   │   ├── config.go          # 実際の設定ファイルの読み込み、検証、apply --dry-run
-│   │   ├── shell.go           # 同じコマンドテーブル上の対話型 REPL
-│   │   ├── exitcode.go        # 実際の、安定した ExitCode/CliError 契約
-│   │   ├── transport.go       # すべてのリクエスト共通の HTTP クライアントと認証情報の規則
-│   │   ├── session.go         # セッション: ログイン、ログアウト、トークンの再利用 (ログインにはレート制限があり、90日有効のリフレッシュトークンが残る)
-│   │   ├── emergency.go       # ロボットの停止: stop と stop-all (停止は他のアカウントの予約に妨げられない)
-│   │   ├── fleet.go           # 多数のサーバーを見る: scan が公開 ID ページで見つけ、fleet doctor が各サーバーに読み取り専用の doctor を実行
-│   │   ├── metrics.go         # サーバーのメトリクス (GET /metrics) を読み、オペレーターが最初に見る数値を表示
-│   │   ├── manifest.go        # manifest validate: hydra-umc.project.json を SDK が公開するスキーマで検査
-│   │   ├── jsonschema.go      # SDK のスキーマが使う範囲の JSON Schema を検査する小さなチェッカー
-│   │   ├── completion.go      # completion bash|zsh: 静的なシェル補完スクリプトを出力
-│   │   ├── usage.go           # <command> --help: そのコマンドだけの使い方 (ネットワークにもファイルにも触れない)
-│   │   ├── schemas/           # project-manifest.schema.json: manifest validate が検査に使うマニフェストスキーマ
-│   │   ├── *_test.go          # 実際のテスト（net/http/httptest ラウンドトリップ、一時ファイルのフィクスチャ）
-│   │   └── version.go         # const Version - オドメーター式インクリメント、マニフェストと同期
-│   ├── cmd/hydra-sign/    # hydra-sign: リリースバイナリの署名と検証 (SHA-256 ダイジェストファイルと Ed25519 署名)
-│   └── redact/            # テキストや JSON 風の値に含まれる既知の秘密情報の形を隠す (SDK 共通の伏せ字処理の移植、テストベクタ付き)
-├── tools/
-│   ├── build_test.py      # バージョンを増やさないビルドチェック
-│   ├── ci_validate.py     # CI が使用するマニフェスト/CHANGELOG/ドキュメント検証
-│   ├── _doc_policy.py     # ファミリー共通のドキュメント規則 (HYDRA-UMC-SDK のコピーで、同期を維持)
-│   ├── _readme_parity.py  # 8つの README が同じ構造であることの検査 (HYDRA-UMC-SDK のコピーで、同期を維持)
-│   └── hydra_project_tool.py # すべてのリポジトリで共通のコマンド: validate、test、ci、version、status、bump
-├── docs/                      # ドキュメント：CLI_REFERENCE.md と DOCTOR.md
-├── build/                     # コンパイル済みバイナリ（gitignore 対象）
-├── images/                    # メディアと図表
-├── bump_version.py            # オドメーター式バージョンインクリメント（明示的な `bump` コマンドのみが実行）
-├── bump_manifest_version.py   # hydra-umc.project.json のバージョンをネイティブ版と同期(--sync)
-├── build.sh / build.bat       # 検証してビルド（ビルドはバージョンを変更しない）
-├── run.sh / run.bat           # 実際の実行：コンパイル済みバイナリを実行
-└── README.md
+## ⚙️ 設定
+
+| 変数 | 既定値 | 設定する内容 |
+|---|---|---|
+| `HYDRA_CLI_SERVER` / `--server` | `http://localhost:3000` | 通信先のサーバー |
+| `HYDRA_CLI_TIMEOUT_SEC` / `--timeout` | `5` | 各リクエストに許す秒数（1〜3600） |
+| `HYDRA_CLI_TOKEN` | なし | サーバーが発行済みの Bearer トークン |
+| `HYDRA_CLI_USER`, `HYDRA_CLI_PASSWORD` | なし | その実行のために CLI がログインします。両方ある場合はトークンが優先されます |
+| `HYDRA_CLI_ALLOW_INSECURE` | `0` | `1` で他のマシンへの平文 http での認証情報送信を許可 |
+| `HYDRA_CLI_CA_FILE` | なし | https で信頼するプライベート認証局の PEM ファイル |
+
+## 🚀 クイックスタート
+
+Go 1.24 以上が必要です。
+
+```bash
+./build.sh  # Linux, macOS (build.bat on Windows)
+./run.sh status --server http://192.168.1.50:3000
+./run.sh doctor
+./run.sh config validate --config hydra-cli.json
+./run.sh help
 ```
 
----
+## 🧪 テスト
 
-## 4. ⚙️ ビルドと実行
+`cd src && go test ./...` で自動テスト 219 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
+
+CI は `HYDRA_UMC_CI=1 python tools/ci_validate.py` を実行し、マニフェスト、文書、8 つの README、図を検査します。
+
+## 🏗️ ビルドとリリース
 
 Go >= 1.24 が必要です。
 
@@ -199,7 +207,54 @@ run.bat config apply --config .\hydra-cli.json --dry-run
 し、すべての引数を転送します——実行中の `HYDRA-UMC-SERVER` インスタンス
 に対して `run doctor` を試してみてください。Doctor は安全な読み取り専用のエンドポイント契約チェックです。詳細は [docs/DOCTOR.md](docs/DOCTOR.md) を参照してください。
 
----
+## 🩺 トラブルシューティング
+
+| 表示 | 原因 | 対処 |
+|---|---|---|
+| exit code 7 | コマンドにログインが必要だが認証情報が無い、またはサーバーに拒否された | `HYDRA_CLI_TOKEN`、または `HYDRA_CLI_USER` と `HYDRA_CLI_PASSWORD` を設定するか、`login` を実行します |
+| exit code 4 | サーバーにまったく到達できなかった | アドレス（`--server`、設定ファイル、`HYDRA_CLI_SERVER`）を確認し、`doctor` を実行します |
+| exit code 2 | 未知のコマンド、引数の不足、または値の無いオプション | `help` を実行します。黙って無視されるものはありません |
+
+## 📂 リポジトリの構成
+
+<p align="center">
+  <img src="images/repository-structure.svg" alt="Repository structure of HYDRA-UMC-TOOL-CLI" width="100%">
+</p>
+
+<details>
+<summary>ツリーのテキスト版</summary>
+
+```text
+HYDRA-UMC-TOOL-CLI/
+├── tools/                      ソースコード
+│   ├── build_test.py           バージョンを増やさないビルドチェック
+│   ├── ci_validate.py          CI が使用するマニフェスト/CHANGELOG/ドキュメント検証
+│   ├── _doc_policy.py          ファミリー共通のドキュメント規則 (HYDRA-UMC-SDK のコピーで、同期を維持)
+│   ├── _readme_parity.py       8つの README が同じ構造であることの検査 (HYDRA-UMC-SDK のコピーで、同期を維持)
+│   └── hydra_project_tool.py   すべてのリポジトリで共通のコマンド: validate、test、ci、version、status、bump
+├── src/                        Go モジュール
+├── docs/                       ドキュメント：CLI_REFERENCE.md と DOCTOR.md
+├── images/                     メディアと図表
+├── .github/                    CI ワークフローと Issue テンプレート
+├── bump_version.py             明示的なバージョン更新
+├── bump_manifest_version.py    hydra-umc.project.json のバージョンをネイティブ版と同期(--sync)
+├── build.sh / build.bat        検証してビルド（ビルドはバージョンを変更しない）
+├── run.sh / run.bat            実際の実行：コンパイル済みバイナリを実行
+├── CHANGELOG.md                各バージョンの変更点
+├── build-test.sh               変更を伴わないビルド確認
+├── hydra-umc.project.json      マニフェスト：バージョン、成熟度、ファミリー
+└── test.sh                     テストを実行
+```
+
+</details>
+
+## 🗺️ ロードマップと既知の制限
+
+`deploy`、`flash-all`、`audit` はまだ作られていません。いずれも `HYDRA-UMC-SERVER` に存在しないフリート書き込み、OTA、監査のエンドポイントを必要とします。`--dry-run` なしの `config apply` は同じ欠落に対する正直な代替で、終了コード 6 を返します。
+
+## 🌍 言語
+
+この README とリポジトリの文書は、英語・スペイン語・ドイツ語・フランス語・イタリア語・日本語・中国語・ポルトガル語（ポルトガル）の 8 言語で提供されています。8 つのファイルは同時に書かれ、同じ節と同じリンクを持つことを CI が確認します。 このリポジトリには独自の画面もメッセージカタログもないため、翻訳すべきインターフェース文字列はありません。
 
 ## 🔗 関連プロジェクト
 
@@ -290,21 +345,26 @@ run.bat config apply --config .\hydra-cli.json --dry-run
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — 保守インシデントコーディネーター: 低権限のエッジ役割がサニタイズされたインベントリ/ヘルスのスナップショットを収集し、コントロールプレーン役割がそれを読み取り専用でレンダリングして AI プロバイダーに診断の提案を依頼します - パッチを適用することも、何かをデプロイすることも決してありません。
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — 再現可能な開発ホスト（Raspberry Pi 5 / CM5）。エコシステムのソースコードを保管し、永続キューのもとで境界の明確なビルド/テストタスクを実行する。運用中の CM5 とは明確に異なる、開発専用の役割。
 
+## 📚 ドキュメント
 
----
+さらに読むには：
 
-## 📚 ドキュメント & コミュニティ
+* [エコシステムのセキュリティ基準](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)
+* [エコシステムの脅威モデル](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)
+* [このリポジトリの変更履歴](CHANGELOG.md)
+* [このリポジトリのライセンス](LICENSE.md)
 
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** —— プルリクエストのための技術スタックとコーディング指針。
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** —— このコミュニティで期待される行動規範。
-- **[SECURITY.md](SECURITY.md)** —— 脆弱性の報告方法と、このプロジェクトの実際のセキュリティ重点領域。
-- **[SUPPORT.md](SUPPORT.md)** —— 質問の投稿先とバグの報告先。
-- **[LICENSE.md](LICENSE.md)** —— このプロジェクト自身のライセンス。
+## 🤝 コントリビュートとコミュニティ
+
+* プルリクエストの前に `HYDRA_UMC_CI=1 py -3 tools/ci_validate.py`（または `HYDRA_UMC_CI=1 python3 tools/ci_validate.py`）を実行してください。`CI_VALIDATION=PASS` と表示される必要があります。この確認に `build.sh` や `build.bat` は使わないでください。ビルドは検査ではありません。
+* 8 つの README は HYDRA-UMC-DOCS の 1 つのソースから書かれます。手で編集しないでください。ソースを変更し、`tools/make_readmes.py` で書き直します。
+* 実行していないことを README に書かないでください。事実であれば「シミュレーションのみ」「実機では未確認」と書きます。
+* [CONTRIBUTING.md](CONTRIBUTING.md)、[行動規範](CODE_OF_CONDUCT.md)、[SECURITY.md](SECURITY.md)、[SUPPORT.md](SUPPORT.md) を参照してください。
 
 ## 👤 作者
-**JuanenRac** (Electro Hobby 3D)
-📧 electrohobby3d@gmail.com
-📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+
+**JuanenRac (Electro Hobby 3D)** · electrohobby3d@gmail.com
 
 ## 📜 ライセンス
-GPL-3.0 —— 詳細は LICENSE を参照してください。
+
+GPL-3.0-or-later - [LICENSE](LICENSE).

@@ -1,0 +1,178 @@
+{
+  "repo": "HYDRA-UMC-TOOL-CLI",
+  "ecosystem": "hydra",
+  "tagline": "One static binary for the terminal: read the fleet, check it, stop it in software, and sign what is released.",
+  "description": "HYDRA-UMC-TOOL-CLI resolves the server and the credential, calls the HYDRA-UMC-SERVER REST interface for status, robots, doctor, jog and software stops, checks fleets, validates configuration, and signs release binaries with hydra-sign.",
+  "columns": [
+    "WHO RUNS IT",
+    "THIS REPOSITORY",
+    "WHAT IT TALKS TO"
+  ],
+  "nodes": [
+    {
+      "id": "ops",
+      "column": 0,
+      "level": "tested",
+      "title": "Operator and scripts",
+      "lines": [
+        "commands, exit codes 0 to 7,",
+        "JSON output with --json"
+      ],
+      "code": [
+        "src/cmd/hydra-cli/main.go",
+        "src/cmd/hydra-cli/exitcode.go"
+      ]
+    },
+    {
+      "id": "rel",
+      "column": 0,
+      "level": "tested",
+      "title": "Release process",
+      "lines": [
+        "hydra-sign: SHA-256 and",
+        "Ed25519 signature"
+      ],
+      "code": [
+        "src/cmd/hydra-sign/main.go"
+      ]
+    },
+    {
+      "id": "srv",
+      "column": 2,
+      "level": "contract",
+      "title": "HYDRA-UMC-SERVER",
+      "lines": [
+        "REST: hydra-info, login,",
+        "settings, control"
+      ]
+    },
+    {
+      "id": "trn",
+      "column": 1,
+      "level": "tested",
+      "title": "transport, auth, session",
+      "lines": [
+        "server, token and login;",
+        "saved session mode 0600"
+      ],
+      "code": [
+        "src/cmd/hydra-cli/transport.go",
+        "src/cmd/hydra-cli/auth.go",
+        "src/cmd/hydra-cli/session.go"
+      ]
+    },
+    {
+      "id": "rd",
+      "column": 1,
+      "level": "tested",
+      "title": "status, robots, doctor",
+      "lines": [
+        "reads the server; limits,",
+        "claims and metrics"
+      ],
+      "code": [
+        "src/cmd/hydra-cli/robots.go",
+        "src/cmd/hydra-cli/doctor.go",
+        "src/cmd/hydra-cli/metrics.go"
+      ]
+    },
+    {
+      "id": "ctl",
+      "column": 1,
+      "level": "tested",
+      "title": "control + emergency",
+      "lines": [
+        "jog, claim, stop and",
+        "stop-all --yes"
+      ],
+      "code": [
+        "src/cmd/hydra-cli/control.go",
+        "src/cmd/hydra-cli/emergency.go"
+      ]
+    },
+    {
+      "id": "flt",
+      "column": 1,
+      "level": "tested",
+      "title": "fleet",
+      "lines": [
+        "doctor over a list of",
+        "servers; network scan"
+      ],
+      "code": [
+        "src/cmd/hydra-cli/fleet.go"
+      ]
+    },
+    {
+      "id": "cfg",
+      "column": 1,
+      "level": "tested",
+      "title": "config + manifest",
+      "lines": [
+        "validates and applies",
+        "configuration; manifests"
+      ],
+      "code": [
+        "src/cmd/hydra-cli/config.go",
+        "src/cmd/hydra-cli/manifest.go"
+      ]
+    },
+    {
+      "id": "shl",
+      "column": 1,
+      "level": "tested",
+      "title": "shell",
+      "lines": [
+        "one server for the whole",
+        "session; same commands"
+      ],
+      "code": [
+        "src/cmd/hydra-cli/shell.go"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "ops",
+      "to": "trn",
+      "level": "tested"
+    },
+    {
+      "from": "ops",
+      "to": "cfg",
+      "level": "tested"
+    },
+    {
+      "from": "ops",
+      "to": "shl",
+      "level": "tested"
+    },
+    {
+      "from": "trn",
+      "to": "rd",
+      "level": "tested"
+    },
+    {
+      "from": "rd",
+      "to": "flt",
+      "level": "tested"
+    },
+    {
+      "from": "trn",
+      "to": "ctl",
+      "level": "tested"
+    },
+    {
+      "from": "trn",
+      "to": "srv",
+      "level": "contract",
+      "label": "REST"
+    },
+    {
+      "from": "ops",
+      "to": "rd",
+      "level": "tested"
+    }
+  ],
+  "footer": "Tried against test servers on a computer; not against a real cell, and the software stops are not an emergency stop."
+}

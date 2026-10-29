@@ -1,26 +1,37 @@
+<!-- =============================================================================
+HYDRA-UMC-TOOL-CLI - Command-line interface for fleet DevOps
+Copyright (C) JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+GPL-3.0-or-later - see LICENSE
+============================================================================= -->
+
 <p align="center">
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-TOOL-CLI banner" width="100%">
 </p>
 
-# 💻 HYDRA-UMC-TOOL-CLI
+# 🛠️ HYDRA-UMC-TOOL-CLI
 
 <p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | 🇫🇷 <b>Français</b> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 🛠️ Interface en Ligne de Commande pour le DevOps et l'Automatisation de Flottes
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
-  <img src="https://img.shields.io/badge/Language-Go-00ADD8.svg" alt="Go">
-  <img src="https://img.shields.io/badge/Feature-Fleet%20DevOps-blue.svg" alt="DevOps">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
+  <img src="https://img.shields.io/badge/Language-Go-00ADD8.svg" alt="Language">
+  <img src="https://img.shields.io/badge/Feature-Fleet%20DevOps-blue.svg" alt="Feature">
+  <img src="https://img.shields.io/badge/Tests-219%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.1.8-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** `version`, `status`, `robots`, `claims`, `claim`, `release`, `limits`, `jog-arm`, `jog`, `table`, `robot`, `audit`, `doctor`, `config validate`, `config apply --dry-run`, et le `shell` interactif (`main.go`, `server.go`, `robots.go`, `control.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) sont du code Go réel et fonctionnel, vérifié par 127 tests qui passent (`go test ./...`) - de vrais échanges `net/http`/`httptest` contre un faux serveur, plus de vraies fixtures de fichiers de configuration temporaires, pas des stubs. Ces tests simulent une instance de HYDRA-UMC-SERVER ; `status`, `robots` et `doctor` (connexion comprise) ont aussi été exécutés contre un vrai processus HYDRA-UMC-SERVER. `config apply` sans `--dry-run` renvoie honnêtement le code de sortie `ExitNotImplemented` plutôt que de simuler un succès, car le endpoint d'écriture de flotte qu'il appellerait n'existe pas encore sur HYDRA-UMC-SERVER. `deploy`, `flash-all` et `audit` relèvent de la pure aspiration - marqués "planned" ci-dessous et totalement absents de `src/`, pas même une fonction stub. Voir `CHANGELOG.md` pour savoir exactement ce qui a été livré jusqu'à présent.
+**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** `version`, `status`, `robots`, `claims`, `claim`, `release`, `limits`, `jog-arm`, `jog`, `table`, `robot`, `audit`, `doctor`, `config validate`, `config apply --dry-run`, et le `shell` interactif (`main.go`, `server.go`, `robots.go`, `control.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) sont du code Go réel et fonctionnel, vérifié par 219 tests qui passent (`go test ./...`) - de vrais échanges `net/http`/`httptest` contre un faux serveur, plus de vraies fixtures de fichiers de configuration temporaires, pas des stubs. Ces tests simulent une instance de HYDRA-UMC-SERVER ; `status`, `robots` et `doctor` (connexion comprise) ont aussi été exécutés contre un vrai processus HYDRA-UMC-SERVER. `config apply` sans `--dry-run` renvoie honnêtement le code de sortie `ExitNotImplemented` plutôt que de simuler un succès, car le endpoint d'écriture de flotte qu'il appellerait n'existe pas encore sur HYDRA-UMC-SERVER. `deploy`, `flash-all` et `audit` relèvent de la pure aspiration - marqués "planned" ci-dessous et totalement absents de `src/`, pas même une fonction stub. Voir `CHANGELOG.md` pour savoir exactement ce qui a été livré jusqu'à présent.
 
 ---
 
 > **État de la sûreté et de la cybersécurité :** cet écosystème n'est pas un système de sécurité certifié. Il n'existe pas encore de chaîne d'E-STOP matérielle, ni de limites ou de verrouillages imposés par le firmware, ni de commande de mouvement vérifiée ; les images de firmware sont contrôlées par CRC32 et un HMAC-SHA256 à clé partagée, pas par une signature asymétrique ; TLS et TLS mutuel sont optionnels et désactivés par défaut ; aucune carte propre n'a encore été assemblée ni testée. Lisez la [base de sécurité](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md) et le [modèle de menaces](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md) avant de vous fier à une affirmation d'ici pour la sécurité d'une personne.
+
+---
 
 ## 📋 En un coup d'œil
 
@@ -28,10 +39,12 @@
 |---|---|
 | Version | `0.1.8` |
 | Maturité | Fonctionnel |
-| Tests | 132 (`go test ./...`) |
+| Tests | 219 (`go test ./...`) |
 | Technologie | Go / standard-library flag handling |
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |
+
+**Aller à :** [Présentation](#-présentation) · [Architecture](#-architecture) · [Sécurité et protection](#-sécurité-et-protection) · [Configuration](#-configuration) · [Démarrage rapide](#-démarrage-rapide) · [Tests](#-tests) · [Dépannage](#-dépannage) · [Structure du dépôt](#-structure-du-dépôt) · [Projets liés](#-projets-liés)
 
 ## 🚦 État du projet
 
@@ -42,11 +55,11 @@ Chaque ligne est une partie de ce dépôt et le feu dit où elle en est aujourd'
 | Domaine | État | Ce que cela veut dire ici |
 |---|---|---|
 | Logiciel | 🟡 | Fonctionne pour son usage principal ; la vérification d'honnêteté ci-dessus liste ce qui manque encore |
-| Tests | 🟢 | 132 tests automatiques, exécutés à chaque modification |
+| Tests | 🟢 | 219 tests automatiques, exécutés à chaque modification |
 | Matériel réel | 🟠 | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |
 | Documentation | 🟢 | README en huit langues, vérifié par rapport au manifeste à chaque modification |
 
-## 1. 🛠️ APERÇU TECHNIQUE
+## 🎯 Présentation
 
 **HYDRA-UMC-TOOL-CLI** est le couteau suisse des développeurs et administrateurs système de l'écosystème HYDRA-UMC. Il s'agit d'un binaire Go statique unique fournissant des outils en ligne de commande pour interroger, mettre à jour et auditer les déploiements HYDRA-UMC.
 
@@ -74,9 +87,18 @@ L'objectif à long terme est de permettre des déploiements massifs de missions,
 * 🚧 **`hydra-cli flash-all`** — mises à jour de firmware en parallèle pour contrôleurs et têtes URTC. *(prévu)*
 * 🚧 **`hydra-cli audit`** — suite de diagnostic automatisée pour la santé du bus CAN et la validation des capteurs. *(prévu)*
 
----
+## 🧩 Rôle dans HYDRA-UMC
 
-## 2. 🔄 FLUX DU CLI
+**HYDRA-UMC-TOOL-CLI** est `hydra-cli`, un binaire Go unique sans dépendance de bibliothèque partagée qui parle à `HYDRA-UMC-SERVER` : état, robots, limites, un doctor qui vérifie un serveur, jog et arrêts logiciels, un balayage des réseaux privés, des contrôles de flotte, la validation des manifestes et des fichiers de configuration, et un shell interactif. Il contient aussi `hydra-sign`, qui signe et vérifie les binaires de version.
+
+## 🏛️ Architecture
+
+<p align="center">
+  <img src="images/architecture.svg" alt="HYDRA-UMC-TOOL-CLI architecture" width="100%">
+</p>
+
+<details>
+<summary>Version texte du diagramme (Mermaid)</summary>
 
 ```mermaid
 flowchart LR
@@ -88,9 +110,9 @@ flowchart LR
     CLI -- "completion" --> SHELL["bash / zsh"]
 ```
 
----
+</details>
 
-## 3. 🧱 ARCHITECTURE & DÉCISIONS DE CONCEPTION
+### ARCHITECTURE & DÉCISIONS DE CONCEPTION
 
 * **Pourquoi `src/` contient un sous-chemin `cmd/hydra-cli/`, pas une disposition plate.** Suit la convention Go standard pour les CLI (un point d'entrée `cmd/<nom-binaire>/`, avec de la place pour de futurs paquets `internal/`/`pkg/` à mesure que la CLI dépasse une seule commande) - pas une invention de cet écosystème, la propre convention de la communauté Go au sens large pour les CLI multi-commandes.
 * **Pourquoi une CLI, plutôt que simplement scripter directement la propre API REST de HYDRA-UMC-SERVER.** Les opérations à l'échelle de la flotte (installer/mettre à jour sur de nombreux CM5, pas un seul) nécessitent une vraie orchestration - retries, parallélisme, une UX cohérente - qu'un script curl ponctuel n'offre pas, la même raison que HYDRA-UMC-UPDATER applique plus tard au niveau de tout le checkout de l'écosystème.
@@ -100,60 +122,47 @@ flowchart LR
 * **Pourquoi `config apply` sans `--dry-run` retourne "non implémenté" plutôt que de ne rien faire silencieusement.** L'endpoint d'écriture en direct de HYDRA-UMC-SERVER que cela appellerait n'existe vraiment pas encore (le même manque qui bloque `deploy`/`flash-all`) - un code de sortie distinct, `ExitNotImplemented`, indique à l'appelant "c'est un vrai manque, pas un bug", plutôt qu'un no-op faussement réussi.
 * **Pourquoi les erreurs de chaque commande passent désormais par un seul type `CliError`/`ExitCode` plutôt que par des appels ad hoc à `os.Exit`.** Un contrat de codes de sortie stable et documenté ne le reste que s'il existe un seul endroit qui attribue les codes - `exitCodeFor()` (`exitcode.go`) est cet endroit, et les fonctions de commande continuent de retourner des valeurs `error` idiomatiques et enchaînables plutôt que d'appeler elles-mêmes `os.Exit`.
 
----
+## 🔒 Sécurité et protection
 
-## 📂 STRUCTURE DES DOSSIERS
+| Menace | Défense | Où |
+|---|---|---|
+| Un mot de passe ou un jeton laissé dans la liste des processus ou l'historique du shell | L'identifiant vient de l'environnement (`HYDRA_CLI_TOKEN`, ou `HYDRA_CLI_USER` et `HYDRA_CLI_PASSWORD`) ou d'une session enregistrée, jamais d'une option | `auth.go` |
+| Une session enregistrée lue par un autre utilisateur, ou à moitié écrite | Le fichier est écrit dans un fichier temporaire en mode 0600 puis renommé par-dessus l'ancien, dans un dossier créé en mode 0700 | `session.go` |
+| Identifiants envoyés en clair vers une autre machine | Elles sont refusées en `http://` simple vers toute autre machine sauf `HYDRA_CLI_ALLOW_INSECURE=1` ; `HYDRA_CLI_CA_FILE` fait confiance à une autorité privée pour `https://` | `transport.go` |
+| Un balayage qui part sur internet, ou un stop-all par erreur | `scan` reste sur les réseaux privés sauf si `--allow-public-range` est donné et couvre au plus 1024 adresses par défaut ; `stop-all` exige `--yes` | `fleet.go`, `emergency.go` |
 
-Service purement logiciel (CLI) — sans matériel, micrologiciel ou système d'exploitation propres ; ces dossiers sont omis conformément à la politique de structure du dépôt.
+**Ce qu'il ne fait jamais :** servir d'arrêt d'urgence. `stop` et `stop-all` sont des commandes logicielles qui exigent le serveur, le réseau et une connexion ; c'est l'arrêt d'urgence physique de la cellule qui arrête une machine.
 
-```text
-HYDRA-UMC-TOOL-CLI/
-├── src/                       # Module Go
-│   ├── go.mod                 # Définition du module (github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)
-│   ├── cmd/hydra-cli/         # Point d'entrée du binaire
-│   │   ├── main.go            # Répartition des commandes (version, help, status, robots, doctor, claims, claim, release, limits, jog-arm, jog, table, robot, audit, config, shell, completion, login, logout, scan, fleet, stop, stop-all, metrics, manifest)
-│   │   ├── server.go          # Résolution partagée de --server/--config/HYDRA_CLI_SERVER
-│   │   ├── auth.go            # Identifiants issus de l'environnement (jeton ou connexion) pour les lectures authentifiées
-│   │   ├── robots.go          # Vrai client GET /api/settings + affichage de la liste
-│   │   ├── control.go         # Réservations, limites de sécurité et jog (claims/claim/release/limits/jog-arm/jog)
-│   │   ├── record.go          # Révision du robot, déplacement atomique de la table et journal d'audit (robot/table/audit)
-│   │   ├── doctor.go          # Diagnostic de contrat à deux endpoints, en lecture seule
-│   │   ├── config.go          # Chargement réel du fichier de configuration, validation, apply --dry-run
-│   │   ├── shell.go           # REPL interactif sur la même table de commandes
-│   │   ├── exitcode.go        # Contrat réel et stable ExitCode/CliError
-│   │   ├── transport.go       # Un seul client HTTP pour toutes les requêtes et les règles des identifiants
-│   │   ├── session.go         # Sessions : login, logout et réutilisation du jeton (un login est limité en débit et laisse un jeton de rafraîchissement de 90 jours)
-│   │   ├── emergency.go       # Arrêter les robots : stop et stop-all (un arrêt n'est jamais bloqué par la réservation d'un autre compte)
-│   │   ├── fleet.go           # Regarder de nombreux serveurs : scan les trouve par leur page d'identité publique, fleet doctor lance le doctor en lecture seule sur chacun
-│   │   ├── metrics.go         # Lecture des métriques du serveur (GET /metrics) et affichage des chiffres qu'un opérateur regarde en premier
-│   │   ├── manifest.go        # manifest validate : vérifie les fichiers hydra-umc.project.json selon le schéma publié par le SDK
-│   │   ├── jsonschema.go      # Un petit vérificateur JSON Schema pour la partie de JSON Schema qu'utilisent les schémas du SDK
-│   │   ├── completion.go      # completion bash|zsh : affiche un script statique de complétion du shell
-│   │   ├── usage.go           # <command> --help : l'usage de cette commande seule, sans toucher au réseau ni à un fichier
-│   │   ├── schemas/           # project-manifest.schema.json : le schéma de manifeste selon lequel manifest validate vérifie
-│   │   ├── *_test.go          # Vrais tests (allers-retours net/http/httptest, fixtures de fichiers temporaires)
-│   │   └── version.go         # const Version - incrément type compteur kilométrique, synchronisé avec le manifeste
-│   ├── cmd/hydra-sign/    # hydra-sign : signe et vérifie les binaires des versions (fichier d'empreinte SHA-256 et signature Ed25519)
-│   └── redact/            # Masque les formes connues de secrets dans le texte et les valeurs de type JSON (un portage de l'expurgation partagée du SDK, avec ses vecteurs de test)
-├── tools/
-│   ├── build_test.py      # Vérification de build sans versionnage
-│   ├── ci_validate.py     # Validation manifeste/CHANGELOG/docs utilisée par CI
-│   ├── _doc_policy.py     # Règles de documentation partagées par la famille (copie de celle de HYDRA-UMC-SDK, tenue synchronisée)
-│   ├── _readme_parity.py  # Contrôle que les huit README partagent la même structure (copie de celui de HYDRA-UMC-SDK, tenue synchronisée)
-│   └── hydra_project_tool.py # Les mêmes commandes dans chaque dépôt : validate, test, ci, version, status, bump
-├── docs/                      # Documentation : CLI_REFERENCE.md et DOCTOR.md
-├── build/                     # Binaires compilés (ignoré par git)
-├── images/                    # Médias et diagrammes
-├── bump_version.py            # Incrément de version type compteur kilométrique (exécuté seulement par la commande `bump` explicite)
-├── bump_manifest_version.py   # Synchronise la version de hydra-umc.project.json avec la version native (--sync)
-├── build.sh / build.bat       # Valide et compile (compiler ne change jamais la version)
-├── run.sh / run.bat           # Exécution réelle : lance le binaire compilé
-└── README.md
+## ⚙️ Configuration
+
+| Variable | Par défaut | Ce qu'elle définit |
+|---|---|---|
+| `HYDRA_CLI_SERVER` / `--server` | `http://localhost:3000` | le serveur auquel parler |
+| `HYDRA_CLI_TIMEOUT_SEC` / `--timeout` | `5` | secondes accordées à chaque requête (1 à 3600) |
+| `HYDRA_CLI_TOKEN` | aucun | un jeton Bearer déjà émis par le serveur |
+| `HYDRA_CLI_USER`, `HYDRA_CLI_PASSWORD` | aucun | la CLI se connecte pour cette exécution ; le jeton l'emporte si les deux sont définis |
+| `HYDRA_CLI_ALLOW_INSECURE` | `0` | `1` autorise les identifiants en http simple vers une autre machine |
+| `HYDRA_CLI_CA_FILE` | aucun | fichier PEM d'une autorité privée à laquelle faire confiance pour https |
+
+## 🚀 Démarrage rapide
+
+Nécessite Go 1.24 ou plus récent.
+
+```bash
+./build.sh  # Linux, macOS (build.bat on Windows)
+./run.sh status --server http://192.168.1.50:3000
+./run.sh doctor
+./run.sh config validate --config hydra-cli.json
+./run.sh help
 ```
 
----
+## 🧪 Tests
 
-## 4. ⚙️ COMPILATION ET EXÉCUTION
+219 tests automatiques s'exécutent avec `cd src && go test ./...`. Ils n'ont besoin ni de matériel ni de rien en dehors de cette machine.
+
+La CI exécute `HYDRA_UMC_CI=1 python tools/ci_validate.py`, qui vérifie le manifeste, les documents, les huit README et les images.
+
+## 🏗️ Compilation et publication
 
 Nécessite Go >= 1.24.
 
@@ -182,9 +191,56 @@ run.bat config apply --config .\hydra-cli.json --dry-run
 
 `build` ne change jamais la version (seule `python tools/hydra_project_tool.py bump` la fait monter), exécute la vraie suite de tests (`go vet` + `go test`), compile le module Go dans `src/` vers `build/hydra-cli(.exe)`, puis exécute `version` une fois pour vérifier - avant de compiler de façon croisée une version réelle pour `linux/amd64`, `linux/arm64` (l'architecture propre de la CM5), `windows/amd64`, `darwin/amd64` et `darwin/arm64` dans `build/release/`, avec un vrai fichier de somme de contrôle `SHA256SUMS`. `run` relance le binaire compilé en transmettant tous les arguments — essayez `run doctor` face à une instance `HYDRA-UMC-SERVER` en cours d'exécution. Doctor est une vérification sûre et en lecture seule des contrats d'endpoints ; voir [docs/DOCTOR.md](docs/DOCTOR.md).
 
----
+## 🩺 Dépannage
 
-## 🔗 Projets Liés
+| Vous voyez | Parce que | Faites |
+|---|---|---|
+| exit code 7 | La commande exige une connexion et aucun identifiant n'a été donné, ou le serveur l'a refusé | Définissez `HYDRA_CLI_TOKEN`, ou `HYDRA_CLI_USER` et `HYDRA_CLI_PASSWORD`, ou lancez `login` |
+| exit code 4 | Le serveur est resté injoignable | Vérifiez l'adresse (`--server`, fichier de configuration, `HYDRA_CLI_SERVER`) et lancez `doctor` |
+| exit code 2 | Commande inconnue, argument manquant ou option sans valeur | Lancez `help` ; rien n'est ignoré en silence |
+
+## 📂 Structure du dépôt
+
+<p align="center">
+  <img src="images/repository-structure.svg" alt="Repository structure of HYDRA-UMC-TOOL-CLI" width="100%">
+</p>
+
+<details>
+<summary>Version texte de l'arborescence</summary>
+
+```text
+HYDRA-UMC-TOOL-CLI/
+├── tools/                      code source
+│   ├── build_test.py           Vérification de build sans versionnage
+│   ├── ci_validate.py          Validation manifeste/CHANGELOG/docs utilisée par CI
+│   ├── _doc_policy.py          Règles de documentation partagées par la famille (copie de celle de HYDRA-UMC-SDK, tenue synchronisée)
+│   ├── _readme_parity.py       Contrôle que les huit README partagent la même structure (copie de celui de HYDRA-UMC-SDK, tenue synchronisée)
+│   └── hydra_project_tool.py   Les mêmes commandes dans chaque dépôt : validate, test, ci, version, status, bump
+├── src/                        Module Go
+├── docs/                       Documentation : CLI_REFERENCE.md et DOCTOR.md
+├── images/                     Médias et diagrammes
+├── .github/                    workflow de CI et modèles de tickets
+├── bump_version.py             Incrément de version type compteur kilométrique (exécuté seulement par la commande `bump` explicite)
+├── bump_manifest_version.py    Synchronise la version de hydra-umc.project.json avec la version native (--sync)
+├── build.sh / build.bat        Valide et compile (compiler ne change jamais la version)
+├── run.sh / run.bat            Exécution réelle : lance le binaire compilé
+├── CHANGELOG.md                ce qui a changé à chaque version
+├── build-test.sh               vérification de build sans modification
+├── hydra-umc.project.json      manifeste : version, maturité, famille
+└── test.sh                     lance les tests
+```
+
+</details>
+
+## 🗺️ Feuille de route et limites connues
+
+`deploy`, `flash-all` et `audit` ne sont pas encore faits : chacun exige sur `HYDRA-UMC-SERVER` un point d'écriture de flotte, de mise à jour par liaison radio ou d'audit qui n'existe pas. `config apply` sans `--dry-run` est le substitut honnête de la même lacune et répond par le code de sortie 6.
+
+## 🌍 Langues
+
+Ce README et les documents du dépôt existent en huit langues : anglais, espagnol, allemand, français, italien, japonais, chinois et portugais (Portugal). Ils sont écrits ensemble et la CI vérifie que les huit fichiers ont les mêmes sections et les mêmes liens. Ce dépôt n'a ni écran ni catalogue de messages propre, il n'y a donc aucune chaîne d'interface à traduire.
+
+## 🔗 Projets liés
 
 Ce projet fait partie de l'écosystème robotique HYDRA-UMC du même auteur (JuanenRac / Electro Hobby 3D). Bon à savoir, car une demande pourrait en réalité concerner l'un de ceux-ci plutôt que ce dépôt.
 
@@ -273,21 +329,26 @@ Ce projet fait partie de l'écosystème robotique HYDRA-UMC du même auteur (Jua
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — coordinateur d'incidents de maintenance : un rôle edge à faible privilège collecte un instantané d'inventaire/santé assaini, un rôle control-plane le rend en lecture seule et demande à un fournisseur d'IA de suggérer un diagnostic - n'applique jamais de correctif ni ne déploie rien.
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — hôte de développement reproductible (Raspberry Pi 5 / CM5) qui héberge le code source de l'écosystème et exécute des tâches de compilation/test délimitées via une file d'attente durable ; un rôle de développement dédié, explicitement distinct d'un CM5 opérationnel.
 
+## 📚 Documentation
 
----
+Où lire la suite :
 
-## 📚 Documentation & Communauté
+* [Base de sécurité de l'écosystème](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)
+* [Modèle de menaces de l'écosystème](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)
+* [Journal des modifications de ce dépôt](CHANGELOG.md)
+* [Licence de ce dépôt](LICENSE.md)
 
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — pile technologique et lignes directrices de codage pour une pull request.
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — les normes de comportement attendues dans cette communauté.
-- **[SECURITY.md](SECURITY.md)** — comment signaler une vulnérabilité, et les véritables axes de sécurité de ce projet.
-- **[SUPPORT.md](SUPPORT.md)** — où poser des questions et signaler des bugs.
-- **[LICENSE.md](LICENSE.md)** — la licence propre de ce projet.
+## 🤝 Contribuer et communauté
+
+* Avant une pull request, exécutez `HYDRA_UMC_CI=1 py -3 tools/ci_validate.py` (ou `HYDRA_UMC_CI=1 python3 tools/ci_validate.py`) : il doit afficher `CI_VALIDATION=PASS`. N'exécutez pas `build.sh` ni `build.bat` pour cette vérification ; compiler n'est pas vérifier.
+* Les huit README sont écrits à partir d'une source unique dans HYDRA-UMC-DOCS ; ne les modifiez pas à la main. Changez la source et réécrivez-les avec `tools/make_readmes.py`.
+* N'affirmez pas dans un README ce qui n'a pas tourné : écrivez « simulé » ou « non essayé sur matériel » quand c'est la vérité.
+* Voir [CONTRIBUTING.md](CONTRIBUTING.md), le [code de conduite](CODE_OF_CONDUCT.md), [SECURITY.md](SECURITY.md) et [SUPPORT.md](SUPPORT.md).
 
 ## 👤 AUTEUR
-**JuanenRac** (Electro Hobby 3D)
-📧 electrohobby3d@gmail.com
-📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+
+**JuanenRac (Electro Hobby 3D)** · electrohobby3d@gmail.com
 
 ## 📜 LICENCE
-GPL-3.0 - Voir LICENSE pour plus de détails.
+
+GPL-3.0-or-later - [LICENSE](LICENSE).
