@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The CI looks for known vulnerabilities of the Go libraries (it only warns):** `govulncheck` runs after `staticcheck` and writes a warning in the log when it finds some, without failing the check, because the standard library of the runner can have vulnerabilities that this code does not call.
 - **The layout of the README is checked in the CI:** the validator runs `tools/universal_readme_check.py` and lists, as a warning, what differs from the universal layout of the README.
 - CI runs `staticcheck` next to `go vet` and the race tests; the one finding (a helper that nothing called) is removed.
 
