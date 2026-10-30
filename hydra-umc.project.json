@@ -11,6 +11,7 @@
   ],
   "deployment_target": "user-pc",
   "maturity": "functional",
+  "evidence": "simulator",
   "family": "Complementary Tools",
   "parent": null,
   "build": "Go module root is src/. Build with go build ./cmd/hydra-cli from inside src/.",
