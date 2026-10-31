@@ -143,6 +143,7 @@ flowchart LR
 | `HYDRA_CLI_USER`, `HYDRA_CLI_PASSWORD` | nessuno | la CLI effettua il login per quell'esecuzione; il token vince se sono impostati entrambi |
 | `HYDRA_CLI_ALLOW_INSECURE` | `0` | `1` consente le credenziali su http semplice verso un'altra macchina |
 | `HYDRA_CLI_CA_FILE` | nessuno | file PEM di un'autorità privata di cui fidarsi per https |
+| `HYDRA_CLI_TOKEN_FILE` | la sessione salvata | il file in cui `hydra-cli login` conserva il token e il token di rinnovo, leggibile solo dall'utente (anche `tokenFile` di un file di configurazione; per impostazione predefinita `hydra-cli/session.json` nella cartella di configurazione dell'utente); `hydra-cli logout` revoca il token di rinnovo e lo rimuove |
 
 ## 🚀 Avvio rapido
 

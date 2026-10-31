@@ -150,6 +150,7 @@ flowchart LR
 | `HYDRA_CLI_USER`, `HYDRA_CLI_PASSWORD` | なし | その実行のために CLI がログインします。両方ある場合はトークンが優先されます |
 | `HYDRA_CLI_ALLOW_INSECURE` | `0` | `1` で他のマシンへの平文 http での認証情報送信を許可 |
 | `HYDRA_CLI_CA_FILE` | なし | https で信頼するプライベート認証局の PEM ファイル |
+| `HYDRA_CLI_TOKEN_FILE` | 保存されたセッション | `hydra-cli login` がトークンとリフレッシュトークンを保存するファイル（ユーザーだけが読めます。設定ファイルの `tokenFile` でも指定可。既定はユーザー設定ディレクトリの `hydra-cli/session.json`）。`hydra-cli logout` はリフレッシュトークンを失効させてファイルを削除します |
 
 ## 🚀 クイックスタート
 

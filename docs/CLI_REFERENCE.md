@@ -365,7 +365,7 @@ endpoint on HYDRA-UMC-SERVER that doesn't exist. `config apply` without
 
 ## Sessions, credentials and the newer commands
 
-- `login [--user NAME] [--password-stdin]`, `logout`: see the CHANGELOG; the credential is looked for in this order: `HYDRA_CLI_TOKEN`, the saved session of the server, `HYDRA_CLI_USER` + `HYDRA_CLI_PASSWORD`.
+- `login [--user NAME] [--password-stdin]`, `logout`: see the CHANGELOG; the credential is looked for in this order: `HYDRA_CLI_TOKEN`, the saved session of the server, `HYDRA_CLI_USER` + `HYDRA_CLI_PASSWORD`. `login` signs in once (user from `--user` or `HYDRA_CLI_USER`, password from `HYDRA_CLI_PASSWORD` or `--password-stdin`, never from an option) and saves the token and refresh token in a file only the user can read: `HYDRA_CLI_TOKEN_FILE`, `tokenFile` of a config file, or `hydra-cli/session.json` in the user configuration directory. Later commands use it and renew it with `POST /api/refresh` when the server says the token expired; `logout` revokes the refresh token and removes the file. With only `HYDRA_CLI_USER` and `HYDRA_CLI_PASSWORD` the CLI logs in at most once per process (a `shell` shares one login) and revokes the refresh token when it exits.
 - Credentials are refused over plain http to another machine unless `HYDRA_CLI_ALLOW_INSECURE=1` (or `allowInsecure` in the config file); `HYDRA_CLI_CA_FILE` (or `caFile`) trusts a private CA. The config file also accepts `tokenFile`.
 - `--timeout SECONDS` (1 to 3600) on every live command.
 - `scan <network|address>... [--ports 3000,3443] [--scheme http|https] [--concurrency N] [--max-hosts N] [--probe-timeout-ms N] [--allow-public-range] [--json]`: private networks only unless allowed, at most 1024 addresses by default.

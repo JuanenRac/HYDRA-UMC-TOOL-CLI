@@ -147,6 +147,7 @@ flowchart LR
 | `HYDRA_CLI_USER`, `HYDRA_CLI_PASSWORD` | 无 | CLI 在本次运行中登录；两者都设置时以令牌为准 |
 | `HYDRA_CLI_ALLOW_INSECURE` | `0` | `1` 允许通过明文 http 向另一台机器发送凭据 |
 | `HYDRA_CLI_CA_FILE` | 无 | https 所信任的私有证书颁发机构的 PEM 文件 |
+| `HYDRA_CLI_TOKEN_FILE` | 已保存的会话 | `hydra-cli login` 保存令牌和刷新令牌的文件，仅用户本人可读（也可用配置文件的 `tokenFile`；默认是用户配置目录中的 `hydra-cli/session.json`）；`hydra-cli logout` 会吊销刷新令牌并删除该文件 |
 
 ## 🚀 快速开始
 

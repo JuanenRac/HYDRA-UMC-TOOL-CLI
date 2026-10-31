@@ -143,6 +143,7 @@ flowchart LR
 | `HYDRA_CLI_USER`, `HYDRA_CLI_PASSWORD` | keiner | die CLI meldet sich für diesen Lauf an; das Token gewinnt, wenn beide gesetzt sind |
 | `HYDRA_CLI_ALLOW_INSECURE` | `0` | `1` erlaubt Zugangsdaten über reines http zu einem anderen Rechner |
 | `HYDRA_CLI_CA_FILE` | keiner | PEM-Datei einer privaten Stelle, der für https vertraut wird |
+| `HYDRA_CLI_TOKEN_FILE` | die gespeicherte Sitzung | die Datei, in der `hydra-cli login` Token und Refresh-Token ablegt, nur für den Benutzer lesbar (auch `tokenFile` einer Konfigurationsdatei; standardmäßig `hydra-cli/session.json` im Konfigurationsverzeichnis des Benutzers); `hydra-cli logout` widerruft das Refresh-Token und entfernt sie |
 
 ## 🚀 Schnellstart
 
