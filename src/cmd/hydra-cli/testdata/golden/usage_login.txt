@@ -1,6 +1,6 @@
 exit=0
 --stdout--
-USAGE: hydra-cli login [--user NAME] [--password-stdin]
+USAGE: hydra-cli login [--user NAME] [--password-stdin] [--json]
 
 Sign in once and save the session (the token and its refresh token) in a file only you can read. Every later command
 uses it and renews it by itself, so no command logs in again. The file is HYDRA_CLI_TOKEN_FILE, the "tokenFile" of a
@@ -10,6 +10,7 @@ uses it and renews it by itself, so no command logs in again. The file is HYDRA_
 OPTIONS:
     --user NAME     the account (default: HYDRA_CLI_USER)
     --password-stdin  read the password from the standard input
+    --json          print the result as one JSON object (never the token)
     --server URL    the server (default: HYDRA_CLI_SERVER, then a --config file's "server", then DEFAULT_SERVER)
     --config PATH   a config file (see: hydra-cli config validate --help)
     --timeout SECONDS   how long to wait for the server (1 to 3600; default: the config file's "timeoutSec", then HYDRA_CLI_TIMEOUT_SEC, then 5)

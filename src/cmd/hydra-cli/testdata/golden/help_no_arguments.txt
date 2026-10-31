@@ -7,7 +7,7 @@ USAGE:
     hydra-cli <command> [arguments]
 
 COMMANDS:
-    version              Print the CLI version and exit.
+    version [--json]     Print the CLI version and exit.
     status [--server URL] [--config PATH] [--json]
                           Query a HYDRA-UMC-SERVER instance's /api/hydra-info
                           endpoint and print its reported identity/version.
@@ -25,8 +25,8 @@ COMMANDS:
 	                      --json prints a structured report (checkId/severity/
 	                      status per check) instead of the DOCTOR=PASS line, for
 	                      scripts that need to act on individual results.
-    login [--user NAME] [--password-stdin]
-    logout
+    login [--user NAME] [--password-stdin] [--json]
+    logout [--json]
                           Sign in once and keep the session in a file only you
                           can read (every later command uses it and renews it by
                           itself), or end it. Avoids a login on every run.
@@ -35,7 +35,7 @@ COMMANDS:
                           public /api/hydra-info only).
     fleet doctor --servers FILE [--json]
                           Run doctor against every server of a list at once.
-    stop <robot>          Send the stop command to one robot.
+    stop <robot> [--json] Send the stop command to one robot.
     stop-all --yes        The global stop: every robot, valves and pumps off.
     metrics [--all] [--json]
                           Read the Prometheus metrics of the server (GET /metrics).
@@ -74,12 +74,12 @@ COMMANDS:
                           here and, with --verify, by the server over the whole
                           record. --export saves the lines as stored (.jsonl).
 
-    claim, release, jog and table also take --if-match REVISION (a revision
+    claim, release, jog and table also take --json (one result object) and --if-match REVISION (a revision
     printed by robot or by an earlier command) or --if-match current: the
     server then refuses the write (exit code 8) if the robot changed since.
-    config validate --config PATH
+    config validate --config PATH [--json]
                           Load and schema-validate a local config file.
-    config apply --config PATH [--dry-run]
+    config apply --config PATH [--dry-run] [--json]
                           Preview (--dry-run) what a config apply would send.
                           Without --dry-run, exits ExitNotImplemented: no
                           live fleet-write endpoint exists yet.

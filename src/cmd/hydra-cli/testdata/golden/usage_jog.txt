@@ -1,12 +1,13 @@
 exit=0
 --stdout--
-USAGE: hydra-cli jog <robot> <axis> <amount> [--absolute] [--if-match REVISION|current]
+USAGE: hydra-cli jog <robot> <axis> <amount> [--absolute] [--if-match REVISION|current] [--json]
 
 Move one axis (x y z a b c). A step above the limit of the robot's model is refused before it is sent.
 
 OPTIONS:
     --absolute           the amount is a position, not a step
     --if-match REVISION  refuse (exit 8) if the robot changed since REVISION; "current" reads it first
+    --json          print the result as one JSON object (schema_version, command, ok and the fields of the command)
     --server URL    the server (default: HYDRA_CLI_SERVER, then a --config file's "server", then DEFAULT_SERVER)
     --config PATH   a config file (see: hydra-cli config validate --help)
     --timeout SECONDS   how long to wait for the server (1 to 3600; default: the config file's "timeoutSec", then HYDRA_CLI_TIMEOUT_SEC, then 5)

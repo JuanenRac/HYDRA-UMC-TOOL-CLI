@@ -1,6 +1,6 @@
 exit=0
 --stdout--
-USAGE: hydra-cli claim <robot> [--ttl-ms N] [--force] [--reason TEXT] [--if-match REVISION|current]
+USAGE: hydra-cli claim <robot> [--ttl-ms N] [--force] [--reason TEXT] [--if-match REVISION|current] [--json]
 
 Reserve a robot for this program. The reservation belongs to your account and to this program's controller id
 (--controller-id ID or HYDRA_CLI_CONTROLLER_ID; default hydra-cli-<host>).
@@ -11,6 +11,7 @@ OPTIONS:
     --controller-id ID   the controller id of this program (default: HYDRA_CLI_CONTROLLER_ID, then hydra-cli-<host>)
     --reason TEXT        written to the audit record
     --if-match REVISION  refuse (exit 8) if the robot changed since REVISION; "current" reads it first
+    --json          print the result as one JSON object (schema_version, command, ok and the fields of the command)
     --server URL    the server (default: HYDRA_CLI_SERVER, then a --config file's "server", then DEFAULT_SERVER)
     --config PATH   a config file (see: hydra-cli config validate --help)
     --timeout SECONDS   how long to wait for the server (1 to 3600; default: the config file's "timeoutSec", then HYDRA_CLI_TIMEOUT_SEC, then 5)

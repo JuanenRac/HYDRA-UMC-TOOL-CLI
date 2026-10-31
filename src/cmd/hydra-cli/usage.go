@@ -22,9 +22,12 @@ const serverOptions = `    --server URL    the server (default: HYDRA_CLI_SERVER
 `
 
 var commandUsage = map[string]string{
-	"version": `USAGE: hydra-cli version
+	"version": `USAGE: hydra-cli version [--json]
 
 Print the CLI version and exit.
+
+OPTIONS:
+    --json          print the result as one JSON object (schema_version, command, ok and the fields of the command)
 `,
 	"status": `USAGE: hydra-cli status [--server URL] [--config PATH] [--json]
 
@@ -56,7 +59,7 @@ List who reserves which robot (GET /api/claims).
 OPTIONS:
 ` + serverOptions + `    --json          print the list as JSON
 `,
-	"claim": `USAGE: hydra-cli claim <robot> [--ttl-ms N] [--force] [--reason TEXT] [--if-match REVISION|current]
+	"claim": `USAGE: hydra-cli claim <robot> [--ttl-ms N] [--force] [--reason TEXT] [--if-match REVISION|current] [--json]
 
 Reserve a robot for this program. The reservation belongs to your account and to this program's controller id
 (--controller-id ID or HYDRA_CLI_CONTROLLER_ID; default hydra-cli-<host>).
@@ -67,8 +70,9 @@ OPTIONS:
     --controller-id ID   the controller id of this program (default: HYDRA_CLI_CONTROLLER_ID, then hydra-cli-<host>)
     --reason TEXT        written to the audit record
     --if-match REVISION  refuse (exit 8) if the robot changed since REVISION; "current" reads it first
+    --json          print the result as one JSON object (schema_version, command, ok and the fields of the command)
 ` + serverOptions,
-	"release": `USAGE: hydra-cli release <robot> [--reason TEXT] [--if-match REVISION|current]
+	"release": `USAGE: hydra-cli release <robot> [--reason TEXT] [--if-match REVISION|current] [--json]
 
 Release a robot this program reserved.
 
@@ -76,6 +80,7 @@ OPTIONS:
     --reason TEXT        written to the audit record
     --controller-id ID   the controller id of this program (default: HYDRA_CLI_CONTROLLER_ID, then hydra-cli-<host>)
     --if-match REVISION  refuse (exit 8) if the robot changed since REVISION; "current" reads it first
+    --json          print the result as one JSON object (schema_version, command, ok and the fields of the command)
 ` + serverOptions,
 	"limits": `USAGE: hydra-cli limits [--robot ID] [--json]
 
@@ -85,23 +90,25 @@ OPTIONS:
     --robot ID      the limits of one robot's model
     --json          print them as JSON
 ` + serverOptions,
-	"jog-arm": `USAGE: hydra-cli jog-arm <robot> <on|off> [--ttl-ms N]
+	"jog-arm": `USAGE: hydra-cli jog-arm <robot> <on|off> [--ttl-ms N] [--json]
 
 Arm or disarm the jog of one robot. Needed only when the server requires it; it ends by itself, with a stop or when
 the robot is released.
 
 OPTIONS:
     --ttl-ms N      how long the arming lasts
+    --json          print the result as one JSON object (schema_version, command, ok and the fields of the command)
 ` + serverOptions,
-	"jog": `USAGE: hydra-cli jog <robot> <axis> <amount> [--absolute] [--if-match REVISION|current]
+	"jog": `USAGE: hydra-cli jog <robot> <axis> <amount> [--absolute] [--if-match REVISION|current] [--json]
 
 Move one axis (x y z a b c). A step above the limit of the robot's model is refused before it is sent.
 
 OPTIONS:
     --absolute           the amount is a position, not a step
     --if-match REVISION  refuse (exit 8) if the robot changed since REVISION; "current" reads it first
+    --json          print the result as one JSON object (schema_version, command, ok and the fields of the command)
 ` + serverOptions,
-	"table": `USAGE: hydra-cli table <robot> <x> <y> [--rz N] [--relative] [--if-match REVISION|current]
+	"table": `USAGE: hydra-cli table <robot> <x> <y> [--rz N] [--relative] [--if-match REVISION|current] [--json]
 
 Move the XY table of a robot in one atomic request (absolute positions unless --relative). The whole move is checked
 against the limits of the model before it is sent; the server applies all of it or none of it.
@@ -110,6 +117,7 @@ OPTIONS:
     --rz N               rotate to N as part of the same move
     --relative           x and y are steps, not positions
     --if-match REVISION  refuse (exit 8) if the robot changed since REVISION; "current" reads it first
+    --json          print the result as one JSON object (schema_version, command, ok and the fields of the command)
 ` + serverOptions,
 	"robot": `USAGE: hydra-cli robot <robot> [--json]
 
@@ -131,11 +139,12 @@ OPTIONS:
     --export FILE   save the lines as stored (.jsonl)
     --json          print the answer as JSON
 ` + serverOptions,
-	"config": `USAGE: hydra-cli config validate --config PATH
-       hydra-cli config apply --config PATH [--dry-run]
+	"config": `USAGE: hydra-cli config validate --config PATH [--json]
+       hydra-cli config apply --config PATH [--dry-run] [--json]
 
 validate loads a local config file and checks it against the schema. apply previews (--dry-run) what it would send;
 without --dry-run it exits 6 (not implemented): no live fleet-write endpoint exists yet.
+--json prints the result as one JSON object.
 `,
 	"shell": `USAGE: hydra-cli shell [--server URL] [--config PATH]
 
@@ -149,7 +158,7 @@ OPTIONS:
 Print a completion script for the shell to stdout: eval "$(hydra-cli completion bash)" enables tab-completion.
 For fish: hydra-cli completion fish | source. For PowerShell: hydra-cli completion powershell | Out-String | Invoke-Expression.
 `,
-	"login": `USAGE: hydra-cli login [--user NAME] [--password-stdin]
+	"login": `USAGE: hydra-cli login [--user NAME] [--password-stdin] [--json]
 
 Sign in once and save the session (the token and its refresh token) in a file only you can read. Every later command
 uses it and renews it by itself, so no command logs in again. The file is HYDRA_CLI_TOKEN_FILE, the "tokenFile" of a
@@ -159,12 +168,14 @@ uses it and renews it by itself, so no command logs in again. The file is HYDRA_
 OPTIONS:
     --user NAME     the account (default: HYDRA_CLI_USER)
     --password-stdin  read the password from the standard input
+    --json          print the result as one JSON object (never the token)
 ` + serverOptions,
-	"logout": `USAGE: hydra-cli logout
+	"logout": `USAGE: hydra-cli logout [--json]
 
 End the saved session: the server revokes the refresh token and the session file is removed.
 
 OPTIONS:
+    --json          print the result as one JSON object
 ` + serverOptions,
 	"scan": `USAGE: hydra-cli scan <network|address>... [--ports 3000,3443] [--scheme http|https] [--json]
 
@@ -193,13 +204,14 @@ OPTIONS:
     --config PATH     a config file for the timeout and the transport options
     --timeout SECONDS how long to wait for each server
 `,
-	"stop": `USAGE: hydra-cli stop <robot> [--controller-id ID]
+	"stop": `USAGE: hydra-cli stop <robot> [--controller-id ID] [--json]
 
 Send the stop command to one robot. The server lets it through even when another account reserved the robot.
 This is a software command, not the emergency stop of the cell.
 
 OPTIONS:
     --controller-id ID   the controller id of this program (default: HYDRA_CLI_CONTROLLER_ID, then hydra-cli-<host>)
+    --json          print the result as one JSON object (schema_version, command, ok and the fields of the command)
 ` + serverOptions,
 	"stop-all": `USAGE: hydra-cli stop-all --yes [--json]
 

@@ -4,6 +4,9 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **`--json` in every command that prints data:** `version`, `stop`, `claim`, `release`, `jog-arm`, `jog`, `table`, `login`, `logout`, `config validate` and `config apply --dry-run` now also print one JSON object with a fixed envelope (`schema_version`, `command`, `ok` and the fields of the command), documented in `docs/CLI_REFERENCE.md`. The text output of every command is unchanged and stays the default; golden files in the tests pin it, together with the help of each command and the four completion scripts. A login result never carries the token.
+- The embedded copy of the project manifest schema follows the SDK again.
+
 ## [0.1.9] - staticcheck in the CI, the vulnerability check of the Go libraries and the universal README
 
 - **The notes of the project manifest no longer carry a hand-written test count:** the counts went out of date at every change; the number of tests is stated by the README, which is checked against the code.

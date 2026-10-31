@@ -104,16 +104,17 @@ func cmdConfig(w io.Writer, args []string) error {
 	}
 
 	sub := args[0]
-	path, dryRun := parseConfigFlags(args[1:])
+	jsonOutput, flags := takeSwitch(args[1:], "--json")
+	path, dryRun := parseConfigFlags(flags)
 	if path == "" {
 		return newCliError(ExitUsageError, fmt.Errorf("--config PATH is required"))
 	}
 
 	switch sub {
 	case "validate":
-		return cmdConfigValidate(w, path)
+		return cmdConfigValidateAs(w, path, jsonOutput)
 	case "apply":
-		return cmdConfigApply(w, path, dryRun)
+		return cmdConfigApplyAs(w, path, dryRun, jsonOutput)
 	default:
 		return newCliError(ExitUsageError, fmt.Errorf("unknown config subcommand %q (want validate or apply)", sub))
 	}
@@ -122,9 +123,27 @@ func cmdConfig(w io.Writer, args []string) error {
 // cmdConfigValidate loads and schema-validates a real config file - no
 // network, no device, real file I/O and real validation only.
 func cmdConfigValidate(w io.Writer, path string) error {
+	return cmdConfigValidateAs(w, path, false)
+}
+
+// cmdConfigValidateAs is cmdConfigValidate with the choice of JSON (--json).
+func cmdConfigValidateAs(w io.Writer, path string, jsonOutput bool) error {
 	cfg, err := loadConfig(path)
 	if err != nil {
 		return err
+	}
+	if jsonOutput {
+		fields := map[string]any{"path": path, "server": cfg.Server, "timeout_sec": cfg.TimeoutSec, "ca_file": nil, "allow_insecure": nil, "token_file": nil}
+		if cfg.CAFile != "" {
+			fields["ca_file"] = cfg.CAFile
+		}
+		if cfg.AllowInsecure != nil {
+			fields["allow_insecure"] = *cfg.AllowInsecure
+		}
+		if cfg.TokenFile != "" {
+			fields["token_file"] = cfg.TokenFile
+		}
+		return writeJSONResult(w, "config validate", true, fields)
 	}
 	fmt.Fprintf(w, "config %s is valid: server=%s timeoutSec=%d\n", path, cfg.Server, cfg.TimeoutSec)
 	if cfg.CAFile != "" {
@@ -146,6 +165,11 @@ func cmdConfigValidate(w io.Writer, path string) error {
 // the real config/validation path end to end without touching any
 // device or live server.
 func cmdConfigApply(w io.Writer, path string, dryRun bool) error {
+	return cmdConfigApplyAs(w, path, dryRun, false)
+}
+
+// cmdConfigApplyAs is cmdConfigApply with the choice of JSON (--json).
+func cmdConfigApplyAs(w io.Writer, path string, dryRun, jsonOutput bool) error {
 	cfg, err := loadConfig(path)
 	if err != nil {
 		return err
@@ -157,6 +181,9 @@ func cmdConfigApply(w io.Writer, path string, dryRun bool) error {
 		))
 	}
 
+	if jsonOutput {
+		return writeJSONResult(w, "config apply", true, map[string]any{"dry_run": true, "server": cfg.Server, "timeout_sec": cfg.TimeoutSec, "contacted": false})
+	}
 	fmt.Fprintf(w, "DRY RUN: would apply config to %s\n", cfg.Server)
 	fmt.Fprintf(w, "  server:     %s\n", cfg.Server)
 	fmt.Fprintf(w, "  timeoutSec: %d\n", cfg.TimeoutSec)

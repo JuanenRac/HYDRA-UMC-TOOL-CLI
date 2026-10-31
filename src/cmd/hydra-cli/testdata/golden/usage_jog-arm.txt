@@ -1,12 +1,13 @@
 exit=0
 --stdout--
-USAGE: hydra-cli jog-arm <robot> <on|off> [--ttl-ms N]
+USAGE: hydra-cli jog-arm <robot> <on|off> [--ttl-ms N] [--json]
 
 Arm or disarm the jog of one robot. Needed only when the server requires it; it ends by itself, with a stop or when
 the robot is released.
 
 OPTIONS:
     --ttl-ms N      how long the arming lasts
+    --json          print the result as one JSON object (schema_version, command, ok and the fields of the command)
     --server URL    the server (default: HYDRA_CLI_SERVER, then a --config file's "server", then DEFAULT_SERVER)
     --config PATH   a config file (see: hydra-cli config validate --help)
     --timeout SECONDS   how long to wait for the server (1 to 3600; default: the config file's "timeoutSec", then HYDRA_CLI_TIMEOUT_SEC, then 5)

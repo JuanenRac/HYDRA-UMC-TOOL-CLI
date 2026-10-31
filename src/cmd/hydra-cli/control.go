@@ -395,6 +395,7 @@ func cmdClaim(w io.Writer, args []string) error {
 		return err
 	}
 	force, rest := takeSwitch(rest, "--force")
+	jsonOutput, rest := takeSwitch(rest, "--json")
 	reason, rest, err := takeFlag(rest, "--reason")
 	if err != nil {
 		return err
@@ -440,6 +441,9 @@ func cmdClaim(w io.Writer, args []string) error {
 	if !okStatus(resp.Status) {
 		return refusalError("Reservation", resp)
 	}
+	if jsonOutput {
+		return writeJSONResult(w, "claim", true, map[string]any{"robot": robotID, "controller_id": controllerID, "revision": revisionOrNil(resp)})
+	}
 	fmt.Fprintf(w, "Robot %d is reserved for this program (controller %s).\n", robotID, controllerID)
 	printRevision(w, resp)
 	return nil
@@ -451,6 +455,7 @@ func cmdRelease(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
+	jsonOutput, rest := takeSwitch(rest, "--json")
 	reason, rest, err := takeFlag(rest, "--reason")
 	if err != nil {
 		return err
@@ -481,6 +486,9 @@ func cmdRelease(w io.Writer, args []string) error {
 	}
 	if !okStatus(resp.Status) {
 		return refusalError("Release", resp)
+	}
+	if jsonOutput {
+		return writeJSONResult(w, "release", true, map[string]any{"robot": robotID, "controller_id": controllerID, "revision": revisionOrNil(resp)})
 	}
 	fmt.Fprintf(w, "Robot %d is released.\n", robotID)
 	printRevision(w, resp)
@@ -611,6 +619,7 @@ func cmdJogArm(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
+	jsonOutput, rest := takeSwitch(rest, "--json")
 	if len(rest) != 2 || (rest[1] != "on" && rest[1] != "off") {
 		return newCliError(ExitUsageError, errors.New("usage: hydra-cli jog-arm <robotId> <on|off> [--ttl-ms N] [--controller-id ID]"))
 	}
@@ -635,6 +644,9 @@ func cmdJogArm(w io.Writer, args []string) error {
 		return refusalError("Arming the jog", resp)
 	}
 	if rest[1] == "off" {
+		if jsonOutput {
+			return writeJSONResult(w, "jog-arm", true, map[string]any{"robot": robotID, "armed": false, "expires_at_ms": nil})
+		}
 		fmt.Fprintf(w, "The jog of robot %d is disarmed.\n", robotID)
 		return nil
 	}
@@ -642,6 +654,13 @@ func cmdJogArm(w io.Writer, args []string) error {
 		ExpiresAt int64 `json:"expiresAt"`
 	}
 	_ = json.Unmarshal(resp.Body, &armed)
+	if jsonOutput {
+		var expires any
+		if armed.ExpiresAt > 0 {
+			expires = armed.ExpiresAt
+		}
+		return writeJSONResult(w, "jog-arm", true, map[string]any{"robot": robotID, "armed": true, "expires_at_ms": expires})
+	}
 	fmt.Fprintf(w, "The jog of robot %d is armed for %s; it also ends with a stop or a release.\n", robotID, remaining(armed.ExpiresAt))
 	return nil
 }
@@ -666,6 +685,7 @@ func cmdJog(w io.Writer, args []string) error {
 		return err
 	}
 	absolute, rest := takeSwitch(rest, "--absolute")
+	jsonOutput, rest := takeSwitch(rest, "--json")
 	ifMatch, rest, err := takeIfMatch(rest)
 	if err != nil {
 		return err
@@ -720,6 +740,16 @@ func cmdJog(w io.Writer, args []string) error {
 		} `json:"warnings"`
 	}
 	_ = json.Unmarshal(resp.Body, &answer)
+	if len(answer.Warnings) > 0 && jsonOutput {
+		warnings := make([]map[string]any, 0, len(answer.Warnings))
+		for _, warning := range answer.Warnings {
+			warnings = append(warnings, map[string]any{"field": printable(warning.Field), "code": printable(warning.Code), "message": printable(warning.Message)})
+		}
+		if err := writeJSONResult(w, "jog", false, map[string]any{"robot": robotID, "axis": axis, "amount": amount, "absolute": absolute, "warnings": warnings}); err != nil {
+			return err
+		}
+		return newCliError(ExitRefused, errors.New("the server did not apply the jog (see the warnings in the result)"))
+	}
 	if len(answer.Warnings) > 0 {
 		for _, warning := range answer.Warnings {
 			label := warning.Field
@@ -729,6 +759,9 @@ func cmdJog(w io.Writer, args []string) error {
 			fmt.Fprintf(w, "Warning (%s): %s\n", printable(label), printable(warning.Message))
 		}
 		return newCliError(ExitRefused, errors.New("the server did not apply the jog (see the warnings above)"))
+	}
+	if jsonOutput {
+		return writeJSONResult(w, "jog", true, map[string]any{"robot": robotID, "axis": axis, "amount": amount, "absolute": absolute, "revision": revisionOrNil(resp)})
 	}
 	fmt.Fprintf(w, "Jog sent to robot %d: %s %g%s.\n", robotID, axis, amount, map[bool]string{true: " (absolute)", false: ""}[absolute])
 	printRevision(w, resp)

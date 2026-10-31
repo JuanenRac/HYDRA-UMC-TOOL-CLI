@@ -372,3 +372,37 @@ endpoint on HYDRA-UMC-SERVER that doesn't exist. `config apply` without
 - `fleet doctor --servers FILE [--concurrency N] [--json]`: exit 0 when all pass, otherwise the code the failures share, or 1.
 - `stop <robot>`, `stop-all --yes [--json]`: software stops, not the emergency stop of the cell.
 - `metrics [--all] [--json]`, `manifest validate [PATH...] [--workspace DIR] [--schema FILE] [--json]`, `status --json`, `completion <bash|zsh|fish|powershell>`.
+
+## JSON output (`--json`)
+
+Every command that prints data also prints it as JSON with `--json`. The text output is the default and does not change. A failure is never printed as JSON: it goes to the standard error as text and sets the exit code listed above, with or without `--json`. No JSON output ever carries a token, a refresh token or a password.
+
+There are two shapes.
+
+**Commands that read** keep the shape of what they read:
+
+| Command | Output with `--json` |
+|---|---|
+| `status` | one object: `server`, `product`, `hostname`, `appVersion`, `remoteApiVersion`, `status` |
+| `robots` | an array (empty when there are no robots) of `controller`, `robot`, `online`, `model`, `role` |
+| `claims` | an array of the reservations the server reports |
+| `robot`, `limits`, `stop-all` | the answer of the server, indented |
+| `doctor` | one report: `server`, `ok`, `controllers`, `robots`, `checks` (`checkId`, `severity`, `status`) |
+| `metrics`, `scan`, `fleet doctor`, `manifest validate`, `audit` | the samples, servers found, reports, verdicts or lines they list |
+
+**Commands that act, and the commands added with the JSON mode,** print one object with a fixed envelope: `schema_version` (`"1.0"`), `command`, `ok` and the fields of the command. The keys are sorted and the fields of a command do not change within a `schema_version`; a new field is a new `schema_version`.
+
+| Command | Fields besides the envelope |
+|---|---|
+| `version` | `name`, `version` |
+| `stop` | `robot`, `revision` (`null` when the server sends none) |
+| `claim`, `release` | `robot`, `controller_id`, `revision` |
+| `jog-arm` | `robot`, `armed`, `expires_at_ms` (`null` when disarmed) |
+| `jog` | `robot`, `axis`, `amount`, `absolute`, `revision`; when the server did not apply the jog, `ok` is `false`, `warnings` (`field`, `code`, `message`) is listed and the exit code is 8 |
+| `table` | `robot`, `x`, `y`, `rz` (`null` when not moved), `revision` |
+| `login` | `server`, `role`, `session_file`, `refresh_token_saved` |
+| `logout` | `server`, `session_found`, `revoked_on_server`, `session_file` (`null` when there was no session) |
+| `config validate` | `path`, `server`, `timeout_sec`, `ca_file`, `allow_insecure`, `token_file` (`null` when not set) |
+| `config apply --dry-run` | `dry_run`, `server`, `timeout_sec`, `contacted` (always `false`) |
+
+`help`, `shell` and `completion` have no data to print and take no `--json`.

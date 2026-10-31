@@ -120,6 +120,7 @@ func cmdTable(w io.Writer, args []string) error {
 		return err
 	}
 	relative, rest := takeSwitch(rest, "--relative")
+	jsonOutput, rest := takeSwitch(rest, "--json")
 	rzRaw, rest, err := takeFlag(rest, "--rz")
 	if err != nil {
 		return err
@@ -188,6 +189,9 @@ func cmdTable(w io.Writer, args []string) error {
 		} `json:"applied"`
 	}
 	_ = json.Unmarshal(resp.Body, &answer)
+	if jsonOutput {
+		return writeJSONResult(w, "table", true, map[string]any{"robot": robotID, "x": answer.Applied.X, "y": answer.Applied.Y, "rz": answer.Applied.Rz, "revision": revisionOrNil(resp)})
+	}
 	if answer.Applied.Rz != nil {
 		fmt.Fprintf(w, "Table of robot %d is now at x %g, y %g, rz %g.\n", robotID, answer.Applied.X, answer.Applied.Y, *answer.Applied.Rz)
 	} else {

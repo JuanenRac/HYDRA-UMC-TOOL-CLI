@@ -1,6 +1,9 @@
 exit=0
 --stdout--
-USAGE: hydra-cli version
+USAGE: hydra-cli version [--json]
 
 Print the CLI version and exit.
+
+OPTIONS:
+    --json          print the result as one JSON object (schema_version, command, ok and the fields of the command)
 --stderr--

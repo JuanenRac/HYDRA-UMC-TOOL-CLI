@@ -1,12 +1,13 @@
 exit=0
 --stdout--
-USAGE: hydra-cli stop <robot> [--controller-id ID]
+USAGE: hydra-cli stop <robot> [--controller-id ID] [--json]
 
 Send the stop command to one robot. The server lets it through even when another account reserved the robot.
 This is a software command, not the emergency stop of the cell.
 
 OPTIONS:
     --controller-id ID   the controller id of this program (default: HYDRA_CLI_CONTROLLER_ID, then hydra-cli-<host>)
+    --json          print the result as one JSON object (schema_version, command, ok and the fields of the command)
     --server URL    the server (default: HYDRA_CLI_SERVER, then a --config file's "server", then DEFAULT_SERVER)
     --config PATH   a config file (see: hydra-cli config validate --help)
     --timeout SECONDS   how long to wait for the server (1 to 3600; default: the config file's "timeoutSec", then HYDRA_CLI_TIMEOUT_SEC, then 5)

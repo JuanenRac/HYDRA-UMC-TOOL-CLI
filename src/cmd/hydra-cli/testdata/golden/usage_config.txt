@@ -1,8 +1,9 @@
 exit=0
 --stdout--
-USAGE: hydra-cli config validate --config PATH
-       hydra-cli config apply --config PATH [--dry-run]
+USAGE: hydra-cli config validate --config PATH [--json]
+       hydra-cli config apply --config PATH [--dry-run] [--json]
 
 validate loads a local config file and checks it against the schema. apply previews (--dry-run) what it would send;
 without --dry-run it exits 6 (not implemented): no live fleet-write endpoint exists yet.
+--json prints the result as one JSON object.
 --stderr--

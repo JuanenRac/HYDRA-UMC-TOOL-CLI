@@ -28,6 +28,7 @@ func cmdStop(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
+	jsonOutput, rest := takeSwitch(rest, "--json")
 	if len(rest) != 1 {
 		return newCliError(ExitUsageError, errors.New("usage: hydra-cli stop <robotId> [--controller-id ID]"))
 	}
@@ -43,6 +44,9 @@ func cmdStop(w io.Writer, args []string) error {
 	}
 	if !okStatus(resp.Status) {
 		return refusalError("Stop", resp)
+	}
+	if jsonOutput {
+		return writeJSONResult(w, "stop", true, map[string]any{"robot": robotID, "revision": revisionOrNil(resp)})
 	}
 	fmt.Fprintf(w, "Stop sent to robot %d.\n", robotID)
 	printRevision(w, resp)

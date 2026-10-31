@@ -329,6 +329,7 @@ func cmdLogin(w io.Writer, in io.Reader, args []string) error {
 		return err
 	}
 	fromStdin, rest := takeSwitch(rest, "--password-stdin")
+	jsonOutput, rest := takeSwitch(rest, "--json")
 	if err := rejectExtraArgs("login", rest); err != nil {
 		return err
 	}
@@ -360,6 +361,9 @@ func cmdLogin(w io.Writer, in io.Reader, args []string) error {
 		return newCliError(ExitGeneralError, fmt.Errorf("the session could not be saved: %w", err))
 	}
 	path, _ := sessionPath()
+	if jsonOutput {
+		return writeJSONResult(w, "login", true, map[string]any{"server": server, "role": result.Role, "session_file": path, "refresh_token_saved": result.RefreshToken != ""})
+	}
 	role := ""
 	if result.Role != "" {
 		role = " as " + printable(result.Role)
@@ -377,26 +381,35 @@ func cmdLogout(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
+	jsonOutput, rest := takeSwitch(rest, "--json")
 	if err := rejectExtraArgs("logout", rest); err != nil {
 		return err
 	}
 	saved, ok := readSession(server)
+	if !ok && jsonOutput {
+		return writeJSONResult(w, "logout", true, map[string]any{"server": server, "session_found": false, "revoked_on_server": false, "session_file": nil})
+	}
 	if !ok {
 		fmt.Fprintf(w, "No saved session for %s.\n", server)
 		return nil
 	}
 	revoked := "the server was not asked to revoke it (no refresh token)"
+	revokedOnServer := false
 	if saved.RefreshToken != "" {
 		client := newClient(timeout)
 		if status, _, postErr := postJSON(&client, server, "/api/logout", map[string]string{"refreshToken": saved.RefreshToken}); postErr != nil || status != http.StatusOK {
 			revoked = "the server could not be told to revoke the refresh token (it expires by itself)"
 		} else {
 			revoked = "the refresh token was revoked on the server"
+			revokedOnServer = true
 		}
 	}
 	path, _ := sessionPath()
 	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return newCliError(ExitGeneralError, fmt.Errorf("the session file %s could not be removed: %w", path, err))
+	}
+	if jsonOutput {
+		return writeJSONResult(w, "logout", true, map[string]any{"server": server, "session_found": true, "revoked_on_server": revokedOnServer, "session_file": path})
 	}
 	fmt.Fprintf(w, "Signed out of %s: %s; %s removed.\n", server, revoked, path)
 	return nil
