@@ -12,4 +12,4 @@ package main
 
 // Version is the current release of HYDRA-UMC-TOOL-CLI. It is a variable so that the build can set it from the manifest
 // (`-ldflags "-X main.Version=..."`, see build.sh and build.bat); the value here is what a plain `go build` reports.
-var Version = "0.1.9"
+var Version = "0.2.0"

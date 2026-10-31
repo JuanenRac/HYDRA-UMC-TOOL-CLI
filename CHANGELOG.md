@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.2.0] - A JSON output in every command that prints data, four new read-only commands and shell completion generated from the table of commands
+
 - **`--json` in every command that prints data:** `version`, `stop`, `claim`, `release`, `jog-arm`, `jog`, `table`, `login`, `logout`, `config validate` and `config apply --dry-run` now also print one JSON object with a fixed envelope (`schema_version`, `command`, `ok` and the fields of the command), documented in `docs/CLI_REFERENCE.md`. The text output of every command is unchanged and stays the default; golden files in the tests pin it, together with the help of each command and the four completion scripts. A login result never carries the token.
 - **Four new read-only commands:** `connections [clients|events]` (the clients and the sign-in history of the server), `liveness` (the signal of life of each robot), `ecosystem-health` (the health of the services, the certificate and the warnings) and `plan-simulate` (a plan checked by the dry run of the semantic planner, which executes nothing; exit 8 when the plan is rejected). Each answer is checked against the closed shape of its contract before anything is printed, and a malformed one is an error with no output. `plan-simulate` never sends the credential of the server to the planner.
 - **Shell completion generated from the table of commands:** the four scripts (`bash`, `zsh`, `fish`, `powershell`) now complete the options of every command, the subcommands and the closed values of some options, all read from the help text of each command instead of a second list. The bash and PowerShell scripts are tested by loading them in the real shell.
