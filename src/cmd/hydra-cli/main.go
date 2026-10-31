@@ -229,13 +229,8 @@ func run(args []string) ExitCode {
 	}
 }
 
-// cmdVersion implements `hydra-cli version` - prints name and version and
-// exits 0. Real, functional, no network or file dependency.
-func cmdVersion() {
-	fmt.Printf("%s v%s\n", projectName, Version)
-}
-
-// cmdVersionTo is cmdVersion writing to w; --json prints the name and the version as one JSON object. Any other
+// cmdVersionTo implements `hydra-cli version`: it prints the name and the version and exits 0, with no network or file
+// dependency. --json prints the name and the version as one JSON object. Any other
 // argument is ignored, as it always was.
 func cmdVersionTo(w io.Writer, args []string) error {
 	if jsonOutput, _ := takeSwitch(args, "--json"); jsonOutput {
