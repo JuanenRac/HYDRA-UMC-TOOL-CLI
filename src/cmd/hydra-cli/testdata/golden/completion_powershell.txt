@@ -3,17 +3,67 @@ exit=0
 # PowerShell completion for hydra-cli: hydra-cli completion powershell | Out-String | Invoke-Expression
 Register-ArgumentCompleter -Native -CommandName hydra-cli -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
-    $words = $commandAst.CommandElements | ForEach-Object { $_.ToString() }
-    $candidates = if ($words.Count -le 1 -or ($words.Count -eq 2 -and $wordToComplete)) {
-        'version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest connections liveness ecosystem-health plan-simulate' -split ' '
-    } elseif ($words[1] -eq 'config') {
-        'validate apply' -split ' '
-    } elseif ($words[1] -eq 'fleet') {
-        'doctor' -split ' '
-    } elseif ($words[1] -eq 'manifest') {
-        'validate' -split ' '
+    $words = @($commandAst.CommandElements | ForEach-Object { $_.ToString() })
+    $top = 'version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest connections liveness ecosystem-health plan-simulate' -split ' '
+    $subs = @{
+        'config' = 'validate apply' -split ' '
+        'completion' = 'bash zsh fish powershell' -split ' '
+        'fleet' = 'doctor' -split ' '
+        'manifest' = 'validate' -split ' '
+        'connections' = 'clients events' -split ' '
+    }
+    $options = @{
+        'version' = '--help --json' -split ' '
+        'help' = '--help' -split ' '
+        'status' = '--config --help --json --server --timeout' -split ' '
+        'robots' = '--config --help --json --server --timeout' -split ' '
+        'claims' = '--config --help --json --server --timeout' -split ' '
+        'claim' = '--config --controller-id --force --help --if-match --json --reason --server --timeout --ttl-ms' -split ' '
+        'release' = '--config --controller-id --help --if-match --json --reason --server --timeout' -split ' '
+        'limits' = '--config --help --json --robot --server --timeout' -split ' '
+        'jog-arm' = '--config --help --json --server --timeout --ttl-ms' -split ' '
+        'jog' = '--absolute --config --help --if-match --json --server --timeout' -split ' '
+        'table' = '--config --help --if-match --json --relative --rz --server --timeout' -split ' '
+        'robot' = '--config --help --json --server --timeout' -split ' '
+        'audit' = '--config --export --help --json --limit --robot --server --timeout --type --verify' -split ' '
+        'doctor' = '--config --help --json --server --timeout' -split ' '
+        'config' = '--config --dry-run --help --json' -split ' '
+        'shell' = '--config --help --server --timeout' -split ' '
+        'completion' = '--help' -split ' '
+        'login' = '--config --help --json --password-stdin --server --timeout --user' -split ' '
+        'logout' = '--config --help --json --server --timeout' -split ' '
+        'scan' = '--allow-public-range --concurrency --help --json --max-hosts --ports --probe-timeout-ms --scheme' -split ' '
+        'fleet' = '--concurrency --config --help --json --servers --timeout' -split ' '
+        'stop' = '--config --controller-id --help --json --server --timeout' -split ' '
+        'stop-all' = '--config --help --json --server --timeout --yes' -split ' '
+        'metrics' = '--all --config --help --json --server --timeout' -split ' '
+        'manifest' = '--help --json --schema --workspace' -split ' '
+        'connections' = '--action --active --before --config --help --json --kind --limit --server --timeout --user' -split ' '
+        'liveness' = '--config --help --json --server --timeout' -split ' '
+        'ecosystem-health' = '--config --help --json --server --timeout' -split ' '
+        'plan-simulate' = '--config --help --json --plan --planner --timeout' -split ' '
+    }
+    $values = @{
+        '--action' = 'first_seen login login_failed second_factor_failed logout session_ended session_expired' -split ' '
+        '--kind' = 'studio suite android ios dsi watch voice other' -split ' '
+        '--scheme' = 'http https' -split ' '
+    }
+    $isNewWord = -not $wordToComplete
+    $count = $words.Count + $(if ($isNewWord) { 1 } else { 0 })
+    $previous = if ($isNewWord) { $words[-1] } elseif ($words.Count -ge 2) { $words[-2] } else { '' }
+    $candidates = @()
+    if ($count -le 2) {
+        $candidates = $top
+    } elseif ($values.ContainsKey($previous)) {
+        $candidates = $values[$previous]
+    } elseif ($count -eq 3 -and $subs.ContainsKey($words[1])) {
+        $candidates = $subs[$words[1]]
+    } elseif ($count -eq 4 -and $words[1] -eq 'jog-arm') {
+        $candidates = @('on', 'off')
+    } elseif ($options.ContainsKey($words[1])) {
+        $candidates = $options[$words[1]]
     } else {
-        '--server --config --timeout --json --help' -split ' '
+        $candidates = '--server --config --timeout --json --help' -split ' '
     }
     $candidates | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)

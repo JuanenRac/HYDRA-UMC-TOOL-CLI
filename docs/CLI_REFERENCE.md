@@ -365,6 +365,12 @@ Sends a plan (one JSON object with a `steps` list and optional `constraints`) to
 
 A verdict is checked before it is printed: it must be `accepted` or `rejected`, say `executable: false` and `executed: false`, list violations only when rejected (each with a `rule` and a `message`) and carry a timeline whose steps do not end before they start. With `--json`: the envelope (`ok` is `true` only for an accepted plan) plus `verdict`, `executable`, `executed`, `violations`, `timeline`, `makespan_ms` and `simulated_clock_ms`. An `accepted` verdict means the plan breaks none of the declared rules, not that it is safe to run.
 
+## Shell completion
+
+`hydra-cli completion <bash|zsh|fish|powershell>` prints a completion script for the shell. Load it with `eval "$(hydra-cli completion bash)"`, `source <(hydra-cli completion zsh)`, `hydra-cli completion fish | source` or `hydra-cli completion powershell | Out-String | Invoke-Expression`. It completes the commands, the subcommands (`config validate`, `connections events`, `completion bash`, ...), the options of each command and the closed values of some options (`--kind`, `--action`, `--scheme`, and `on`/`off` for `jog-arm`).
+
+The scripts are generated from the table of commands of the program itself: the options of a command are read from its own help text, so a command or an option that is added shows up in the four scripts without a second list to keep. A script only declares the completion; loading it runs no program, reads no file and uses no network, and it needs nothing installed besides the shell.
+
 ## Exit codes
 
 | Code | Meaning |

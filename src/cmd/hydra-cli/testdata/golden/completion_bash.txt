@@ -1,27 +1,65 @@
 exit=0
 --stdout--
 _hydra_cli_complete() {
-    local cur prev
+    local cur prev cmd opts
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     if [ "$COMP_CWORD" -eq 1 ]; then
         COMPREPLY=($(compgen -W "version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest connections liveness ecosystem-health plan-simulate" -- "$cur"))
         return 0
     fi
-    if [ "${COMP_WORDS[1]}" = "config" ] && [ "$COMP_CWORD" -eq 2 ]; then
-        COMPREPLY=($(compgen -W "validate apply" -- "$cur"))
-        return 0
-    fi
-    if [ "${COMP_WORDS[1]}" = "fleet" ] && [ "$COMP_CWORD" -eq 2 ]; then
-        COMPREPLY=($(compgen -W "doctor" -- "$cur"))
-        return 0
-    fi
-    if [ "${COMP_WORDS[1]}" = "manifest" ] && [ "$COMP_CWORD" -eq 2 ]; then
-        COMPREPLY=($(compgen -W "validate" -- "$cur"))
-        return 0
-    fi
+    cmd="${COMP_WORDS[1]}"
+    case "$prev" in
+        --action) COMPREPLY=($(compgen -W "first_seen login login_failed second_factor_failed logout session_ended session_expired" -- "$cur")); return 0 ;;
+        --kind) COMPREPLY=($(compgen -W "studio suite android ios dsi watch voice other" -- "$cur")); return 0 ;;
+        --scheme) COMPREPLY=($(compgen -W "http https" -- "$cur")); return 0 ;;
+    esac
+    case "$cmd" in
+        version) opts="--help --json" ;;
+        help) opts="--help" ;;
+        status) opts="--config --help --json --server --timeout" ;;
+        robots) opts="--config --help --json --server --timeout" ;;
+        claims) opts="--config --help --json --server --timeout" ;;
+        claim) opts="--config --controller-id --force --help --if-match --json --reason --server --timeout --ttl-ms" ;;
+        release) opts="--config --controller-id --help --if-match --json --reason --server --timeout" ;;
+        limits) opts="--config --help --json --robot --server --timeout" ;;
+        jog-arm)
+            if [ "$COMP_CWORD" -eq 3 ]; then COMPREPLY=($(compgen -W "on off" -- "$cur")); return 0; fi
+            opts="--config --help --json --server --timeout --ttl-ms" ;;
+        jog) opts="--absolute --config --help --if-match --json --server --timeout" ;;
+        table) opts="--config --help --if-match --json --relative --rz --server --timeout" ;;
+        robot) opts="--config --help --json --server --timeout" ;;
+        audit) opts="--config --export --help --json --limit --robot --server --timeout --type --verify" ;;
+        doctor) opts="--config --help --json --server --timeout" ;;
+        config)
+            if [ "$COMP_CWORD" -eq 2 ]; then COMPREPLY=($(compgen -W "validate apply" -- "$cur")); return 0; fi
+            opts="--config --dry-run --help --json" ;;
+        shell) opts="--config --help --server --timeout" ;;
+        completion)
+            if [ "$COMP_CWORD" -eq 2 ]; then COMPREPLY=($(compgen -W "bash zsh fish powershell" -- "$cur")); return 0; fi
+            opts="--help" ;;
+        login) opts="--config --help --json --password-stdin --server --timeout --user" ;;
+        logout) opts="--config --help --json --server --timeout" ;;
+        scan) opts="--allow-public-range --concurrency --help --json --max-hosts --ports --probe-timeout-ms --scheme" ;;
+        fleet)
+            if [ "$COMP_CWORD" -eq 2 ]; then COMPREPLY=($(compgen -W "doctor" -- "$cur")); return 0; fi
+            opts="--concurrency --config --help --json --servers --timeout" ;;
+        stop) opts="--config --controller-id --help --json --server --timeout" ;;
+        stop-all) opts="--config --help --json --server --timeout --yes" ;;
+        metrics) opts="--all --config --help --json --server --timeout" ;;
+        manifest)
+            if [ "$COMP_CWORD" -eq 2 ]; then COMPREPLY=($(compgen -W "validate" -- "$cur")); return 0; fi
+            opts="--help --json --schema --workspace" ;;
+        connections)
+            if [ "$COMP_CWORD" -eq 2 ]; then COMPREPLY=($(compgen -W "clients events" -- "$cur")); return 0; fi
+            opts="--action --active --before --config --help --json --kind --limit --server --timeout --user" ;;
+        liveness) opts="--config --help --json --server --timeout" ;;
+        ecosystem-health) opts="--config --help --json --server --timeout" ;;
+        plan-simulate) opts="--config --help --json --plan --planner --timeout" ;;
+        *) opts="--server --config --timeout --json --help" ;;
+    esac
     case "$cur" in
-        -*) COMPREPLY=($(compgen -W "--server --config --timeout --json --help" -- "$cur")) ;;
+        -*) COMPREPLY=($(compgen -W "$opts" -- "$cur")) ;;
     esac
 }
 complete -F _hydra_cli_complete hydra-cli

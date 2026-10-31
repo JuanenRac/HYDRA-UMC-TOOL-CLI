@@ -2,31 +2,84 @@ exit=0
 --stdout--
 #compdef hydra-cli
 _hydra_cli() {
-    local -a top_level config_sub fleet_sub manifest_sub options
+    local -a top_level
     top_level=(version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest connections liveness ecosystem-health plan-simulate)
-    config_sub=(validate apply)
-    fleet_sub=(doctor)
-    manifest_sub=(validate)
-    options=(--server --config --timeout --json --help)
     if (( CURRENT == 2 )); then
         compadd -a top_level
         return
     fi
-    if [[ ${words[2]} == "config" && $CURRENT -eq 3 ]]; then
-        compadd -a config_sub
-        return
-    fi
-    if [[ ${words[2]} == "fleet" && $CURRENT -eq 3 ]]; then
-        compadd -a fleet_sub
-        return
-    fi
-    if [[ ${words[2]} == "manifest" && $CURRENT -eq 3 ]]; then
-        compadd -a manifest_sub
-        return
-    fi
-    if [[ ${words[CURRENT]} == -* ]]; then
-        compadd -a options
-    fi
+    case ${words[CURRENT-1]} in
+        --action) compadd -- first_seen login login_failed second_factor_failed logout session_ended session_expired; return ;;
+        --kind) compadd -- studio suite android ios dsi watch voice other; return ;;
+        --scheme) compadd -- http https; return ;;
+    esac
+    case ${words[2]} in
+        version)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --help --json; fi ;;
+        help)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --help; fi ;;
+        status)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --help --json --server --timeout; fi ;;
+        robots)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --help --json --server --timeout; fi ;;
+        claims)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --help --json --server --timeout; fi ;;
+        claim)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --controller-id --force --help --if-match --json --reason --server --timeout --ttl-ms; fi ;;
+        release)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --controller-id --help --if-match --json --reason --server --timeout; fi ;;
+        limits)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --help --json --robot --server --timeout; fi ;;
+        jog-arm)
+            if (( CURRENT == 4 )); then compadd -- on off; return; fi
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --help --json --server --timeout --ttl-ms; fi ;;
+        jog)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --absolute --config --help --if-match --json --server --timeout; fi ;;
+        table)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --help --if-match --json --relative --rz --server --timeout; fi ;;
+        robot)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --help --json --server --timeout; fi ;;
+        audit)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --export --help --json --limit --robot --server --timeout --type --verify; fi ;;
+        doctor)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --help --json --server --timeout; fi ;;
+        config)
+            if (( CURRENT == 3 )); then compadd -- validate apply; return; fi
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --dry-run --help --json; fi ;;
+        shell)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --help --server --timeout; fi ;;
+        completion)
+            if (( CURRENT == 3 )); then compadd -- bash zsh fish powershell; return; fi
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --help; fi ;;
+        login)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --help --json --password-stdin --server --timeout --user; fi ;;
+        logout)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --help --json --server --timeout; fi ;;
+        scan)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --allow-public-range --concurrency --help --json --max-hosts --ports --probe-timeout-ms --scheme; fi ;;
+        fleet)
+            if (( CURRENT == 3 )); then compadd -- doctor; return; fi
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --concurrency --config --help --json --servers --timeout; fi ;;
+        stop)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --controller-id --help --json --server --timeout; fi ;;
+        stop-all)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --help --json --server --timeout --yes; fi ;;
+        metrics)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --all --config --help --json --server --timeout; fi ;;
+        manifest)
+            if (( CURRENT == 3 )); then compadd -- validate; return; fi
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --help --json --schema --workspace; fi ;;
+        connections)
+            if (( CURRENT == 3 )); then compadd -- clients events; return; fi
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --action --active --before --config --help --json --kind --limit --server --timeout --user; fi ;;
+        liveness)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --help --json --server --timeout; fi ;;
+        ecosystem-health)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --help --json --server --timeout; fi ;;
+        plan-simulate)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --help --json --plan --planner --timeout; fi ;;
+        *) if [[ ${words[CURRENT]} == -* ]]; then compadd -- --server --config --timeout --json --help; fi ;;
+    esac
 }
 compdef _hydra_cli hydra-cli
 --stderr--
