@@ -1,0 +1,14 @@
+exit=0
+--stdout--
+USAGE: hydra-cli ecosystem-health [--json]
+
+Read the health of the services of the ecosystem (GET /api/ecosystem/health): state, reason and version drift of each
+service, the certificate and the warnings. Read only. Needs an operator or an administrator account, and the server must
+have the feature switched on (otherwise it answers 404 and this command says so).
+
+OPTIONS:
+    --json          print the checked report as one JSON object
+    --server URL    the server (default: HYDRA_CLI_SERVER, then a --config file's "server", then DEFAULT_SERVER)
+    --config PATH   a config file (see: hydra-cli config validate --help)
+    --timeout SECONDS   how long to wait for the server (1 to 3600; default: the config file's "timeoutSec", then HYDRA_CLI_TIMEOUT_SEC, then 5)
+--stderr--

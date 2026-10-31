@@ -192,6 +192,30 @@ func run(args []string) ExitCode {
 			return exitCodeFor(err)
 		}
 		return ExitOK
+	case "connections":
+		if err := cmdConnections(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli connections: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "liveness":
+		if err := cmdLiveness(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli liveness: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "ecosystem-health":
+		if err := cmdEcosystemHealth(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli ecosystem-health: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "plan-simulate":
+		if err := cmdPlanSimulate(os.Stdout, os.Stdin, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli plan-simulate: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
 	case "manifest":
 		if err := cmdManifest(os.Stdout, args[1:]); err != nil {
 			fmt.Fprintf(os.Stderr, "hydra-cli manifest: %v\n", err)
@@ -268,6 +292,16 @@ COMMANDS:
                           the SDK.
     claims [--server URL] [--config PATH] [--json]
                           List who reserves which robot (GET /api/claims).
+    connections [clients|events] [--kind K] [--user U] [--json]
+                          Read the clients that connect to the server and the
+                          history of their sign-ins (read only).
+    liveness [--json]     Read the signal of life of each robot (read only).
+    ecosystem-health [--json]
+                          Read the health of the services of the ecosystem
+                          (read only; the server must have it switched on).
+    plan-simulate --plan FILE|- [--planner URL] [--json]
+                          Check a plan with the dry run of the semantic planner;
+                          nothing is executed. Exit 8 when the plan is rejected.
     claim <robot> [--ttl-ms N] [--force] [--reason TEXT]
     release <robot> [--reason TEXT]
                           Reserve a robot for this program, or release it. The

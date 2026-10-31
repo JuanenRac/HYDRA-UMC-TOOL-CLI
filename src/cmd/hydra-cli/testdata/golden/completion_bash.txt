@@ -5,7 +5,7 @@ _hydra_cli_complete() {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     if [ "$COMP_CWORD" -eq 1 ]; then
-        COMPREPLY=($(compgen -W "version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest" -- "$cur"))
+        COMPREPLY=($(compgen -W "version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest connections liveness ecosystem-health plan-simulate" -- "$cur"))
         return 0
     fi
     if [ "${COMP_WORDS[1]}" = "config" ] && [ "$COMP_CWORD" -eq 2 ]; then

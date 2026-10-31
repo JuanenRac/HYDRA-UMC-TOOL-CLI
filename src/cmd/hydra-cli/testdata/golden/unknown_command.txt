@@ -44,6 +44,16 @@ COMMANDS:
                           the SDK.
     claims [--server URL] [--config PATH] [--json]
                           List who reserves which robot (GET /api/claims).
+    connections [clients|events] [--kind K] [--user U] [--json]
+                          Read the clients that connect to the server and the
+                          history of their sign-ins (read only).
+    liveness [--json]     Read the signal of life of each robot (read only).
+    ecosystem-health [--json]
+                          Read the health of the services of the ecosystem
+                          (read only; the server must have it switched on).
+    plan-simulate --plan FILE|- [--planner URL] [--json]
+                          Check a plan with the dry run of the semantic planner;
+                          nothing is executed. Exit 8 when the plan is rejected.
     claim <robot> [--ttl-ms N] [--force] [--reason TEXT]
     release <robot> [--reason TEXT]
                           Reserve a robot for this program, or release it. The

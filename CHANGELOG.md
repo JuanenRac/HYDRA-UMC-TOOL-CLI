@@ -5,6 +5,7 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 - **`--json` in every command that prints data:** `version`, `stop`, `claim`, `release`, `jog-arm`, `jog`, `table`, `login`, `logout`, `config validate` and `config apply --dry-run` now also print one JSON object with a fixed envelope (`schema_version`, `command`, `ok` and the fields of the command), documented in `docs/CLI_REFERENCE.md`. The text output of every command is unchanged and stays the default; golden files in the tests pin it, together with the help of each command and the four completion scripts. A login result never carries the token.
+- **Four new read-only commands:** `connections [clients|events]` (the clients and the sign-in history of the server), `liveness` (the signal of life of each robot), `ecosystem-health` (the health of the services, the certificate and the warnings) and `plan-simulate` (a plan checked by the dry run of the semantic planner, which executes nothing; exit 8 when the plan is rejected). Each answer is checked against the closed shape of its contract before anything is printed, and a malformed one is an error with no output. `plan-simulate` never sends the credential of the server to the planner.
 - The embedded copy of the project manifest schema follows the SDK again.
 
 ## [0.1.9] - staticcheck in the CI, the vulnerability check of the Go libraries and the universal README

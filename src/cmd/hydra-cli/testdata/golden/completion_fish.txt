@@ -2,7 +2,7 @@ exit=0
 --stdout--
 # fish completion for hydra-cli: hydra-cli completion fish | source
 complete -c hydra-cli -f
-complete -c hydra-cli -n "__fish_use_subcommand" -a "version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest"
+complete -c hydra-cli -n "__fish_use_subcommand" -a "version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest connections liveness ecosystem-health plan-simulate"
 complete -c hydra-cli -n "__fish_seen_subcommand_from config" -a "validate apply"
 complete -c hydra-cli -n "__fish_seen_subcommand_from fleet" -a "doctor"
 complete -c hydra-cli -n "__fish_seen_subcommand_from manifest" -a "validate"

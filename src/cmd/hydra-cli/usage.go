@@ -139,6 +139,52 @@ OPTIONS:
     --export FILE   save the lines as stored (.jsonl)
     --json          print the answer as JSON
 ` + serverOptions,
+	"connections": `USAGE: hydra-cli connections [clients|events] [--kind KIND] [--user NAME] [--active] [--action ACTION] [--limit N] [--before N] [--json]
+
+Read the clients that connect to the server (clients, the default: GET /api/connections/clients) or the history of their
+sign-ins (events: GET /api/connections/events). Read only. An administrator sees every client; any other account sees
+only its own entries. The answer is checked against its contract before it is printed; one that does not match is an
+error (exit 5) and prints nothing.
+
+OPTIONS:
+    --kind KIND     only this kind: studio, suite, android, ios, dsi, watch, voice, other
+    --user NAME     only this user (administrators; for anyone else the server always answers with their own)
+    --active        clients with an open session (clients only)
+    --action ACTION events of this action: first_seen, login, login_failed, second_factor_failed, logout, session_ended, session_expired
+    --limit N       most events, up to 9 digits (events only)
+    --before N      events older than this event number (events only)
+    --json          print the checked list as one JSON object (clients or events)
+` + serverOptions,
+	"liveness": `USAGE: hydra-cli liveness [--json]
+
+Read the signal of life of each robot of the roster (GET /api/robots/liveness): live, stale (no news for longer than the
+limit the server holds) or unknown (no news since the server started). Read only.
+
+OPTIONS:
+    --json          print the checked report as one JSON object
+` + serverOptions,
+	"ecosystem-health": `USAGE: hydra-cli ecosystem-health [--json]
+
+Read the health of the services of the ecosystem (GET /api/ecosystem/health): state, reason and version drift of each
+service, the certificate and the warnings. Read only. Needs an operator or an administrator account, and the server must
+have the feature switched on (otherwise it answers 404 and this command says so).
+
+OPTIONS:
+    --json          print the checked report as one JSON object
+` + serverOptions,
+	"plan-simulate": `USAGE: hydra-cli plan-simulate --plan FILE|- [--planner URL] [--json]
+
+Send a plan to the dry run of the semantic planner (POST /plan/simulate) and print its verdict. Nothing is executed, queued
+or released. Exit 0 when the plan is accepted, 8 when the simulation rejects it (every broken rule is printed), 2 when the
+planner cannot understand the plan. The credential of the server is never sent to the planner.
+
+OPTIONS:
+    --plan FILE     the plan, one JSON object with a "steps" list (- reads the standard input)
+    --planner URL   the planner (default: HYDRA_CLI_PLANNER, then http://localhost:8109)
+    --json          print the checked verdict as one JSON object (ok is true only for an accepted plan)
+    --config PATH   a config file for the timeout and the transport options
+    --timeout SECONDS   how long to wait for the planner
+`,
 	"config": `USAGE: hydra-cli config validate --config PATH [--json]
        hydra-cli config apply --config PATH [--dry-run] [--json]
 

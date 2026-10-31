@@ -1,0 +1,13 @@
+exit=0
+--stdout--
+USAGE: hydra-cli liveness [--json]
+
+Read the signal of life of each robot of the roster (GET /api/robots/liveness): live, stale (no news for longer than the
+limit the server holds) or unknown (no news since the server started). Read only.
+
+OPTIONS:
+    --json          print the checked report as one JSON object
+    --server URL    the server (default: HYDRA_CLI_SERVER, then a --config file's "server", then DEFAULT_SERVER)
+    --config PATH   a config file (see: hydra-cli config validate --help)
+    --timeout SECONDS   how long to wait for the server (1 to 3600; default: the config file's "timeoutSec", then HYDRA_CLI_TIMEOUT_SEC, then 5)
+--stderr--

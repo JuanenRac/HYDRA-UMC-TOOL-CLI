@@ -3,7 +3,7 @@ exit=0
 #compdef hydra-cli
 _hydra_cli() {
     local -a top_level config_sub fleet_sub manifest_sub options
-    top_level=(version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest)
+    top_level=(version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest connections liveness ecosystem-health plan-simulate)
     config_sub=(validate apply)
     fleet_sub=(doctor)
     manifest_sub=(validate)

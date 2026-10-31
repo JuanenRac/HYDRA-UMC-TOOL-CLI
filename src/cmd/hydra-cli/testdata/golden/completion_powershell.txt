@@ -5,7 +5,7 @@ Register-ArgumentCompleter -Native -CommandName hydra-cli -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
     $words = $commandAst.CommandElements | ForEach-Object { $_.ToString() }
     $candidates = if ($words.Count -le 1 -or ($words.Count -eq 2 -and $wordToComplete)) {
-        'version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest' -split ' '
+        'version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest connections liveness ecosystem-health plan-simulate' -split ' '
     } elseif ($words[1] -eq 'config') {
         'validate apply' -split ' '
     } elseif ($words[1] -eq 'fleet') {

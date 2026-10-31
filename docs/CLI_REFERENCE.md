@@ -335,6 +335,36 @@ DOCTOR=PASS server=http://192.168.1.50:3000 appVersion=0.2.4 schema=1.0 remoteAp
 hydra-cli> exit
 ```
 
+## Read-only views of the server and the plan simulation
+
+These four commands only read or simulate: they never change a robot, a reservation or a setting. Each answer is checked against the closed shape of its contract before a byte is printed. An answer that is not an object, lacks a field the contract requires, has a field of the wrong type, holds a value outside the closed lists of the contract, or whose summary does not add up to its list, is an error (exit code 5) and prints nothing; a field the contract does not know is never passed on. Every text that came from a server is cleaned of control characters and of anything that looks like a credential. They use the same HTTP client, the same options (`--server`, `--config`, `--timeout`) and the same login (`HYDRA_CLI_TOKEN`, a saved session or `HYDRA_CLI_USER`/`HYDRA_CLI_PASSWORD`) as the other commands, and the same exit codes (7 without a login or with a refused one, 4 when the server cannot be reached).
+
+### `connections [clients|events] [--kind KIND] [--user NAME] [--active] [--action ACTION] [--limit N] [--before N] [--json]`
+
+`GET /api/connections/clients` (the default) lists the clients that connect to the server; `GET /api/connections/events` lists the history of their sign-ins. An administrator sees every client; any other account sees only its own entries, and the address and user agent only when the administrator turned `connections.recordAddress` on. `--kind` is one of `studio suite android ios dsi watch voice other`; `--action` one of `first_seen login login_failed second_factor_failed logout session_ended session_expired`; `--limit` and `--before` are whole numbers of up to nine digits. Filters that do not fit the chosen list are a usage error (exit 2) and nothing is sent. With `--json`: `{"schema_version": "1.0", "command": "connections clients", "ok": true, "clients": [...]}` or `"command": "connections events"` with `"events": [...]`; each item has the fields of the `ConnectionClient` or `ConnectionEvent` contract of the SDK.
+
+### `liveness [--json]`
+
+`GET /api/robots/liveness`: for each robot of the roster, `live`, `stale` (no news for longer than the limit the server holds) or `unknown` (no news since the server started), with the age of the last news and its source (`state` or `heartbeat`). With `--json`: the envelope plus `stale_after_s` and `robots` (`controller_id`, `robot_id`, `state` and, unless unknown, `last_update_utc`, `age_s`, `source`). A robot that is `unknown` and also reports news, or one that is `live` or `stale` and reports none, is a malformed answer.
+
+### `ecosystem-health [--json]`
+
+`GET /api/ecosystem/health`: the state, the reason and the version drift of each service of the ecosystem, the certificate of the server and the warnings. Needs an operator or an administrator account, and the server must have `ecosystemHealth.enabled` switched on: otherwise it answers 404, and the command says the feature is missing or switched off (exit 5). With `--json`: the envelope plus `generated_at_utc`, `available`, `summary` (`total ok degraded down unknown drift`), `services`, `certificate` (`null` when there is none) and `warnings`; fields that are unknown to the server stay `null`, and the port, health path and unit of a service appear only for an administrator.
+
+### `plan-simulate --plan FILE|- [--planner URL] [--json]`
+
+Sends a plan (one JSON object with a `steps` list and optional `constraints`) to `POST /plan/simulate` of the semantic planner, a service of its own that does not use the login of the server: the credential of the server is never sent to it. The planner is `--planner URL`, then `HYDRA_CLI_PLANNER`, then `http://localhost:8109`; its switch `plan_simulation.enabled` must be on (otherwise it answers 404, and the command says so). `-` reads the plan from the standard input. Nothing is executed, queued or released, by the planner or by this command.
+
+| Outcome | Exit code |
+|---|---|
+| the plan is accepted | 0 |
+| the simulation rejects the plan (every broken rule is printed) | 8 |
+| the planner cannot understand the plan (HTTP 400), or the plan file is not one JSON object | 2 |
+| the planner does not offer the route (404), answers with another error, or its answer does not match the contract | 5 |
+| the planner cannot be reached | 4 |
+
+A verdict is checked before it is printed: it must be `accepted` or `rejected`, say `executable: false` and `executed: false`, list violations only when rejected (each with a `rule` and a `message`) and carry a timeline whose steps do not end before they start. With `--json`: the envelope (`ok` is `true` only for an accepted plan) plus `verdict`, `executable`, `executed`, `violations`, `timeline`, `makespan_ms` and `simulated_clock_ms`. An `accepted` verdict means the plan breaks none of the declared rules, not that it is safe to run.
+
 ## Exit codes
 
 | Code | Meaning |
@@ -404,5 +434,7 @@ There are two shapes.
 | `logout` | `server`, `session_found`, `revoked_on_server`, `session_file` (`null` when there was no session) |
 | `config validate` | `path`, `server`, `timeout_sec`, `ca_file`, `allow_insecure`, `token_file` (`null` when not set) |
 | `config apply --dry-run` | `dry_run`, `server`, `timeout_sec`, `contacted` (always `false`) |
+| `connections clients`, `connections events` | `clients` or `events` (see above) |
+| `liveness`, `ecosystem-health`, `plan-simulate` | see above |
 
 `help`, `shell` and `completion` have no data to print and take no `--json`.

@@ -1,0 +1,21 @@
+exit=0
+--stdout--
+USAGE: hydra-cli connections [clients|events] [--kind KIND] [--user NAME] [--active] [--action ACTION] [--limit N] [--before N] [--json]
+
+Read the clients that connect to the server (clients, the default: GET /api/connections/clients) or the history of their
+sign-ins (events: GET /api/connections/events). Read only. An administrator sees every client; any other account sees
+only its own entries. The answer is checked against its contract before it is printed; one that does not match is an
+error (exit 5) and prints nothing.
+
+OPTIONS:
+    --kind KIND     only this kind: studio, suite, android, ios, dsi, watch, voice, other
+    --user NAME     only this user (administrators; for anyone else the server always answers with their own)
+    --active        clients with an open session (clients only)
+    --action ACTION events of this action: first_seen, login, login_failed, second_factor_failed, logout, session_ended, session_expired
+    --limit N       most events, up to 9 digits (events only)
+    --before N      events older than this event number (events only)
+    --json          print the checked list as one JSON object (clients or events)
+    --server URL    the server (default: HYDRA_CLI_SERVER, then a --config file's "server", then DEFAULT_SERVER)
+    --config PATH   a config file (see: hydra-cli config validate --help)
+    --timeout SECONDS   how long to wait for the server (1 to 3600; default: the config file's "timeoutSec", then HYDRA_CLI_TIMEOUT_SEC, then 5)
+--stderr--

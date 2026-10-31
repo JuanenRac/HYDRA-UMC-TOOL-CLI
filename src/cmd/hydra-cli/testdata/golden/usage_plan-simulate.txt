@@ -1,0 +1,15 @@
+exit=0
+--stdout--
+USAGE: hydra-cli plan-simulate --plan FILE|- [--planner URL] [--json]
+
+Send a plan to the dry run of the semantic planner (POST /plan/simulate) and print its verdict. Nothing is executed, queued
+or released. Exit 0 when the plan is accepted, 8 when the simulation rejects it (every broken rule is printed), 2 when the
+planner cannot understand the plan. The credential of the server is never sent to the planner.
+
+OPTIONS:
+    --plan FILE     the plan, one JSON object with a "steps" list (- reads the standard input)
+    --planner URL   the planner (default: HYDRA_CLI_PLANNER, then http://localhost:8109)
+    --json          print the checked verdict as one JSON object (ok is true only for an accepted plan)
+    --config PATH   a config file for the timeout and the transport options
+    --timeout SECONDS   how long to wait for the planner
+--stderr--
