@@ -1,0 +1,4 @@
+exit=0
+--stdout--
+SERVER answered, but none of the usual figures is in it (2 samples; --all shows them)
+--stderr--

@@ -1,0 +1,6 @@
+exit=0
+--stdout--
+USAGE: hydra-cli version
+
+Print the CLI version and exit.
+--stderr--

@@ -1,0 +1,5 @@
+exit=0
+--stdout--
+Jog sent to robot 1: x 5.
+Revision: r2
+--stderr--

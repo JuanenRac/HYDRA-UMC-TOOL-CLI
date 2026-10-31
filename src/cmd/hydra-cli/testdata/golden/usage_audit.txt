@@ -1,0 +1,18 @@
+exit=0
+--stdout--
+USAGE: hydra-cli audit [--limit N] [--type T] [--robot ID] [--verify] [--export FILE] [--json]
+
+Read the audit record (administrators only): the newest lines, with the chain of SHA-256 hashes checked here and,
+with --verify, by the server over the whole record.
+
+OPTIONS:
+    --limit N       how many lines
+    --type T        only lines of this type
+    --robot ID      only lines of this robot
+    --verify        ask the server to verify the whole chain
+    --export FILE   save the lines as stored (.jsonl)
+    --json          print the answer as JSON
+    --server URL    the server (default: HYDRA_CLI_SERVER, then a --config file's "server", then DEFAULT_SERVER)
+    --config PATH   a config file (see: hydra-cli config validate --help)
+    --timeout SECONDS   how long to wait for the server (1 to 3600; default: the config file's "timeoutSec", then HYDRA_CLI_TIMEOUT_SEC, then 5)
+--stderr--

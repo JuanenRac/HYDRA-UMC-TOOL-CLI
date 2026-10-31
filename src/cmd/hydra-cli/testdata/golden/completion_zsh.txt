@@ -1,0 +1,32 @@
+exit=0
+--stdout--
+#compdef hydra-cli
+_hydra_cli() {
+    local -a top_level config_sub fleet_sub manifest_sub options
+    top_level=(version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest)
+    config_sub=(validate apply)
+    fleet_sub=(doctor)
+    manifest_sub=(validate)
+    options=(--server --config --timeout --json --help)
+    if (( CURRENT == 2 )); then
+        compadd -a top_level
+        return
+    fi
+    if [[ ${words[2]} == "config" && $CURRENT -eq 3 ]]; then
+        compadd -a config_sub
+        return
+    fi
+    if [[ ${words[2]} == "fleet" && $CURRENT -eq 3 ]]; then
+        compadd -a fleet_sub
+        return
+    fi
+    if [[ ${words[2]} == "manifest" && $CURRENT -eq 3 ]]; then
+        compadd -a manifest_sub
+        return
+    fi
+    if [[ ${words[CURRENT]} == -* ]]; then
+        compadd -a options
+    fi
+}
+compdef _hydra_cli hydra-cli
+--stderr--

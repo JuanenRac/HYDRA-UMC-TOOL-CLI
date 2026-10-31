@@ -1,0 +1,5 @@
+exit=0
+--stdout--
+Robot 3 is released.
+Revision: r2
+--stderr--

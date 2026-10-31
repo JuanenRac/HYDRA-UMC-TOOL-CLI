@@ -1,0 +1,6 @@
+exit=0
+--stdout--
+CONTROLLER    ROBOT     ONLINE  MODEL           ROLE
+Controller A  Robot A1  yes     Parol6 (6-DOF)  Pnp
+Controller A  Robot A2  no      Parol6 (6-DOF)  Idle
+--stderr--

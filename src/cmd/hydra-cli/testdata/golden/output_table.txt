@@ -1,0 +1,5 @@
+exit=0
+--stdout--
+Table of robot 1 is now at x 10, y 20.
+Revision: r3
+--stderr--

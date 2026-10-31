@@ -1,0 +1,16 @@
+exit=0
+--stdout--
+USAGE: hydra-cli scan <network|address>... [--ports 3000,3443] [--scheme http|https] [--json]
+
+Find HYDRA-UMC-SERVERs: every address is asked for /api/hydra-info (public; no credential is sent). Only private networks
+are scanned unless --allow-public-range is given, and no more than --max-hosts addresses.
+
+OPTIONS:
+    --ports LIST        ports to try, separated by commas (default 3000)
+    --scheme SCHEME     http or https (default http)
+    --concurrency N     probes at once, 1 to 256 (default 64)
+    --max-hosts N       most addresses to probe, up to 65536 (default 1024)
+    --probe-timeout-ms N  how long to wait for one address, 50 to 10000 (default 800)
+    --allow-public-range  allow addresses that are not on a private network
+    --json              print the servers found as JSON
+--stderr--

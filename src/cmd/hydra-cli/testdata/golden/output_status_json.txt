@@ -1,0 +1,11 @@
+exit=0
+--stdout--
+{
+  "appVersion": "1.2.3",
+  "hostname": "bench",
+  "product": "HYDRA-UMC-SERVER",
+  "remoteApiVersion": 2,
+  "server": "SERVER",
+  "status": "ok"
+}
+--stderr--

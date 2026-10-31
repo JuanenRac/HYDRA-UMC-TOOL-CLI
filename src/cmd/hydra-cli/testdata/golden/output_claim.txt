@@ -1,0 +1,5 @@
+exit=0
+--stdout--
+Robot 3 is reserved for this program (controller cli-test).
+Revision: r2
+--stderr--

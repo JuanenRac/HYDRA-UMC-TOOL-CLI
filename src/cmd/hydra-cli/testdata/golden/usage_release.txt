@@ -1,0 +1,14 @@
+exit=0
+--stdout--
+USAGE: hydra-cli release <robot> [--reason TEXT] [--if-match REVISION|current]
+
+Release a robot this program reserved.
+
+OPTIONS:
+    --reason TEXT        written to the audit record
+    --controller-id ID   the controller id of this program (default: HYDRA_CLI_CONTROLLER_ID, then hydra-cli-<host>)
+    --if-match REVISION  refuse (exit 8) if the robot changed since REVISION; "current" reads it first
+    --server URL    the server (default: HYDRA_CLI_SERVER, then a --config file's "server", then DEFAULT_SERVER)
+    --config PATH   a config file (see: hydra-cli config validate --help)
+    --timeout SECONDS   how long to wait for the server (1 to 3600; default: the config file's "timeoutSec", then HYDRA_CLI_TIMEOUT_SEC, then 5)
+--stderr--

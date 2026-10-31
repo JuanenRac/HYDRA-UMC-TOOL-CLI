@@ -50,10 +50,24 @@
       "uniqueItems": true
     },
     "deployment_target": {
-      "enum": ["cm5", "user-pc", "mobile", "wearable", "dev-server"]
+      "enum": ["cm5", "user-pc", "mobile", "wearable", "dev-server", "mcu"]
     },
     "maturity": {
       "enum": ["scaffolding", "functional", "established", "production"]
+    },
+    "evidence": {
+      "description": "Optional. How far the repository has been shown to work: none or host-test (tests on a computer only), simulator, bench (a real board on the bench) or field. It limits the traffic lights of the Project status table.",
+      "enum": ["none", "host-test", "simulator", "bench", "field"]
+    },
+    "hardware_bound": {
+      "description": "Optional. false for a repository that has no hardware, so the evidence does not limit its hardware and integration rows.",
+      "type": "boolean"
+    },
+    "depends_on": {
+      "description": "Optional. The names of the repositories that must be installed or updated before this one, so a batch can order itself. A repository does not list itself and the names are unique.",
+      "type": "array",
+      "items": { "type": "string", "pattern": "^(HYDRA-UMC|URTC)(-[A-Z0-9-]+)?$" },
+      "uniqueItems": true
     },
     "deployment_target_note": {
       "description": "Optional free text that explains a deployment_target value.",

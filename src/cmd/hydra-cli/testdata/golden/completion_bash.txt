@@ -1,0 +1,28 @@
+exit=0
+--stdout--
+_hydra_cli_complete() {
+    local cur prev
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    if [ "$COMP_CWORD" -eq 1 ]; then
+        COMPREPLY=($(compgen -W "version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest" -- "$cur"))
+        return 0
+    fi
+    if [ "${COMP_WORDS[1]}" = "config" ] && [ "$COMP_CWORD" -eq 2 ]; then
+        COMPREPLY=($(compgen -W "validate apply" -- "$cur"))
+        return 0
+    fi
+    if [ "${COMP_WORDS[1]}" = "fleet" ] && [ "$COMP_CWORD" -eq 2 ]; then
+        COMPREPLY=($(compgen -W "doctor" -- "$cur"))
+        return 0
+    fi
+    if [ "${COMP_WORDS[1]}" = "manifest" ] && [ "$COMP_CWORD" -eq 2 ]; then
+        COMPREPLY=($(compgen -W "validate" -- "$cur"))
+        return 0
+    fi
+    case "$cur" in
+        -*) COMPREPLY=($(compgen -W "--server --config --timeout --json --help" -- "$cur")) ;;
+    esac
+}
+complete -F _hydra_cli_complete hydra-cli
+--stderr--

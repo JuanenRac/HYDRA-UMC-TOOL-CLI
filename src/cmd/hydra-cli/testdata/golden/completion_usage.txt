@@ -1,0 +1,4 @@
+exit=2
+--stdout--
+--stderr--
+hydra-cli completion: usage: hydra-cli completion <bash|zsh|fish|powershell>

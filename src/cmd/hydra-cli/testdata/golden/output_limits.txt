@@ -1,0 +1,14 @@
+exit=0
+--stdout--
+Relative jog, at most:   100 (default for every model)
+Absolute jog, at most:   1000 (default for every model)
+Bed target, at most:     110 C (default for every model)
+Jog must be armed:       yes (an arming lasts at most 60 s)
+Reservation names its controller: no
+
+Robot 1 (Parol6 (6-DOF)):
+  relative jog, at most: 20
+  absolute jog, at most: 500
+  bed target, at most:   90 C
+  jog armed for:         not armed
+--stderr--

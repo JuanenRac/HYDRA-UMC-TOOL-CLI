@@ -1,0 +1,4 @@
+exit=0
+--stdout--
+config CONFIG_FILE is valid: server=http://localhost:3000 timeoutSec=7
+--stderr--

@@ -1,0 +1,4 @@
+exit=0
+--stdout--
+HYDRA-UMC-TOOL-CLI vVERSION
+--stderr--

@@ -1,0 +1,5 @@
+exit=0
+--stdout--
+Stop sent to robot 1.
+Revision: r2
+--stderr--

@@ -1,0 +1,4 @@
+exit=2
+--stdout--
+--stderr--
+hydra-cli config: usage: hydra-cli config <validate|apply> --config PATH [--dry-run]

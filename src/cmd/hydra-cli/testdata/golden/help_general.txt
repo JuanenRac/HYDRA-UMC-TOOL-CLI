@@ -1,0 +1,125 @@
+exit=0
+--stdout--
+HYDRA-UMC-TOOL-CLI vVERSION
+Command-line interface for HYDRA-UMC/URTC fleet DevOps and automation.
+
+USAGE:
+    hydra-cli <command> [arguments]
+
+COMMANDS:
+    version              Print the CLI version and exit.
+    status [--server URL] [--config PATH] [--json]
+                          Query a HYDRA-UMC-SERVER instance's /api/hydra-info
+                          endpoint and print its reported identity/version.
+    robots [--server URL] [--config PATH] [--json]
+                          Query a HYDRA-UMC-SERVER instance's /api/settings
+                          endpoint and print its real controller/robot roster.
+                          Both default to http://localhost:3000; override with --server, a
+                          --config file's own "server" (see config validate/
+                          apply below), or the HYDRA_CLI_SERVER environment
+                          variable, in that precedence order.
+	doctor [--server URL] [--config PATH] [--json]
+	                      Read-only diagnostic: validates /api/hydra-info and
+	                      /api/settings, then verifies their controller/robot
+	                      counts agree. It never sends commands or probes hardware.
+	                      --json prints a structured report (checkId/severity/
+	                      status per check) instead of the DOCTOR=PASS line, for
+	                      scripts that need to act on individual results.
+    login [--user NAME] [--password-stdin]
+    logout
+                          Sign in once and keep the session in a file only you
+                          can read (every later command uses it and renews it by
+                          itself), or end it. Avoids a login on every run.
+    scan <network|address>... [--ports 3000,3443] [--json]
+                          Find HYDRA-UMC-SERVERs on a private network (reads the
+                          public /api/hydra-info only).
+    fleet doctor --servers FILE [--json]
+                          Run doctor against every server of a list at once.
+    stop <robot>          Send the stop command to one robot.
+    stop-all --yes        The global stop: every robot, valves and pumps off.
+    metrics [--all] [--json]
+                          Read the Prometheus metrics of the server (GET /metrics).
+    manifest validate [PATH...] [--workspace DIR] [--json]
+                          Check hydra-umc.project.json files against the schema of
+                          the SDK.
+    claims [--server URL] [--config PATH] [--json]
+                          List who reserves which robot (GET /api/claims).
+    claim <robot> [--ttl-ms N] [--force] [--reason TEXT]
+    release <robot> [--reason TEXT]
+                          Reserve a robot for this program, or release it. The
+                          reservation belongs to your account AND to this
+                          program's controller id (--controller-id ID or
+                          HYDRA_CLI_CONTROLLER_ID; default hydra-cli-<host>).
+                          --force is for administrators only.
+    limits [--robot ID] [--json]
+                          Read the safety limits the server holds (jog size,
+                          absolute jog range, bed temperature, jog arming).
+    jog-arm <robot> <on|off> [--ttl-ms N]
+                          Arm or disarm the jog of one robot. Needed only when
+                          the server requires it; ends by itself, with a stop
+                          or when the robot is released.
+    jog <robot> <axis> <amount> [--absolute]
+                          Move one axis (x y z a b c). A step above the limit
+                          of the robot's model is refused before it is sent.
+    table <robot> <x> <y> [--rz N] [--relative]
+                          Move the XY table of a robot in one atomic request
+                          (absolute positions unless --relative). The whole move
+                          is checked against the limits of the model before it
+                          is sent; the server applies all of it or none of it.
+    robot <robot> [--json]
+                          Read one robot (GET /api/robot/:id) with its revision.
+    audit [--limit N] [--type T] [--robot ID] [--verify] [--export FILE] [--json]
+                          Read the audit record (administrators only): the
+                          newest lines, with the chain of SHA-256 hashes checked
+                          here and, with --verify, by the server over the whole
+                          record. --export saves the lines as stored (.jsonl).
+
+    claim, release, jog and table also take --if-match REVISION (a revision
+    printed by robot or by an earlier command) or --if-match current: the
+    server then refuses the write (exit code 8) if the robot changed since.
+    config validate --config PATH
+                          Load and schema-validate a local config file.
+    config apply --config PATH [--dry-run]
+                          Preview (--dry-run) what a config apply would send.
+                          Without --dry-run, exits ExitNotImplemented: no
+                          live fleet-write endpoint exists yet.
+    shell [--server URL] [--config PATH]
+                          Interactive REPL - run any command above
+                          repeatedly against the same server without
+                          restarting the process. exit/quit or Ctrl-D
+                          to leave.
+    completion <bash|zsh|fish|powershell>
+                          Print a real completion script for the given
+                          shell to stdout - eval "$(hydra-cli completion
+                          bash)" (or source it from a completions
+                          directory) to enable tab-completion.
+    help                  Show this message.
+
+    <command> --help      Every command above prints its own usage with --help
+                          (or -h), whatever else follows it; nothing is sent.
+
+    Every live command above also reads a --config file's own "timeoutSec"
+    as its HTTP request timeout (default 5s), the same value config
+    validate/apply already schema-validate; --timeout SECONDS sets it for one run.
+
+    A password or a token is never sent over plain http to another machine:
+    use https (a private CA goes in HYDRA_CLI_CA_FILE, or "caFile" of the config
+    file), or set HYDRA_CLI_ALLOW_INSECURE=1 for a network you trust.
+
+    robots and doctor read /api/settings, which the server only gives to a
+    logged-in account. Set HYDRA_CLI_TOKEN (a bearer token), run "hydra-cli
+    login", or set HYDRA_CLI_USER and HYDRA_CLI_PASSWORD (the CLI logs in for that
+    run and ends that login when it exits); they are read from the environment,
+    never from a flag.
+
+EXIT CODES:
+    0  ok                     3  config error
+    1  general error          4  network error (server unreachable)
+    2  usage error            5  server error (bad status/response)
+                              6  not implemented
+                              7  authentication required or refused
+                              8  refused by the server's rules (reserved,
+                                 jog not armed, above a limit)
+
+Report issues at: https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI
+--stderr--

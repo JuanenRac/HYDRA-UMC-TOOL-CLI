@@ -1,0 +1,13 @@
+exit=0
+--stdout--
+USAGE: hydra-cli robots [--server URL] [--config PATH] [--json]
+
+Print the controller and robot roster the server reports (/api/settings). Needs HYDRA_CLI_TOKEN, or
+HYDRA_CLI_USER and HYDRA_CLI_PASSWORD, in the environment.
+
+OPTIONS:
+    --server URL    the server (default: HYDRA_CLI_SERVER, then a --config file's "server", then DEFAULT_SERVER)
+    --config PATH   a config file (see: hydra-cli config validate --help)
+    --timeout SECONDS   how long to wait for the server (1 to 3600; default: the config file's "timeoutSec", then HYDRA_CLI_TIMEOUT_SEC, then 5)
+    --json          print the roster as JSON
+--stderr--

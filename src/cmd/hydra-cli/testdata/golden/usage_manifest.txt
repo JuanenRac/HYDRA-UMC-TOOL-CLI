@@ -1,0 +1,13 @@
+exit=0
+--stdout--
+USAGE: hydra-cli manifest validate [PATH...] [--workspace DIR] [--schema FILE] [--json]
+
+Check hydra-umc.project.json files against the schema of the SDK (embedded in this build). PATH is a manifest or a
+repository directory; --workspace DIR checks every HYDRA-UMC-* and URTC-* directory in DIR; with neither, the
+current directory. A manifest whose name is not the name of its directory fails too. Exit 3 when any fails.
+
+OPTIONS:
+    --workspace DIR  check every repository in DIR
+    --schema FILE    use another schema file
+    --json           print the verdicts as JSON
+--stderr--

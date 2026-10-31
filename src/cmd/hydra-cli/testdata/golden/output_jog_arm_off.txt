@@ -1,0 +1,4 @@
+exit=0
+--stdout--
+The jog of robot 1 is disarmed.
+--stderr--

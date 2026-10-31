@@ -1,0 +1,15 @@
+exit=0
+--stdout--
+USAGE: hydra-cli fleet doctor --servers FILE [--concurrency N] [--json]
+
+Run the read-only doctor against every server of a list at once and give one answer. The file has one server URL per
+line; blank lines and lines starting with # are skipped. Exit 0 when every server passes; otherwise the exit code the
+failures share, or 1 when they differ.
+
+OPTIONS:
+    --servers FILE    the list of servers
+    --concurrency N   servers at once, 1 to 64 (default 8)
+    --json            print one report per server
+    --config PATH     a config file for the timeout and the transport options
+    --timeout SECONDS how long to wait for each server
+--stderr--

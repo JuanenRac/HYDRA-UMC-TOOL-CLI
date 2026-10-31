@@ -1,0 +1,7 @@
+exit=0
+--stdout--
+DRY RUN: would apply config to http://localhost:3000
+  server:     http://localhost:3000
+  timeoutSec: 7
+no real device or server was contacted
+--stderr--

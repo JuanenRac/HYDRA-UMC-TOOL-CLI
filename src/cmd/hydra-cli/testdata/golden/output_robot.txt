@@ -1,0 +1,7 @@
+exit=0
+--stdout--
+Robot 3: Arm (Parol6 (6-DOF))
+Role:     Idle
+Cell:     cell-1
+Revision: abc123
+--stderr--

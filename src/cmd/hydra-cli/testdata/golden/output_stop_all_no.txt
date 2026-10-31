@@ -1,0 +1,4 @@
+exit=2
+--stdout--
+--stderr--
+hydra-cli stop-all: stop-all stops EVERY robot of the server, whoever reserved it, and switches every valve and pump off: add --yes to confirm (nothing was sent)

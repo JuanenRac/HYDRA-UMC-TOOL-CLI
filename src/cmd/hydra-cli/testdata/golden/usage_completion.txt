@@ -1,0 +1,7 @@
+exit=0
+--stdout--
+USAGE: hydra-cli completion <bash|zsh|fish|powershell>
+
+Print a completion script for the shell to stdout: eval "$(hydra-cli completion bash)" enables tab-completion.
+For fish: hydra-cli completion fish | source. For PowerShell: hydra-cli completion powershell | Out-String | Invoke-Expression.
+--stderr--

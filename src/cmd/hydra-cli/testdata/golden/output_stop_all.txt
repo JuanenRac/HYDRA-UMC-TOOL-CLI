@@ -1,0 +1,6 @@
+exit=0
+--stdout--
+Global stop: 1 robot(s) stopped, 0 failed.
+ROBOT  NAME  STOPPED  VALVES OFF  PUMPS OFF  RESERVED BY
+1      A1    yes      2           1          -
+--stderr--

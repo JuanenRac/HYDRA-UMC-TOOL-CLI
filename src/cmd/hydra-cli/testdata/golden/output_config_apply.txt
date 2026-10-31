@@ -1,0 +1,4 @@
+exit=6
+--stdout--
+--stderr--
+hydra-cli config: live config apply needs a real fleet-write endpoint on HYDRA-UMC-SERVER, which does not exist yet - rerun with --dry-run

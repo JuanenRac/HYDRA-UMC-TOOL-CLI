@@ -1,0 +1,13 @@
+exit=0
+--stdout--
+USAGE: hydra-cli doctor [--server URL] [--config PATH] [--json]
+
+Read-only diagnostic: validates /api/hydra-info and /api/settings and checks that their controller and robot counts
+agree. It never sends a command or probes hardware.
+
+OPTIONS:
+    --server URL    the server (default: HYDRA_CLI_SERVER, then a --config file's "server", then DEFAULT_SERVER)
+    --config PATH   a config file (see: hydra-cli config validate --help)
+    --timeout SECONDS   how long to wait for the server (1 to 3600; default: the config file's "timeoutSec", then HYDRA_CLI_TIMEOUT_SEC, then 5)
+    --json          print a structured report (checkId, severity, status per check) instead of DOCTOR=PASS
+--stderr--

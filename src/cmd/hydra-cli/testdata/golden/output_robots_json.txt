@@ -1,0 +1,19 @@
+exit=0
+--stdout--
+[
+  {
+    "controller": "Controller A",
+    "robot": "Robot A1",
+    "online": true,
+    "model": "Parol6 (6-DOF)",
+    "role": "Pnp"
+  },
+  {
+    "controller": "Controller A",
+    "robot": "Robot A2",
+    "online": false,
+    "model": "Parol6 (6-DOF)",
+    "role": "Idle"
+  }
+]
+--stderr--
