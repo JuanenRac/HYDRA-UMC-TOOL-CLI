@@ -18,14 +18,14 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Go-00ADD8.svg" alt="Language">
   <img src="https://img.shields.io/badge/Feature-Fleet%20DevOps-blue.svg" alt="Feature">
-  <img src="https://img.shields.io/badge/Tests-219%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-249%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.9-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**Ehrlichkeitscheck - was heute wirklich funktioniert:** `version`, `status`, `robots`, `claims`, `claim`, `release`, `limits`, `jog-arm`, `jog`, `table`, `robot`, `audit`, `doctor`, `config validate`, `config apply --dry-run` und die interaktive `shell` (`main.go`, `server.go`, `robots.go`, `control.go`, `doctor.go`, `config.go`, `shell.go`, `exitcode.go`) sind echter, funktionierender Go-Code, geprüft durch 219 bestandene Tests (`go test ./...`) - echte `net/http`/`httptest`-Round-Trips gegen einen simulierten Server plus echte Temp-Datei-Konfigurationsfixtures, keine Stubs. Diese Tests simulieren eine HYDRA-UMC-SERVER-Instanz; `status`, `robots` und `doctor` (einschließlich der Anmeldung) wurden zusätzlich gegen einen echten HYDRA-UMC-SERVER-Prozess ausgeführt. `config apply` gibt ohne `--dry-run` ehrlich den Exit-Code `ExitNotImplemented` zurück, statt einen Erfolg vorzutäuschen, weil der Fleet-Write-Endpunkt, den es aufrufen würde, auf HYDRA-UMC-SERVER noch nicht existiert. `deploy`, `flash-all` und `audit` sind reine Zukunftsmusik - unten als "planned" markiert und in `src/` vollständig abwesend, nicht einmal als Stub-Funktion. Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
+**Ehrlichkeitscheck - was heute wirklich funktioniert:** `version`, `status`, `robots`, `claims`, `claim`, `release`, `limits`, `jog-arm`, `jog`, `table`, `robot`, `audit`, `doctor`, `connections`, `liveness`, `ecosystem-health`, `plan-simulate`, `config validate`, `config apply --dry-run` und die interaktive `shell` (`main.go`, `server.go`, `robots.go`, `control.go`, `doctor.go`, `observe.go`, `plansim.go`, `config.go`, `shell.go`, `exitcode.go`) sind echter, funktionierender Go-Code, geprüft durch 249 bestandene Tests (`go test ./...`) - echte `net/http`/`httptest`-Round-Trips gegen einen simulierten Server plus echte Temp-Datei-Konfigurationsfixtures, keine Stubs. Diese Tests simulieren eine HYDRA-UMC-SERVER-Instanz; `status`, `robots` und `doctor` (einschließlich der Anmeldung) wurden zusätzlich gegen einen echten HYDRA-UMC-SERVER-Prozess ausgeführt. `config apply` gibt ohne `--dry-run` ehrlich den Exit-Code `ExitNotImplemented` zurück, statt einen Erfolg vorzutäuschen, weil der Fleet-Write-Endpunkt, den es aufrufen würde, auf HYDRA-UMC-SERVER noch nicht existiert. `deploy`, `flash-all` und `audit` sind reine Zukunftsmusik - unten als "planned" markiert und in `src/` vollständig abwesend, nicht einmal als Stub-Funktion. Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
 
 ---
 
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Version | `0.1.9` |
 | Reifegrad | Funktionsfähig |
-| Tests | 219 (`go test ./...`) |
+| Tests | 249 (`go test ./...`) |
 | Technik | Go / standard-library flag handling |
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
@@ -55,7 +55,7 @@ Jede Zeile ist ein Teil dieses Repositorys, und die Ampel sagt, wie weit er heut
 | Bereich | Stand | Was das hier bedeutet |
 |---|---|---|
 | Software | 🟡 | Funktioniert für seinen Hauptzweck; die Ehrlichkeitsprüfung oben nennt, was noch fehlt |
-| Tests | 🟢 | 219 automatische Tests, bei jeder Änderung ausgeführt |
+| Tests | 🟢 | 249 automatische Tests, bei jeder Änderung ausgeführt |
 | Echte Hardware | 🟠 | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
 | Dokumentation | 🟢 | README in acht Sprachen, bei jeder Änderung gegen das Manifest geprüft |
 
@@ -75,6 +75,7 @@ Das langfristige Ziel sind massive Missionsausrollungen, parallele Firmware-Upda
 * ✅ **`hydra-cli robot <Roboter>`, `table <Roboter> <x> <y> [--rz N] [--relative]`, `audit [--limit N] [--type T] [--robot ID] [--verify] [--export DATEI]`** — `robot` liest einen Roboter mit seiner Revision; `table` bewegt den XY-Tisch in einer atomaren Anfrage (vor dem Senden gegen die Grenzen des Modells geprüft; der Server wendet alles oder nichts an); `audit` (nur Administratoren) liest das nur anfügbare Audit-Protokoll, prüft die Kette der SHA-256-Hashes der erhaltenen Zeilen (Exit-Code 8, wenn sie unterbrochen ist) und lässt mit `--verify` den Server das ganze Protokoll prüfen; `--export DATEI` speichert die Zeilen so, wie sie abgelegt sind. `claim`, `release`, `jog` und `table` nehmen auch `--if-match REVISION` (oder `current`): der Server lehnt den Schreibzugriff dann mit Exit-Code 8 ab, wenn sich der Roboter seit dieser Revision geändert hat, und nichts wird angewendet. Den WebSocket-Push der Reservierungen nutzt die CLI nicht (sie führt einen Befehl aus und endet).
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** — schreibgeschützte Server-Vertragsdiagnose: prüft `/api/hydra-info` und `/api/settings` und vergleicht veröffentlichte Controller-/Roboterzahlen mit der Liste. Sendet keine Befehle und prüft keine Hardware. `--json` gibt statt der Textzeile einen strukturierten Bericht mit `checkId`/`severity`/`status` pro Prüfung aus, für Skripte (siehe [docs/DOCTOR.md](docs/DOCTOR.md)). *(implementiert)*
 * 🔐 **Sitzungen, sichere Zugangsdaten und Flottenbefehle:** `login`/`logout` speichern eine Sitzung in einer Datei, die nur du lesen kannst (kein Login bei jedem Lauf); ein Passwort oder Token wird über einfaches http zu einem anderen Rechner abgelehnt, außer mit `HYDRA_CLI_ALLOW_INSECURE=1`, und `HYDRA_CLI_CA_FILE` vertraut einer privaten CA; neu sind `scan`, `fleet doctor`, `stop`, `stop-all --yes`, `metrics` und `manifest validate`. Siehe [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md).
+* 🧾 **`--json`, Shell-Vervollständigung und schreibgeschützte Ansichten:** Jeder Befehl, der Daten ausgibt, gibt sie mit `--json` auch als JSON aus (bei den handelnden Befehlen ein Objekt mit `schema_version`, `command`, `ok` und den Feldern des Befehls; die Textausgabe bleibt der Standard und ändert sich nicht); `completion <bash|zsh|fish|powershell>` vervollständigt Befehle, Unterbefehle, Optionen und geschlossene Werte, erzeugt aus der Befehlstabelle; `connections`, `liveness` und `ecosystem-health` lesen vom Server die Clients samt Anmeldeverlauf, das Lebenszeichen jedes Roboters und den Zustand der Dienste, und `plan-simulate` prüft einen Plan mit dem Trockenlauf des semantischen Planers (nichts wird ausgeführt; Exit-Code 8, wenn der Plan abgelehnt wird). Jede Antwort wird vor der Ausgabe gegen ihren Vertrag geprüft, und eine fehlerhafte ist ein Fehler ohne Ausgabe. Siehe [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md).
 * Jeder Text, der von einem Server kommt und ausgegeben wird (Fehlermeldungen, Namen, Versionen), läuft jetzt auch durch die gemeinsame Geheimnis-Schwärzung; ein Token, ein `password=`-Wert oder ein Bearer-Header in einer Antwort erscheint so nie im Terminal (dieselben Vektoren wie in den anderen Projekten).
 * ✅ **`hydra-cli completion <bash|zsh>`** — gibt ein Tab-Vervollständigungsskript für die Shell aus. *(implementiert)*
 * ✅ **Ein echter, stabiler Exit-Code-Vertrag** — `0` ok, `1` allgemeiner Fehler, `2` Nutzungsfehler, `3` Konfigurationsfehler, `4` Netzwerkfehler, `5` Serverfehler, `6` nicht implementiert, `7` Authentifizierung erforderlich oder abgelehnt. Jeder Befehl klassifiziert seine eigenen Fehlschläge über diesen Vertrag statt über ein bloßes `exit 1`, sodass Skripte, die dieses CLI umschließen, anhand des *Warum* eines Fehlschlags verzweigen können. *(implementiert)*
@@ -159,7 +160,7 @@ Benötigt Go 1.24 oder neuer.
 
 ## 🧪 Tests
 
-219 automatische Tests laufen mit `cd src && go test ./...`. Sie brauchen weder Hardware noch etwas außerhalb dieses Rechners.
+249 automatische Tests laufen mit `cd src && go test ./...`. Sie brauchen weder Hardware noch etwas außerhalb dieses Rechners.
 
 Die CI führt `HYDRA_UMC_CI=1 python tools/ci_validate.py` aus; das prüft das Manifest, die Dokumente, die acht READMEs und die Bilder.
 

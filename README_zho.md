@@ -18,14 +18,14 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Go-00ADD8.svg" alt="Language">
   <img src="https://img.shields.io/badge/Feature-Fleet%20DevOps-blue.svg" alt="Feature">
-  <img src="https://img.shields.io/badge/Tests-219%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-249%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.9-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**诚实核查 - 今天真正能运行的部分：** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`table`、`robot`、`audit`、`doctor`、`config validate`、`config apply --dry-run`，以及交互式 `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）都是真实可运行的 Go 代码，由 219 个通过的测试（`go test ./...`）验证——针对一个模拟服务器的真实 `net/http`/`httptest` 往返请求，加上真实的临时配置文件测试夹具，而不是桩代码。这些测试模拟的是一个 HYDRA-UMC-SERVER 实例；`status`、`robots` 和 `doctor`（包括登录）也已针对真实的 HYDRA-UMC-SERVER 进程运行过。`config apply` 在没有 `--dry-run` 时会诚实地返回 `ExitNotImplemented` 退出码，而不是伪装成功，因为它需要调用的车队写入端点在 HYDRA-UMC-SERVER 上还不存在。`deploy`、`flash-all` 和 `audit` 完全是愿景——在下文中标记为"planned"，在 `src/` 中完全不存在，连桩函数都没有。具体已经交付了什么，请参见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`table`、`robot`、`audit`、`doctor`、`connections`、`liveness`、`ecosystem-health`、`plan-simulate`、`config validate`、`config apply --dry-run`，以及交互式 `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`observe.go`、`plansim.go`、`config.go`、`shell.go`、`exitcode.go`）都是真实可运行的 Go 代码，由 249 个通过的测试（`go test ./...`）验证——针对一个模拟服务器的真实 `net/http`/`httptest` 往返请求，加上真实的临时配置文件测试夹具，而不是桩代码。这些测试模拟的是一个 HYDRA-UMC-SERVER 实例；`status`、`robots` 和 `doctor`（包括登录）也已针对真实的 HYDRA-UMC-SERVER 进程运行过。`config apply` 在没有 `--dry-run` 时会诚实地返回 `ExitNotImplemented` 退出码，而不是伪装成功，因为它需要调用的车队写入端点在 HYDRA-UMC-SERVER 上还不存在。`deploy`、`flash-all` 和 `audit` 完全是愿景——在下文中标记为"planned"，在 `src/` 中完全不存在，连桩函数都没有。具体已经交付了什么，请参见 `CHANGELOG.md`。
 
 ---
 
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | 版本 | `0.1.9` |
 | 成熟度 | 可用 |
-| 测试 | 219 (`go test ./...`) |
+| 测试 | 249 (`go test ./...`) |
 | 技术栈 | Go / standard-library flag handling |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
@@ -55,7 +55,7 @@ GPL-3.0-or-later - see LICENSE
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟡 | 主要用途可用；上面的诚实性检查列出了仍然缺少的内容 |
-| 测试 | 🟢 | 219 项自动测试，每次变更都会运行 |
+| 测试 | 🟢 | 249 项自动测试，每次变更都会运行 |
 | 真实硬件 | 🟠 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
 | 文档 | 🟢 | 八种语言的 README，每次变更都会与清单核对 |
 
@@ -79,6 +79,7 @@ HYDRA-UMC 部署的命令行工具。
 * ✅ **`hydra-cli robot <robot>`、`table <robot> <x> <y> [--rz N] [--relative]`、`audit [--limit N] [--type T] [--robot ID] [--verify] [--export FILE]`** —— `robot` 读取一个机器人及其修订号;`table` 用一次原子请求移动 XY 工作台(发送前先按型号限值检查,服务器要么全部应用要么全部不应用);`audit`(仅管理员)读取仅追加的审计记录,检查所收到各行的 SHA-256 哈希链(链断裂时退出码为 8),使用 `--verify` 时还会让服务器检查整份记录;`--export FILE` 按存储原样保存各行。`claim`、`release`、`jog` 和 `table` 还接受 `--if-match 修订号`(或 `current`):若自该修订号以来机器人已发生变化,服务器会以退出码 8 拒绝写入,且不应用任何内容。CLI 不使用预约的 WebSocket 推送(它只执行一条命令就退出)。
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** —— 只读服务器契约诊断：验证 `/api/hydra-info` 和 `/api/settings`，并将已发布的控制器/机器人总数与名单进行核对。不发送命令，也不探测硬件。`--json` 会输出结构化报告(每项检查带 `checkId`/`severity`/`status`)而不是纯文本行,供脚本使用(见 [docs/DOCTOR.md](docs/DOCTOR.md))。*（已实现）*
 * 🔐 **会话、安全凭据与车队命令:** `login`/`logout` 把会话保存在只有你能读取的文件中(不必每次运行都登录);除非设置 `HYDRA_CLI_ALLOW_INSECURE=1`,否则密码或令牌不会通过明文 http 发往其他机器,`HYDRA_CLI_CA_FILE` 可信任私有 CA;新增 `scan`、`fleet doctor`、`stop`、`stop-all --yes`、`metrics` 和 `manifest validate`。参见 [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md)。
+* 🧾 **`--json`、shell 补全与只读视图：** 每个输出数据的命令都可用 `--json` 以 JSON 输出（执行动作的命令输出一个含 `schema_version`、`command`、`ok` 及该命令字段的对象；文本输出仍是默认且不变）；`completion <bash|zsh|fish|powershell>` 由命令表生成，补全命令、子命令、选项和封闭取值；`connections`、`liveness` 和 `ecosystem-health` 从服务器读取客户端与登录历史、每台机器人的存活信号以及各服务的健康状况，`plan-simulate` 用语义规划器的试运行检查计划（不执行任何内容；计划被拒绝时退出码为 8）。每个响应在输出前都会对照其契约检查，格式错误的响应会报错且不输出任何内容。参见 [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md)。
 * 来自服务器并被打印的所有文本（错误信息、名称、版本）现在还会经过共享的机密脱敏，因此响应中的令牌、`password=` 的值或 bearer 头不会回显到终端（与其他项目使用相同的测试向量）。
 * ✅ **`hydra-cli completion <bash|zsh>`** — 输出适用于 shell 的 Tab 补全脚本。 *（已实现）*
 * ✅ **真实、稳定的退出码契约** —— `0` 正常，`1` 一般错误，`2` 用法错误，`3` 配置错误，`4` 网络错误，`5` 服务器错误，`6` 未实现，`7` 需要认证或认证被拒绝。每个命令都通过该契约对自身的失败进行分类，而不是简单地 `exit 1`，因此封装本 CLI 的脚本可以根据*失败原因*进行分支处理。*（已实现）*
@@ -163,7 +164,7 @@ flowchart LR
 
 ## 🧪 测试
 
-运行 `cd src && go test ./...` 会执行 219 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+运行 `cd src && go test ./...` 会执行 249 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
 
 CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
 

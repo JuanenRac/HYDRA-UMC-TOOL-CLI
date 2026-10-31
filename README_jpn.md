@@ -18,14 +18,14 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Go-00ADD8.svg" alt="Language">
   <img src="https://img.shields.io/badge/Feature-Fleet%20DevOps-blue.svg" alt="Feature">
-  <img src="https://img.shields.io/badge/Tests-219%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-249%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.9-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**正直な現状確認 - 実際に今動くもの:** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`table`、`robot`、`audit`、`doctor`、`config validate`、`config apply --dry-run`、そして対話型の `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`config.go`、`shell.go`、`exitcode.go`）は、127件のテストがすべて通過している（`go test ./...`）、実際に動く本物の Go コードであり — 偽サーバーに対する本物の `net/http`/`httptest` の往復通信と、本物の一時設定ファイルのフィクスチャを使っており、スタブではない。これらのテストは HYDRA-UMC-SERVER のインスタンスを模擬しているが、`status`、`robots`、`doctor`（ログインを含む）は本物の HYDRA-UMC-SERVER プロセスに対しても実行している。`config apply` は `--dry-run` なしで実行すると、成功を装うのではなく正直に `ExitNotImplemented` の終了コードを返す。呼び出すはずのフリート書き込みエンドポイントが HYDRA-UMC-SERVER にまだ存在しないためだ。`deploy`、`flash-all`、`audit` は純粋な構想であり、下記では「planned」と記されている通り `src/` には一切存在せず、スタブ関数すらない。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を参照。
+**正直な現状確認 - 実際に今動くもの:** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`table`、`robot`、`audit`、`doctor`、`connections`、`liveness`、`ecosystem-health`、`plan-simulate`、`config validate`、`config apply --dry-run`、そして対話型の `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`observe.go`、`plansim.go`、`config.go`、`shell.go`、`exitcode.go`）は、127件のテストがすべて通過している（`go test ./...`）、実際に動く本物の Go コードであり — 偽サーバーに対する本物の `net/http`/`httptest` の往復通信と、本物の一時設定ファイルのフィクスチャを使っており、スタブではない。これらのテストは HYDRA-UMC-SERVER のインスタンスを模擬しているが、`status`、`robots`、`doctor`（ログインを含む）は本物の HYDRA-UMC-SERVER プロセスに対しても実行している。`config apply` は `--dry-run` なしで実行すると、成功を装うのではなく正直に `ExitNotImplemented` の終了コードを返す。呼び出すはずのフリート書き込みエンドポイントが HYDRA-UMC-SERVER にまだ存在しないためだ。`deploy`、`flash-all`、`audit` は純粋な構想であり、下記では「planned」と記されている通り `src/` には一切存在せず、スタブ関数すらない。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を参照。
 
 ---
 
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | バージョン | `0.1.9` |
 | 成熟度 | 機能する |
-| テスト | 219 (`go test ./...`) |
+| テスト | 249 (`go test ./...`) |
 | 技術 | Go / standard-library flag handling |
 | 対象 | 利用者の PC |
 | 実機での確認 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
@@ -55,7 +55,7 @@ GPL-3.0-or-later - see LICENSE
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟡 | 主な目的では動作します。足りない点は上の正直さの確認に書かれています |
-| テスト | 🟢 | 自動テスト 219 件。変更のたびに実行されます |
+| テスト | 🟢 | 自動テスト 249 件。変更のたびに実行されます |
 | 実機 | 🟠 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
 | ドキュメント | 🟢 | 8 言語の README。変更のたびにマニフェストと照合されます |
 
@@ -82,6 +82,7 @@ GPL-3.0-or-later - see LICENSE
 * ✅ **`hydra-cli robot <robot>`、`table <robot> <x> <y> [--rz N] [--relative]`、`audit [--limit N] [--type T] [--robot ID] [--verify] [--export FILE]`** — `robot` はロボット 1 台をリビジョン付きで読み取ります。`table` は XY テーブルを 1 回のアトミックなリクエストで動かします(送信前にモデルの上限と照合し、サーバーは全部適用するか何も適用しません)。`audit`(管理者のみ)は追記専用の監査記録を読み、受け取った行の SHA-256 ハッシュのチェーンを確認し(壊れていれば終了コード 8)、`--verify` ではサーバーに記録全体を確認させます。`--export FILE` は保存されているままの行を保存します。`claim`、`release`、`jog`、`table` は `--if-match REVISION`(または `current`)も受け付けます。そのリビジョン以降にロボットが変更されていれば、サーバーは終了コード 8 で書き込みを拒否し、何も適用されません。予約の WebSocket 通知は CLI では使いません(1 つのコマンドを実行して終了するため)。
 * ✅ **`hydra-cli doctor [--server URL] [--config PATH] [--json]`** — 読み取り専用のサーバー契約診断：`/api/hydra-info` と `/api/settings` を検証し、公開されたコントローラー/ロボット数を一覧と照合します。コマンド送信やハードウェアの検査は行いません。`--json` を付けるとテキスト行の代わりに、チェックごとの `checkId`/`severity`/`status` を含む構造化レポートを出力します(スクリプト向け、詳細は [docs/DOCTOR.md](docs/DOCTOR.md))。*（実装済み）*
 * 🔐 **セッション、安全な認証情報、フリート向けコマンド:** `login`/`logout` は自分だけが読めるファイルにセッションを保存します(実行のたびにログインしません)。パスワードやトークンは、`HYDRA_CLI_ALLOW_INSECURE=1` がない限り、他のマシンへの平文 http では拒否され、`HYDRA_CLI_CA_FILE` でプライベート CA を信頼できます。`scan`、`fleet doctor`、`stop`、`stop-all --yes`、`metrics`、`manifest validate` が追加されました。[`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) を参照。
+* 🧾 **`--json`、シェル補完、読み取り専用ビュー：** データを出力するすべてのコマンドは `--json` で JSON としても出力します（動作を行うコマンドでは `schema_version`、`command`、`ok` とコマンド固有のフィールドを持つ 1 つのオブジェクト。テキスト出力は既定のままで変わりません）。`completion <bash|zsh|fish|powershell>` はコマンド表から生成され、コマンド、サブコマンド、オプション、閉じた値を補完します。`connections`、`liveness`、`ecosystem-health` はサーバーからクライアントとサインイン履歴、各ロボットの生存信号、サービスの健全性を読み取り、`plan-simulate` はセマンティックプランナーのドライランでプランを検査します（何も実行されません。プランが拒否されると終了コード 8）。各応答は出力前に契約と照合され、形式が不正な応答は出力なしのエラーになります。[`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) を参照してください。
 * サーバーから届いて表示されるテキスト(エラーメッセージ、名前、バージョン)はすべて、共有の機密マスキングも通ります。応答に含まれるトークン、`password=` の値、bearer ヘッダーが端末に出ることはありません(他のプロジェクトと同じベクター)。
 * ✅ **`hydra-cli completion <bash|zsh>`** — シェル用のタブ補完スクリプトを出力します。 *（実装済み）*
 * ✅ **実際に安定した終了コード契約** — `0` 正常、`1` 一般エラー、`2` 使用方法エラー、`3` 設定エラー、`4` ネットワークエラー、`5` サーバーエラー、`6` 未実装、`7` 認証が必要、または拒否。各コマンドは単なる `exit 1` の代わりにこの契約を通じて自身の失敗を分類するため、この CLI をラップするスクリプトは*失敗の理由*に応じて分岐できます。*（実装済み）*
@@ -166,7 +167,7 @@ Go 1.24 以上が必要です。
 
 ## 🧪 テスト
 
-`cd src && go test ./...` で自動テスト 219 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
+`cd src && go test ./...` で自動テスト 249 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
 
 CI は `HYDRA_UMC_CI=1 python tools/ci_validate.py` を実行し、マニフェスト、文書、8 つの README、図を検査します。
 
