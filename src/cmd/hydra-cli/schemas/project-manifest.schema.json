@@ -80,7 +80,15 @@
       "properties": {
         "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
         "health_path": { "type": "string", "minLength": 1 },
-        "systemd_unit": { "type": "string", "minLength": 1 }
+        "systemd_unit": { "type": "string", "minLength": 1 },
+        "grpc_port": {
+          "description": "Optional. The loopback port of the gRPC health service (HealthService) when the service also serves it. The registry check (tools/sync_ports.py) requires grpc_service next to it and that it differs from every other port of the registry.",
+          "type": "integer", "minimum": 1, "maximum": 65535
+        },
+        "grpc_service": {
+          "description": "Optional. The fully qualified name of the gRPC service served on grpc_port, for example hydra.common.v1.HealthService. The registry check (tools/sync_ports.py) requires grpc_port next to it.",
+          "type": "string", "minLength": 1
+        }
       }
     },
     "family": {
