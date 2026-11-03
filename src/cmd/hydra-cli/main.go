@@ -19,6 +19,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	sdk "github.com/JuanenRac/HYDRA-UMC-SDK/clients/go"
 )
 
 const projectName = "HYDRA-UMC-TOOL-CLI"
@@ -378,15 +380,20 @@ Report issues at: https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI
 `, projectName, Version, defaultServerURL)
 }
 
-// hydraInfo mirrors the subset of HYDRA-UMC-SERVER's GET /api/hydra-info
-// response this CLI actually reads. Unknown fields are ignored, so this
-// stays forward-compatible with a server that adds fields later.
+// hydraInfo is the answer of HYDRA-UMC-SERVER's GET /api/hydra-info. The wire
+// contract itself (schema_version, product, remoteApiVersion, appVersion,
+// hostname, uptimeSeconds) is the SDK's own ServerDiscovery type, imported from
+// the Go client of HYDRA-UMC-SDK instead of declared a second time here. Only
+// what that type does not carry is added: the human status text, and the two
+// counts as pointers, so a server that does not report them stays
+// distinguishable from one that reports zero (the field of this struct that
+// has the same name hides the SDK's, which is a plain number). Unknown fields
+// are ignored, so this stays forward-compatible.
 type hydraInfo struct {
-	AppVersion       string `json:"appVersion"`
-	Status           string `json:"status"`
-	Product          string `json:"product"`
-	Hostname         string `json:"hostname"`
-	RemoteAPIVersion int    `json:"remoteApiVersion"`
+	sdk.ServerDiscovery
+	Status          string `json:"status"`
+	ControllerCount *int   `json:"controllerCount"`
+	RobotCount      *int   `json:"robotCount"`
 }
 
 // cmdStatus implements `hydra-cli status` - a real HTTP client call

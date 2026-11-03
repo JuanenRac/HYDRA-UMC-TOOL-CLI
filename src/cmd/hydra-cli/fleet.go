@@ -143,7 +143,7 @@ func probeServer(client *http.Client, scheme string, addr netip.Addr, port int) 
 	return foundServer{
 		Address: addr.String(), Port: port, Scheme: scheme,
 		Product: printable(info.Product), Hostname: printable(info.Hostname),
-		AppVersion: printable(info.AppVersion), RemoteAPIVersion: info.RemoteAPIVersion,
+		AppVersion: printable(info.AppVersion), RemoteAPIVersion: int(info.RemoteAPIVersion),
 	}, true
 }
 

@@ -17,19 +17,10 @@ import (
 	"time"
 )
 
-// doctorInfo is the published, read-only subset of /api/hydra-info needed for
-// a diagnosis. The count fields are pointers so an older server that does not
-// report them remains usable, but the result explicitly says that cross-check
-// evidence is unavailable rather than pretending it passed.
-type doctorInfo struct {
-	SchemaVersion    string `json:"schema_version"`
-	Product          string `json:"product"`
-	AppVersion       string `json:"appVersion"`
-	Hostname         string `json:"hostname"`
-	RemoteAPIVersion int    `json:"remoteApiVersion"`
-	ControllerCount  *int   `json:"controllerCount"`
-	RobotCount       *int   `json:"robotCount"`
-}
+// doctorInfo is the same answer of /api/hydra-info that `status` reads (hydraInfo, built on the SDK's ServerDiscovery).
+// The count fields are pointers so an older server that does not report them remains usable, but the result
+// explicitly says that cross-check evidence is unavailable rather than pretending it passed.
+type doctorInfo = hydraInfo
 
 // supportedSchemaVersion is the only /api/hydra-info schema_version this CLI
 // accepts; the discovery contract says consumers reject a missing or unknown one.
@@ -143,7 +134,7 @@ func diagnose(client *http.Client, server string) (report doctorReport, info doc
 	report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-schema-version", Severity: "critical", Status: "pass"})
 	report.AppVersion = info.AppVersion
 	report.SchemaVersion = info.SchemaVersion
-	report.RemoteAPIVersion = info.RemoteAPIVersion
+	report.RemoteAPIVersion = int(info.RemoteAPIVersion)
 	report.Checks = append(report.Checks, doctorCheck{CheckID: "hydra-info-has-app-version", Severity: "critical", Status: "pass"})
 
 	// The count of /api/hydra-info comes from memory and /api/settings is read from disk, and the write to disk is
