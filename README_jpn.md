@@ -18,7 +18,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Go-00ADD8.svg" alt="Language">
   <img src="https://img.shields.io/badge/Feature-Fleet%20DevOps-blue.svg" alt="Feature">
-  <img src="https://img.shields.io/badge/Tests-249%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-256%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.2.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | バージョン | `0.2.0` |
 | 成熟度 | 機能する |
-| テスト | 249 (`go test ./...`) |
+| テスト | 256 (`go test ./...`) |
 | 技術 | Go / standard-library flag handling |
 | 対象 | 利用者の PC |
 | 実機での確認 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
@@ -55,7 +55,7 @@ GPL-3.0-or-later - see LICENSE
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟡 | 主な目的では動作します。足りない点は上の正直さの確認に書かれています |
-| テスト | 🟢 | 自動テスト 249 件。変更のたびに実行されます |
+| テスト | 🟢 | 自動テスト 256 件。変更のたびに実行されます |
 | 実機 | 🟠 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
 | 連携 | 🟠 | メッセージとルートは SDK の共通契約に照らして検証されていますが、実機と一緒に動かしたことはありません |
 | デプロイ | 🟠 | リリースとして公開されています。新しい環境へのインストールは文書化されていますが記録はありません |
@@ -169,7 +169,7 @@ Go 1.24 以上が必要です。
 
 ## 🧪 テスト
 
-`cd src && go test ./...` で自動テスト 249 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
+`cd src && go test ./...` で自動テスト 256 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
 
 CI は `HYDRA_UMC_CI=1 python tools/ci_validate.py` を実行し、マニフェスト、文書、8 つの README、図を検査します。
 

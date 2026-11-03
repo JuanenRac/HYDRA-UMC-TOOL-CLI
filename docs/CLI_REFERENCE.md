@@ -33,6 +33,17 @@ hydra-cli status --server http://192.168.1.50:3000
 HYDRA_CLI_SERVER=http://192.168.1.50:3000 hydra-cli robots
 ```
 
+## Options and the SDK client
+
+Options are read by the standard `flag.FlagSet`, declared once per command: they may come before or after the
+positional arguments (`claim 3 --force` and `claim --force 3` are the same), a value option takes the next argument
+whatever it looks like, and the last occurrence wins. A token that is not an option of the command is reported as an
+extra argument, with the same usage error (exit code `2`) as always.
+
+The answer of `GET /api/hydra-info` (used by `status`, `doctor`, `scan` and `fleet doctor`) is decoded into the
+`ServerDiscovery` type of the Go client of HYDRA-UMC-SDK (module `github.com/JuanenRac/HYDRA-UMC-SDK/clients/go`),
+so the wire contract is declared once, in the SDK, and not copied into this program.
+
 ## Authentication
 
 `GET /api/hydra-info` (used by `status`) is public. `GET /api/settings` (used by

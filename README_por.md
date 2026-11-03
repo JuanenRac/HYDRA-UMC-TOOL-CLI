@@ -18,14 +18,14 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Go-00ADD8.svg" alt="Language">
   <img src="https://img.shields.io/badge/Feature-Fleet%20DevOps-blue.svg" alt="Feature">
-  <img src="https://img.shields.io/badge/Tests-249%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-256%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.2.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**Verificação de honestidade - o que realmente funciona hoje:** `version`, `status`, `robots`, `claims`, `claim`, `release`, `limits`, `jog-arm`, `jog`, `table`, `robot`, `audit`, `doctor`, `connections`, `liveness`, `ecosystem-health`, `plan-simulate`, `config validate`, `config apply --dry-run` e o `shell` interativo (`main.go`, `server.go`, `robots.go`, `control.go`, `doctor.go`, `observe.go`, `plansim.go`, `config.go`, `shell.go`, `exitcode.go`) são código Go real e funcional, exercitado por 249 testes a passar (`go test ./...`) - idas e voltas reais com `net/http`/`httptest` contra um servidor simulado, mais ficheiros de configuração temporários reais como dados de teste, não stubs. Esses testes simulam uma instância do HYDRA-UMC-SERVER; `status`, `robots` e `doctor` (com o início de sessão incluído) também foram executados contra um processo real do HYDRA-UMC-SERVER. O `config apply` sem `--dry-run` devolve honestamente o código de saída `ExitNotImplemented` em vez de fingir êxito, porque o endpoint de escrita na frota que chamaria ainda não existe no HYDRA-UMC-SERVER. `deploy`, `flash-all` e `audit` são pura aspiração - marcados como "planeados" abaixo e ausentes por completo do `src/`, nem sequer uma função esboço. Veja o `CHANGELOG.md` para saber exatamente o que foi entregue até agora.
+**Verificação de honestidade - o que realmente funciona hoje:** `version`, `status`, `robots`, `claims`, `claim`, `release`, `limits`, `jog-arm`, `jog`, `table`, `robot`, `audit`, `doctor`, `connections`, `liveness`, `ecosystem-health`, `plan-simulate`, `config validate`, `config apply --dry-run` e o `shell` interativo (`main.go`, `server.go`, `robots.go`, `control.go`, `doctor.go`, `observe.go`, `plansim.go`, `config.go`, `shell.go`, `exitcode.go`) são código Go real e funcional, exercitado por 256 testes a passar (`go test ./...`) - idas e voltas reais com `net/http`/`httptest` contra um servidor simulado, mais ficheiros de configuração temporários reais como dados de teste, não stubs. Esses testes simulam uma instância do HYDRA-UMC-SERVER; `status`, `robots` e `doctor` (com o início de sessão incluído) também foram executados contra um processo real do HYDRA-UMC-SERVER. O `config apply` sem `--dry-run` devolve honestamente o código de saída `ExitNotImplemented` em vez de fingir êxito, porque o endpoint de escrita na frota que chamaria ainda não existe no HYDRA-UMC-SERVER. `deploy`, `flash-all` e `audit` são pura aspiração - marcados como "planeados" abaixo e ausentes por completo do `src/`, nem sequer uma função esboço. Veja o `CHANGELOG.md` para saber exatamente o que foi entregue até agora.
 
 ---
 
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versão | `0.2.0` |
 | Maturidade | Funcional |
-| Testes | 249 (`go test ./...`) |
+| Testes | 256 (`go test ./...`) |
 | Tecnologia | Go / standard-library flag handling |
 | Destino | O PC de quem o usa |
 | Em hardware real | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |
@@ -55,7 +55,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 | Área | Estado | O que significa aqui |
 |---|---|---|
 | Software | 🟡 | Funciona para o seu propósito principal; a verificação de honestidade acima lista o que ainda falta |
-| Testes | 🟢 | 249 testes automáticos, executados a cada alteração |
+| Testes | 🟢 | 256 testes automáticos, executados a cada alteração |
 | Hardware real | 🟠 | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |
 | Integração | 🟠 | As suas mensagens e rotas são verificadas contra os contratos partilhados do SDK; ainda não funcionou em conjunto com o equipamento real |
 | Implantação | 🟠 | Publicado como release; instalá-lo numa máquina limpa está documentado mas não registado |
@@ -162,7 +162,7 @@ Requer Go 1.24 ou superior.
 
 ## 🧪 Testes
 
-249 testes automáticos correm com `cd src && go test ./...`. Não precisam de hardware nem de nada fora desta máquina.
+256 testes automáticos correm com `cd src && go test ./...`. Não precisam de hardware nem de nada fora desta máquina.
 
 A CI executa `HYDRA_UMC_CI=1 python tools/ci_validate.py`, que verifica o manifesto, os documentos, os oito README e as imagens.
 
