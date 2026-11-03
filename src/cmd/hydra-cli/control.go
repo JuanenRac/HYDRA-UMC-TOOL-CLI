@@ -39,19 +39,6 @@ const controllerEnv = "HYDRA_CLI_CONTROLLER_ID"
 // revisionPattern is what a revision looks like (the server gives a short hex fingerprint).
 var revisionPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,128}$`)
 
-// takeIfMatch removes `--if-match REVISION` from args. REVISION is a revision read with `hydra-cli robot` (or
-// printed by an earlier command), or "current", which reads the robot first and sends the revision it has now.
-func takeIfMatch(args []string) (string, []string, error) {
-	value, rest, err := takeFlag(args, "--if-match")
-	if err != nil {
-		return "", nil, err
-	}
-	if value, err = checkIfMatch(value); err != nil {
-		return "", nil, err
-	}
-	return value, rest, nil
-}
-
 // checkIfMatch validates the value of --if-match (empty means the option was not given).
 func checkIfMatch(value string) (string, error) {
 	if value != "" && value != "current" && !revisionPattern.MatchString(value) {
