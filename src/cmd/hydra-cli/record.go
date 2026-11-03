@@ -119,16 +119,16 @@ func cmdTable(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	relative, rest := takeSwitch(rest, "--relative")
-	jsonOutput, rest := takeSwitch(rest, "--json")
-	rzRaw, rest, err := takeFlag(rest, "--rz")
+	flags, err := parseFlagSetOrdered("table", rest, switchOpt("--relative"), switchOpt("--json"), valueOpt("--rz"), valueOpt("--if-match"))
 	if err != nil {
 		return err
 	}
-	ifMatch, rest, err := takeIfMatch(rest)
+	relative, jsonOutput, rzRaw := flags.Bool("--relative"), flags.Bool("--json"), flags.String("--rz")
+	ifMatch, err := checkIfMatch(flags.String("--if-match"))
 	if err != nil {
 		return err
 	}
+	rest = flags.Rest
 	if len(rest) != 3 {
 		return newCliError(ExitUsageError, errors.New("usage: hydra-cli table <robotId> <x> <y> [--rz N] [--relative] [--if-match REVISION|current] [--controller-id ID]"))
 	}

@@ -446,15 +446,16 @@ func cmdRelease(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	jsonOutput, rest := takeSwitch(rest, "--json")
-	reason, rest, err := takeFlag(rest, "--reason")
+	flags, err := parseFlagSetOrdered("release", rest, switchOpt("--json"), valueOpt("--reason"), valueOpt("--if-match"))
 	if err != nil {
 		return err
 	}
-	ifMatch, rest, err := takeIfMatch(rest)
+	jsonOutput, reason := flags.Bool("--json"), flags.String("--reason")
+	ifMatch, err := checkIfMatch(flags.String("--if-match"))
 	if err != nil {
 		return err
 	}
+	rest = flags.Rest
 	if len(rest) != 1 {
 		return newCliError(ExitUsageError, errors.New("usage: hydra-cli release <robotId> [--reason TEXT] [--if-match REVISION|current] [--controller-id ID]"))
 	}
@@ -545,12 +546,12 @@ func cmdLimits(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	jsonOutput, rest := takeSwitch(rest, "--json")
-	robotRaw, rest, err := takeFlag(rest, "--robot")
+	flags, err := parseFlagSetOrdered("limits", rest, switchOpt("--json"), valueOpt("--robot"))
 	if err != nil {
 		return err
 	}
-	if err := rejectExtraArgs("limits", rest); err != nil {
+	jsonOutput, robotRaw := flags.Bool("--json"), flags.String("--robot")
+	if err := rejectExtraArgs("limits", flags.Rest); err != nil {
 		return err
 	}
 	var robotID *int
@@ -606,11 +607,12 @@ func cmdJogArm(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	ttlRaw, rest, err := takeFlag(rest, "--ttl-ms")
+	flags, err := parseFlagSetOrdered("jog-arm", rest, valueOpt("--ttl-ms"), switchOpt("--json"))
 	if err != nil {
 		return err
 	}
-	jsonOutput, rest := takeSwitch(rest, "--json")
+	ttlRaw, jsonOutput := flags.String("--ttl-ms"), flags.Bool("--json")
+	rest = flags.Rest
 	if len(rest) != 2 || (rest[1] != "on" && rest[1] != "off") {
 		return newCliError(ExitUsageError, errors.New("usage: hydra-cli jog-arm <robotId> <on|off> [--ttl-ms N] [--controller-id ID]"))
 	}
@@ -675,12 +677,16 @@ func cmdJog(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	absolute, rest := takeSwitch(rest, "--absolute")
-	jsonOutput, rest := takeSwitch(rest, "--json")
-	ifMatch, rest, err := takeIfMatch(rest)
+	flags, err := parseFlagSetOrdered("jog", rest, switchOpt("--absolute"), switchOpt("--json"), valueOpt("--if-match"))
 	if err != nil {
 		return err
 	}
+	absolute, jsonOutput := flags.Bool("--absolute"), flags.Bool("--json")
+	ifMatch, err := checkIfMatch(flags.String("--if-match"))
+	if err != nil {
+		return err
+	}
+	rest = flags.Rest
 	if len(rest) != 3 {
 		return newCliError(ExitUsageError, errors.New("usage: hydra-cli jog <robotId> <axis> <amount> [--absolute] [--if-match REVISION|current] [--controller-id ID]"))
 	}

@@ -129,16 +129,12 @@ func cmdPlanSimulate(w io.Writer, in io.Reader, args []string) error {
 	if err != nil {
 		return err
 	}
-	jsonOutput, rest := takeSwitch(rest, "--json")
-	planPath, rest, err := takeFlag(rest, "--plan")
+	flags, err := parseFlagSetOrdered("plan-simulate", rest, switchOpt("--json"), valueOpt("--plan"), valueOpt("--planner"))
 	if err != nil {
 		return err
 	}
-	planner, rest, err := takeFlag(rest, "--planner")
-	if err != nil {
-		return err
-	}
-	if err := rejectExtraArgs("plan-simulate", rest); err != nil {
+	jsonOutput, planPath, planner := flags.Bool("--json"), flags.String("--plan"), flags.String("--planner")
+	if err := rejectExtraArgs("plan-simulate", flags.Rest); err != nil {
 		return err
 	}
 	if planPath == "" {

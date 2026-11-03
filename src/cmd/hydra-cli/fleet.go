@@ -153,28 +153,15 @@ func cmdScan(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	portsRaw, rest, err := takeFlag(rest, "--ports")
+	flags, err := parseFlagSetOrdered("scan", rest, valueOpt("--ports"), valueOpt("--scheme"), valueOpt("--concurrency"),
+		valueOpt("--max-hosts"), valueOpt("--probe-timeout-ms"), switchOpt("--allow-public-range"), switchOpt("--json"))
 	if err != nil {
 		return err
 	}
-	scheme, rest, err := takeFlag(rest, "--scheme")
-	if err != nil {
-		return err
-	}
-	concurrencyRaw, rest, err := takeFlag(rest, "--concurrency")
-	if err != nil {
-		return err
-	}
-	maxHostsRaw, rest, err := takeFlag(rest, "--max-hosts")
-	if err != nil {
-		return err
-	}
-	probeRaw, rest, err := takeFlag(rest, "--probe-timeout-ms")
-	if err != nil {
-		return err
-	}
-	allowPublic, rest := takeSwitch(rest, "--allow-public-range")
-	jsonOutput, rest := takeSwitch(rest, "--json")
+	portsRaw, scheme, concurrencyRaw := flags.String("--ports"), flags.String("--scheme"), flags.String("--concurrency")
+	maxHostsRaw, probeRaw := flags.String("--max-hosts"), flags.String("--probe-timeout-ms")
+	allowPublic, jsonOutput := flags.Bool("--allow-public-range"), flags.Bool("--json")
+	rest = flags.Rest
 	if len(rest) == 0 {
 		return newCliError(ExitUsageError, errors.New("usage: hydra-cli scan <network|address>... [--ports 3000,3443] [--scheme http|https] [--json]"))
 	}
@@ -334,16 +321,12 @@ func cmdFleet(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	listPath, rest, err := takeFlag(rest, "--servers")
+	flags, err := parseFlagSetOrdered("fleet doctor", rest, valueOpt("--servers"), valueOpt("--concurrency"), switchOpt("--json"))
 	if err != nil {
 		return err
 	}
-	concurrencyRaw, rest, err := takeFlag(rest, "--concurrency")
-	if err != nil {
-		return err
-	}
-	jsonOutput, rest := takeSwitch(rest, "--json")
-	if err := rejectExtraArgs("fleet doctor", rest); err != nil {
+	listPath, concurrencyRaw, jsonOutput := flags.String("--servers"), flags.String("--concurrency"), flags.Bool("--json")
+	if err := rejectExtraArgs("fleet doctor", flags.Rest); err != nil {
 		return err
 	}
 	if listPath == "" {

@@ -324,13 +324,12 @@ func cmdLogin(w io.Writer, in io.Reader, args []string) error {
 	if err != nil {
 		return err
 	}
-	user, rest, err := takeFlag(rest, "--user")
+	flags, err := parseFlagSetOrdered("login", rest, valueOpt("--user"), switchOpt("--password-stdin"), switchOpt("--json"))
 	if err != nil {
 		return err
 	}
-	fromStdin, rest := takeSwitch(rest, "--password-stdin")
-	jsonOutput, rest := takeSwitch(rest, "--json")
-	if err := rejectExtraArgs("login", rest); err != nil {
+	user, fromStdin, jsonOutput := flags.String("--user"), flags.Bool("--password-stdin"), flags.Bool("--json")
+	if err := rejectExtraArgs("login", flags.Rest); err != nil {
 		return err
 	}
 	if user == "" {
