@@ -214,23 +214,13 @@ func cmdConnections(w io.Writer, args []string) error {
 		if len(rest) > 0 && (rest[0] == "clients" || rest[0] == "events") {
 			sub, rest = rest[0], rest[1:]
 		}
-		var err error
-		if kind, rest, err = takeFlag(rest, "--kind"); err != nil {
+		flags, err := parseFlagSetOrdered("connections", rest, valueOpt("--kind"), valueOpt("--user"), valueOpt("--action"),
+			valueOpt("--limit"), valueOpt("--before"), switchOpt("--active"))
+		if err != nil {
 			return "", nil, err
 		}
-		if user, rest, err = takeFlag(rest, "--user"); err != nil {
-			return "", nil, err
-		}
-		if action, rest, err = takeFlag(rest, "--action"); err != nil {
-			return "", nil, err
-		}
-		if limit, rest, err = takeFlag(rest, "--limit"); err != nil {
-			return "", nil, err
-		}
-		if before, rest, err = takeFlag(rest, "--before"); err != nil {
-			return "", nil, err
-		}
-		active, rest = takeSwitch(rest, "--active")
+		kind, user, action, limit, before = flags.String("--kind"), flags.String("--user"), flags.String("--action"), flags.String("--limit"), flags.String("--before")
+		active, rest = flags.Bool("--active"), flags.Rest
 		if kind != "" && !oneOf(kind, connectionKinds) {
 			return "", nil, newCliError(ExitUsageError, fmt.Errorf("--kind must be one of %s, got %q", strings.Join(connectionKinds, ", "), kind))
 		}

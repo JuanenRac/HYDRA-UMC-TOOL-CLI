@@ -147,9 +147,12 @@ func cmdMetrics(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	all, rest := takeSwitch(rest, "--all")
-	jsonOutput, rest := takeSwitch(rest, "--json")
-	if err := rejectExtraArgs("metrics", rest); err != nil {
+	flags, err := parseFlagSetOrdered("metrics", rest, switchOpt("--all"), switchOpt("--json"))
+	if err != nil {
+		return err
+	}
+	all, jsonOutput := flags.Bool("--all"), flags.Bool("--json")
+	if err := rejectExtraArgs("metrics", flags.Rest); err != nil {
 		return err
 	}
 	client := newClient(timeout)

@@ -252,3 +252,12 @@ func TestParseFlagSetOrderedEarlierOptionsTakeTheirValuesFirst(t *testing.T) {
 		t.Fatalf("last wins: %v %q %v", err, p.String("--n"), p.Rest)
 	}
 }
+
+func TestMetricsConnectionsAndManifestOptions(t *testing.T) {
+	wantUsage(t, cmdMetrics(io.Discard, []string{"--server", "http://127.0.0.1:1", "--bogus"}), "metrics does not accept arguments: --bogus")
+	wantUsage(t, cmdConnections(io.Discard, []string{"--server", "http://127.0.0.1:1", "events", "--limit"}), "--limit needs a value")
+	wantUsage(t, cmdConnections(io.Discard, []string{"--server", "http://127.0.0.1:1", "--kind", "nope", "--kind", "bogus"}), `got "bogus"`)
+	wantUsage(t, cmdConnections(io.Discard, []string{"--server", "http://127.0.0.1:1", "clients", "--limit", "5"}), "belong to `connections events`")
+	wantUsage(t, cmdManifest(io.Discard, []string{"validate", "--bogus"}), "manifest validate does not know the option --bogus")
+	wantUsage(t, cmdManifest(io.Discard, []string{"validate", "--schema"}), "--schema needs a value")
+}

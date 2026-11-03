@@ -118,15 +118,12 @@ func cmdManifest(w io.Writer, args []string) error {
 		return newCliError(ExitUsageError, errors.New("usage: hydra-cli manifest validate [PATH...] [--workspace DIR] [--schema FILE] [--json]"))
 	}
 	rest := args[1:]
-	workspace, rest, err := takeFlag(rest, "--workspace")
+	flags, err := parseFlagSetOrdered("manifest validate", rest, valueOpt("--workspace"), valueOpt("--schema"), switchOpt("--json"))
 	if err != nil {
 		return err
 	}
-	schemaPath, rest, err := takeFlag(rest, "--schema")
-	if err != nil {
-		return err
-	}
-	jsonOutput, rest := takeSwitch(rest, "--json")
+	workspace, schemaPath, jsonOutput := flags.String("--workspace"), flags.String("--schema"), flags.Bool("--json")
+	rest = flags.Rest
 	for _, extra := range rest {
 		if strings.HasPrefix(extra, "--") {
 			return newCliError(ExitUsageError, fmt.Errorf("manifest validate does not know the option %s", extra))
