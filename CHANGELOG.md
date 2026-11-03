@@ -5,7 +5,7 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 - **The answer of `/api/hydra-info` uses the SDK client:** `status`, `doctor`, `scan` and `fleet doctor` decode it into the `ServerDiscovery` type of the Go client of HYDRA-UMC-SDK (`github.com/JuanenRac/HYDRA-UMC-SDK/clients/go`, tag `clients/go/v0.1.0`) instead of a second copy of the contract. Output and exit codes are unchanged.
-- **Options are parsed with `flag.FlagSet`:** the target options (`--server`, `--config`, `--timeout`), `claim` and `audit` declare their options once and read them with the standard library, and the shared helpers behind every other command do the same. The order of options and arguments, the messages and the exit codes are unchanged; new tests pin the parser.
+- **Options are parsed with `flag.FlagSet`:** the target options (`--server`, `--config`, `--timeout`) and every command with options of its own (`claim`, `release`, `limits`, `jog-arm`, `jog`, `table`, `audit`, `scan`, `fleet doctor`, `plan-simulate`, `login`, `metrics`, `manifest validate` and `connections`) declare their options once and read them with the standard library; commands whose only option is `--json` keep a thin helper on the same parser. The order of options and arguments, the messages and the exit codes are unchanged; new tests pin the parser.
 
 ## [0.2.0] - A JSON output in every command that prints data, four new read-only commands and shell completion generated from the table of commands
 

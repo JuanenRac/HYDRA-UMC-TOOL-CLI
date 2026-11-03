@@ -38,7 +38,9 @@ HYDRA_CLI_SERVER=http://192.168.1.50:3000 hydra-cli robots
 Options are read by the standard `flag.FlagSet`, declared once per command: they may come before or after the
 positional arguments (`claim 3 --force` and `claim --force 3` are the same), a value option takes the next argument
 whatever it looks like, and the last occurrence wins. A token that is not an option of the command is reported as an
-extra argument, with the same usage error (exit code `2`) as always.
+extra argument, with the same usage error (exit code `2`) as always. Where a command has several options, the ones
+it lists first take their arguments first: `limits --robot --json` is a missing value for `--robot`, because `--json`
+is read before it, while `jog-arm 1 on --ttl-ms --json` takes `--json` as the value of `--ttl-ms`.
 
 The answer of `GET /api/hydra-info` (used by `status`, `doctor`, `scan` and `fleet doctor`) is decoded into the
 `ServerDiscovery` type of the Go client of HYDRA-UMC-SDK (module `github.com/JuanenRac/HYDRA-UMC-SDK/clients/go`),
