@@ -46,10 +46,18 @@ func takeIfMatch(args []string) (string, []string, error) {
 	if err != nil {
 		return "", nil, err
 	}
-	if value != "" && value != "current" && !revisionPattern.MatchString(value) {
-		return "", nil, newCliError(ExitUsageError, fmt.Errorf("--if-match needs a revision (letters, digits, - and _) or \"current\", got %q", value))
+	if value, err = checkIfMatch(value); err != nil {
+		return "", nil, err
 	}
 	return value, rest, nil
+}
+
+// checkIfMatch validates the value of --if-match (empty means the option was not given).
+func checkIfMatch(value string) (string, error) {
+	if value != "" && value != "current" && !revisionPattern.MatchString(value) {
+		return "", newCliError(ExitUsageError, fmt.Errorf("--if-match needs a revision (letters, digits, - and _) or \"current\", got %q", value))
+	}
+	return value, nil
 }
 
 // resolveIfMatch turns "current" into the revision the server reports for the robot right now.
@@ -117,34 +125,20 @@ func resolveControllerID(flagValue string) (string, error) {
 
 // takeFlag removes `--name value` from args and returns the value.
 func takeFlag(args []string, name string) (string, []string, error) {
-	rest := make([]string, 0, len(args))
-	value := ""
-	for i := 0; i < len(args); i++ {
-		if args[i] == name {
-			if i+1 >= len(args) {
-				return "", nil, newCliError(ExitUsageError, fmt.Errorf("%s needs a value", name))
-			}
-			value = args[i+1]
-			i++
-			continue
-		}
-		rest = append(rest, args[i])
+	parsed, err := parseFlagSet("hydra-cli", args, []string{name}, nil)
+	if err != nil {
+		return "", nil, err
 	}
-	return value, rest, nil
+	return parsed.String(name), parsed.Rest, nil
 }
 
 // takeSwitch removes a bare `--name` from args.
 func takeSwitch(args []string, name string) (bool, []string) {
-	rest := make([]string, 0, len(args))
-	found := false
-	for _, a := range args {
-		if a == name {
-			found = true
-			continue
-		}
-		rest = append(rest, a)
+	parsed, err := parseFlagSet("hydra-cli", args, nil, []string{name})
+	if err != nil {
+		return false, args
 	}
-	return found, rest
+	return parsed.Bool(name), parsed.Rest
 }
 
 func parseRobotID(raw string) (int, error) {
@@ -394,20 +388,17 @@ func cmdClaim(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	force, rest := takeSwitch(rest, "--force")
-	jsonOutput, rest := takeSwitch(rest, "--json")
-	reason, rest, err := takeFlag(rest, "--reason")
+	flags, err := parseFlagSet("claim", rest, []string{"--reason", "--ttl-ms", "--if-match"}, []string{"--force", "--json"})
 	if err != nil {
 		return err
 	}
-	ttlRaw, rest, err := takeFlag(rest, "--ttl-ms")
+	force, jsonOutput := flags.Bool("--force"), flags.Bool("--json")
+	reason, ttlRaw := flags.String("--reason"), flags.String("--ttl-ms")
+	ifMatch, err := checkIfMatch(flags.String("--if-match"))
 	if err != nil {
 		return err
 	}
-	ifMatch, rest, err := takeIfMatch(rest)
-	if err != nil {
-		return err
-	}
+	rest = flags.Rest
 	if len(rest) != 1 {
 		return newCliError(ExitUsageError, errors.New("usage: hydra-cli claim <robotId> [--ttl-ms N] [--force] [--reason TEXT] [--if-match REVISION|current] [--controller-id ID]"))
 	}

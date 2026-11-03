@@ -321,24 +321,13 @@ func cmdAudit(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	jsonOutput, rest := takeSwitch(rest, "--json")
-	verify, rest := takeSwitch(rest, "--verify")
-	limitRaw, rest, err := takeFlag(rest, "--limit")
+	flags, err := parseFlagSet("audit", rest, []string{"--limit", "--type", "--robot", "--export"}, []string{"--json", "--verify"})
 	if err != nil {
 		return err
 	}
-	kind, rest, err := takeFlag(rest, "--type")
-	if err != nil {
-		return err
-	}
-	robotRaw, rest, err := takeFlag(rest, "--robot")
-	if err != nil {
-		return err
-	}
-	exportPath, rest, err := takeFlag(rest, "--export")
-	if err != nil {
-		return err
-	}
+	jsonOutput, verify := flags.Bool("--json"), flags.Bool("--verify")
+	limitRaw, kind, robotRaw, exportPath := flags.String("--limit"), flags.String("--type"), flags.String("--robot"), flags.String("--export")
+	rest = flags.Rest
 	if err := rejectExtraArgs("audit", rest); err != nil {
 		return err
 	}

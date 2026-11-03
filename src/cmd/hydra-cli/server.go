@@ -52,26 +52,12 @@ func resolveTarget(args []string) (server string, timeout time.Duration, rest []
 		timeout = envTimeout
 	}
 
-	var explicitServer, configPath, explicitTimeout string
-	rest = make([]string, 0, len(args))
-	for i := 0; i < len(args); i++ {
-		if args[i] == "--server" || args[i] == "--config" || args[i] == "--timeout" {
-			if i+1 >= len(args) {
-				return "", 0, nil, newCliError(ExitUsageError, fmt.Errorf("%s needs a value", args[i]))
-			}
-			switch args[i] {
-			case "--server":
-				explicitServer = args[i+1]
-			case "--config":
-				configPath = args[i+1]
-			default:
-				explicitTimeout = args[i+1]
-			}
-			i++
-			continue
-		}
-		rest = append(rest, args[i])
+	parsed, err := parseFlagSet("target", args, []string{"--server", "--config", "--timeout"}, nil)
+	if err != nil {
+		return "", 0, nil, err
 	}
+	explicitServer, configPath, explicitTimeout := parsed.String("--server"), parsed.String("--config"), parsed.String("--timeout")
+	rest = parsed.Rest
 
 	// the options of the transport and the session file: the environment, replaced by what a --config file says
 	settings := settingsFromEnvironment()
