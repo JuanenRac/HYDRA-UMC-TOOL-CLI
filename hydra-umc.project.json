@@ -19,5 +19,8 @@
   "native_version": {
     "file": "src/cmd/hydra-cli/version.go",
     "pattern": "Version\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""
-  }
+  },
+  "depends_on": [
+    "HYDRA-UMC-SDK"
+  ]
 }
