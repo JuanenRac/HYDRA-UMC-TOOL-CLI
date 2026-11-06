@@ -16,3 +16,5 @@ __pycache__/
 
 # Editor settings
 .vscode/
+# Coverage data written by the test runs
+.coverage
