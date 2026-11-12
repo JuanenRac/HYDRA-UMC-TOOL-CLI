@@ -3,7 +3,7 @@ exit=0
 #compdef hydra-cli
 _hydra_cli() {
     local -a top_level
-    top_level=(version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest connections liveness ecosystem-health plan-simulate)
+    top_level=(version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all flash-all deploy metrics manifest connections liveness ecosystem-health plan-simulate)
     if (( CURRENT == 2 )); then
         compadd -a top_level
         return
@@ -64,6 +64,10 @@ _hydra_cli() {
             if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --controller-id --help --json --server --timeout; fi ;;
         stop-all)
             if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --help --json --server --timeout --yes; fi ;;
+        flash-all)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --config --controller-id --downgrade-from --dry-run --hardware-id --help --image --image-version --json --keep-going --min-bootloader --relay --server --signature --signature-file --slots --target --tier --timeout --yes; fi ;;
+        deploy)
+            if [[ ${words[CURRENT]} == -* ]]; then compadd -- --apply --device-root --help --install-plan --json --timeout --updater --workspace --yes; fi ;;
         metrics)
             if [[ ${words[CURRENT]} == -* ]]; then compadd -- --all --config --help --json --server --timeout; fi ;;
         manifest)

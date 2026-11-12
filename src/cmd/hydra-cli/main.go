@@ -182,6 +182,18 @@ func run(args []string) ExitCode {
 			return exitCodeFor(err)
 		}
 		return ExitOK
+	case "flash-all":
+		if err := cmdFlashAll(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli flash-all: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
+	case "deploy":
+		if err := cmdDeploy(os.Stdout, args[1:]); err != nil {
+			fmt.Fprintf(os.Stderr, "hydra-cli deploy: %v\n", err)
+			return exitCodeFor(err)
+		}
+		return ExitOK
 	case "stop-all":
 		if err := cmdStopAll(os.Stdout, args[1:]); err != nil {
 			fmt.Fprintf(os.Stderr, "hydra-cli stop-all: %v\n", err)
@@ -282,6 +294,10 @@ COMMANDS:
                           Run doctor against every server of a list at once.
     stop <robot> [--json] Send the stop command to one robot.
     stop-all --yes        The global stop: every robot, valves and pumps off.
+    flash-all --image FILE --tier N --hardware-id N --image-version X.Y.Z [--slots 0-7] [--dry-run | --yes]
+                          Flash one signed image to the boards of the slots, one by one.
+    deploy [--updater CMD] [--apply --yes] [--json]
+                          Show, and with --apply --yes do, what the device needs through the updater.
     metrics [--all] [--json]
                           Read the Prometheus metrics of the server (GET /metrics).
     manifest validate [PATH...] [--workspace DIR] [--json]

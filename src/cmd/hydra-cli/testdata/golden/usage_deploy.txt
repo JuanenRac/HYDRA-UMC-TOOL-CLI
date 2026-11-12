@@ -1,0 +1,19 @@
+exit=0
+--stdout--
+USAGE: hydra-cli deploy [--updater COMMAND] [--workspace DIR] [--device-root DIR] [--install-plan FILE] [--apply --yes] [--timeout SECONDS] [--json]
+
+Show what the device needs to run what the workspace has, and with --apply --yes put it there, through the updater (hydra-umc-updater deploy-plan).
+The updater checks the signature of each checkout, honours its own os_deploy switch, runs the health check of each unit and puts the old program back if
+it does not hold. Without --apply nothing is changed. The updater runs as the command you give: the default is hydra-umc-updater (or $HYDRA_CLI_UPDATER),
+and for a device reached over SSH, for example "ssh user@device hydra-umc-updater". The command is started without a shell.
+
+OPTIONS:
+    --updater COMMAND    the updater command (split like a shell line; default: $HYDRA_CLI_UPDATER, then hydra-umc-updater)
+    --workspace DIR      the workspace the updater reads (passed to it)
+    --device-root DIR    where the installed programs are (passed to it)
+    --install-plan FILE  the table of installers (passed to it)
+    --apply              deploy the steps (needs --yes)
+    --yes                confirm --apply
+    --timeout SECONDS    how long the updater may take (1 to 3600; default 2 minutes for the plan, 30 for --apply)
+    --json               print the result as one JSON object (schema_version, command, ok and the fields of the command)
+--stderr--

@@ -405,15 +405,32 @@ $ echo $?
 2
 ```
 
-## Planned, not yet implemented
+## `flash-all` and `deploy`
 
-`deploy` and `flash-all` are described in the project README's roadmap but
-are not built yet — each needs a fleet write/CAN-OTA endpoint on
-HYDRA-UMC-SERVER that doesn't exist for a whole fleet (the Server only has a
-single-board relay to the STM32H757), and a CAN and sensor diagnostic suite needs a CAN bus to test against.
-`audit` is built: it reads the audit record (see above), and is not that
-diagnostic suite. `config apply` without
-`--dry-run` (above) is the current, honest placeholder for the same gap.
+Both are written against what exists (the single-board flash route of the server, the deploy plan of the updater) and have been tested only against stand-ins: no board has been flashed and no device deployed with them.
+
+### `flash-all --image FILE --tier N --hardware-id N --image-version X.Y.Z [--slots 0-7] [--relay 0|1] [--signature HEX | --signature-file FILE] [--downgrade-from X.Y.Z] [--target NAME] [--min-bootloader X.Y.Z] [--dry-run | --yes] [--keep-going] [--json]`
+
+Sends one signed firmware image to the controller boards of the slots (0 to 7 by default; `0,2,5` and `1-3,6` also work), one after the other, through `POST /api/hardware/canota/flash` of the server (admin role). The body is the image (`application/octet-stream`, 1 byte to 64 MiB); the query carries `tier`, `slot`, `relay`, `hardware_id`, the version as `version_major`, `version_minor` and `version_patch`, and, when given, `signature`, `downgrade_from`, `target` and `min_bootloader`, with the shapes the server checks. The signature is the one made where the private key is: the CLI never signs, and the bootloader of each board checks the signature and refuses a wrong target or an older image. What the CLI adds is the loop, the plan and the stop.
+
+* `--dry-run` prints the plan (the size and the sha256 of the image and the request of each slot) and sends nothing; it needs no login and no server.
+* Without `--dry-run` it asks for `--yes` (exit `2` and nothing sent otherwise); `--dry-run` and `--yes` together are refused. Every option is checked before the first request.
+* It stops at the first slot that fails (the rest are reported as `not-tried`); `--keep-going` goes on. The exit code is the one of the first failure (`5` for a flash that did not reach its final phase or a server error, `7` for a refused login, `8` for a refusal, `3` for an image or signature file that cannot be read, `2` for a wrong option).
+* One slot may take 10 minutes unless `--timeout` says otherwise. The progress of each page goes to the admin WebSocket of the server, not to this command.
+* `--json` prints `{schema_version, command: "flash-all", ok, dry_run, image_bytes, image_sha256, slots: [{slot, status, phase, detail}]}` with the status `planned`, `flashed`, `failed`, `refused` or `not-tried`.
+
+### `deploy [--updater COMMAND] [--workspace DIR] [--device-root DIR] [--install-plan FILE] [--apply --yes] [--timeout SECONDS] [--json]`
+
+Shows what the device would need to run what the workspace has, through the updater (`hydra-umc-updater deploy-plan --json`, which only reads), and with `--apply --yes` runs the same command with `--apply --yes`. The updater is the one that checks the signature of each checkout, honours its own `os_deploy` switch, runs the health check of each unit, puts the old program back if it does not hold and writes the evidence; the CLI weakens none of that and does not reach the device by itself.
+
+* The updater runs as the command you give: `--updater`, then `$HYDRA_CLI_UPDATER`, then `hydra-umc-updater`. The command is split like a shell line (spaces, quotes, a backslash outside quotes) and started without a shell; for a device reached over SSH use for example `--updater "ssh user@device hydra-umc-updater"`.
+* Without `--apply` nothing is changed anywhere; `--apply` without `--yes` (and `--yes` without `--apply`) is refused before the updater is started. A plan with no step is not applied.
+* The plan must be `schema_version` `1.0` and count its steps correctly; anything else is exit `5`. The output of the updater is limited to 4 MiB and its text is cleaned of control characters. The plan may take 2 minutes and the deployment 30, or what `--timeout` (1 to 3600) says; a command that does not finish is killed (exit `4`).
+* `--json` prints `{schema_version, command: "deploy", ok, applied, steps, projects: [{project, state, checkout_version, device_version, unit}], messages}`. A failed deployment exits `5` with the first line the updater said.
+
+## Still planned
+
+A CAN and sensor diagnostic suite needs a CAN bus to test against. `audit` is built: it reads the audit record (see above), and is not that diagnostic suite. `config apply` without `--dry-run` (above) is the current, honest placeholder for the missing fleet write endpoint.
 
 ## Sessions, credentials and the newer commands
 

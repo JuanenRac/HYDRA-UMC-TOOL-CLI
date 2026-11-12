@@ -18,14 +18,14 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Go-00ADD8.svg" alt="Language">
   <img src="https://img.shields.io/badge/Feature-Fleet%20DevOps-blue.svg" alt="Feature">
-  <img src="https://img.shields.io/badge/Tests-271%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-291%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.2.1-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**诚实核查 - 今天真正能运行的部分：** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`table`、`robot`、`audit`、`doctor`、`connections`、`liveness`、`ecosystem-health`、`plan-simulate`、`config validate`、`config apply --dry-run`，以及交互式 `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`observe.go`、`plansim.go`、`config.go`、`shell.go`、`exitcode.go`）都是真实可运行的 Go 代码，由 271 个通过的测试（`go test ./...`）验证——针对一个模拟服务器的真实 `net/http`/`httptest` 往返请求，加上真实的临时配置文件测试夹具，而不是桩代码。这些测试模拟的是一个 HYDRA-UMC-SERVER 实例；`status`、`robots` 和 `doctor`（包括登录）也已针对真实的 HYDRA-UMC-SERVER 进程运行过。`config apply` 在没有 `--dry-run` 时会诚实地返回 `ExitNotImplemented` 退出码，而不是伪装成功，因为它需要调用的车队写入端点在 HYDRA-UMC-SERVER 上还不存在。`deploy`、`flash-all` 和 CAN 与传感器诊断套件完全是愿景——在下文中标记为"planned"，在 `src/` 中完全不存在，连桩函数都没有。具体已经交付了什么，请参见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`table`、`robot`、`audit`、`doctor`、`connections`、`liveness`、`ecosystem-health`、`plan-simulate`、`config validate`、`config apply --dry-run`，以及交互式 `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`observe.go`、`plansim.go`、`config.go`、`shell.go`、`exitcode.go`）都是真实可运行的 Go 代码，由 291 个通过的测试（`go test ./...`）验证——针对一个模拟服务器的真实 `net/http`/`httptest` 往返请求，加上真实的临时配置文件测试夹具，而不是桩代码。这些测试模拟的是一个 HYDRA-UMC-SERVER 实例；`status`、`robots` 和 `doctor`（包括登录）也已针对真实的 HYDRA-UMC-SERVER 进程运行过。`config apply` 在没有 `--dry-run` 时会诚实地返回 `ExitNotImplemented` 退出码，而不是伪装成功，因为它需要调用的车队写入端点在 HYDRA-UMC-SERVER 上还不存在。`flash-all` 和 `deploy`（`flashall.go`、`deploy.go`）同样是真实的 Go 代码，但只针对模拟服务器和模拟更新器测试过：没有用它们给任何电路板刷过固件，也没有部署过任何设备。CAN 与传感器诊断套件完全是愿景——在下文中标记为"planned"，在 `src/` 中完全不存在，连桩函数都没有。具体已经交付了什么，请参见 `CHANGELOG.md`。
 
 ---
 
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | 版本 | `0.2.1` |
 | 成熟度 | 可用 |
-| 测试 | 271 (`go test ./...`) |
+| 测试 | 291 (`go test ./...`) |
 | 技术栈 | Go / standard-library flag handling |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
@@ -55,7 +55,7 @@ GPL-3.0-or-later - see LICENSE
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟡 | 主要用途可用；上面的诚实性检查列出了仍然缺少的内容 |
-| 测试 | 🟢 | 271 项自动测试，每次变更都会运行 |
+| 测试 | 🟢 | 291 项自动测试，每次变更都会运行 |
 | 真实硬件 | 🟠 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
 | 集成 | 🟠 | 其消息和路由已对照 SDK 的共享契约检查；尚未与真实设备一起运行 |
 | 部署 | 🟠 | 已作为发布版本公开；在干净机器上安装有文档，但没有记录 |
@@ -90,8 +90,8 @@ HYDRA-UMC 部署的命令行工具。
 * ✅ **在 `status`/`robots`/`doctor`/`shell` 上使用 `--config PATH`** —— 同一个已校验文件的 `server`/`timeoutSec` 现在真正驱动每个实时命令的 HTTP 目标与请求超时,不再只影响 `config validate`/`apply`；若两者同时给出,`--server` 仍然优先。*（已实现）*
 * ✅ **`hydra-cli shell [--server URL] [--config PATH]`** —— 一个交互式 REPL：无需重启进程即可对同一服务器重复运行上面的任意命令。通过与单次调用完全相同的命令表进行分发，因此 shell 与单次调用的行为永远不会出现分歧。输入 `exit`/`quit` 或按 Ctrl-D 退出。*（已实现）*
 * ✅ **`hydra-cli help` / `--help`** —— 完整的命令用法。*（已实现）*
-* 🚧 **`hydra-cli deploy`** —— 同时向一批机器人上传任务和配置。*（计划中）*
-* 🚧 **`hydra-cli flash-all`** —— 面向控制器和 URTC 刀头的并行固件更新。*（计划中）*
+* ✅ **`hydra-cli deploy`** —— 通过更新器（`deploy-plan`）显示设备需要什么，并在 `--apply --yes` 时部署；签名检查、健康检查和回退都由更新器负责。*（已实现；仅针对模拟更新器测试）*
+* ✅ **`hydra-cli flash-all`** —— 把一个已签名镜像依次发送到槽位 0 至 7 的电路板，带 `--dry-run`、确认步骤，并在首次失败时停止。*（已实现；仅针对模拟服务器测试）*
 * 🚧 **CAN 与传感器诊断套件（不是上面读取审计记录的 `audit` 命令）** —— 用于 CAN 总线健康状况和传感器验证的自动化诊断套件。*（计划中）*
 
 ## 🧩 在 HYDRA-UMC 中的角色
@@ -124,9 +124,9 @@ flowchart LR
 * **为何 `src/` 包含一个 `cmd/hydra-cli/` 子路径，而非扁平布局。** 遵循标准的 Go CLI 惯例（一个 `cmd/<binary-name>/` 入口点，并为随着 CLI 超出单一命令规模而增加的未来 `internal/`/`pkg/` 包留出空间）——这并非本生态系统自身的发明，而是更广泛 Go 社区针对多命令 CLI 的自有惯例。
 * **为何采用 CLI，而非直接编写脚本调用 HYDRA-UMC-SERVER 自身的 REST API。** 车队规模的操作（跨多个 CM5 进行安装/更新，而非仅一个）需要真正的编排——重试、并行性、一致的用户体验——这些是一次性 curl 脚本无法提供的，HYDRA-UMC-UPDATER 后来在生态系统检出层面应用的正是同样的理由。
 * **这如何融入生态系统的其余部分。** 在车队规模上完成 URTC-FLASHER 和 URTC-TESTER 各自为单块板卡所做的事——管理跨车队的多个 HYDRA-UMC-SERVER 实例，而非单块板卡自身的固件。
-* **为何 `robots` 读取 `GET /api/settings`，而非新建一个端点。** 该端点已经携带完整的控制器/机器人名单，并且已经是一个需要已登录账户的真实读取操作（参见 HYDRA-UMC-SERVER 自身的 `src/server.ts`；CLI 使用 `HYDRA_CLI_USER`/`HYDRA_CLI_PASSWORD` 登录，或发送 `HYDRA_CLI_TOKEN`）——`robots` 是一个已发布契约的真实客户端，而非新的服务器端工作。`doctor` 将同一读取与 `/api/hydra-info` 组合，在不添加端点的情况下发现不兼容的公开车队总数。更大型的、仍在计划中的命令（`deploy`/`flash-all`/面向硬件的 `audit`）确实需要目前尚不存在的新写入端点。
+* **为何 `robots` 读取 `GET /api/settings`，而非新建一个端点。** 该端点已经携带完整的控制器/机器人名单，并且已经是一个需要已登录账户的真实读取操作（参见 HYDRA-UMC-SERVER 自身的 `src/server.ts`；CLI 使用 `HYDRA_CLI_USER`/`HYDRA_CLI_PASSWORD` 登录，或发送 `HYDRA_CLI_TOKEN`）——`robots` 是一个已发布契约的真实客户端，而非新的服务器端工作。`doctor` 将同一读取与 `/api/hydra-info` 组合，在不添加端点的情况下发现不兼容的公开车队总数。`flash-all` 不需要新端点（它通过现有的单板刷写路由，把同一个已签名镜像依次发送到槽位 0 至 7），`deploy` 经由更新器而不是新路由；只有面向硬件的 `audit` 才真正需要新端点。
 * **为何 `doctor` 明确为只读。** 契约检查在硬件到位前很有用，也适合在 CI 中安全运行。它只报告 HTTP/JSON/计数一致性；不会控制设备，也不会声明 CAN、执行器、传感器、摄像头、Hailo、CM5 或安全状态的健康性。
-* **为何不带 `--dry-run` 的 `config apply` 会返回“未实现”，而非悄无声息地什么都不做。** 它本应调用的 HYDRA-UMC-SERVER 实时写入端点确实尚不存在（与 `deploy`/`flash-all` 被卡住的原因相同）——一个独立的 `ExitNotImplemented` 退出码会告诉调用者“这是一个真实的缺口，而非 bug”，而不是让其误以为是一次成功的空操作。
+* **为何不带 `--dry-run` 的 `config apply` 会返回“未实现”，而非悄无声息地什么都不做。** 它本应调用的 HYDRA-UMC-SERVER 实时写入端点确实尚不存在——一个独立的 `ExitNotImplemented` 退出码会告诉调用者“这是一个真实的缺口，而非 bug”，而不是让其误以为是一次成功的空操作。
 * **为何现在每个命令的错误都统一流经一个 `CliError`/`ExitCode` 类型，而非零散的 `os.Exit` 调用。** 一个稳定、有文档记录的退出码契约，只有在存在唯一一处分配退出码的地方时才能保持稳定——`exitCodeFor()`（`exitcode.go`）就是那个地方，各命令函数则继续返回符合惯例、可包装的 `error` 值，而不是自行调用 `os.Exit`。
 
 ## 🔒 安全与防护
@@ -166,7 +166,7 @@ flowchart LR
 
 ## 🧪 测试
 
-运行 `cd src && go test ./...` 会执行 271 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+运行 `cd src && go test ./...` 会执行 291 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
 
 CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
 
@@ -249,7 +249,7 @@ HYDRA-UMC-TOOL-CLI/
 
 ## 🗺️ 路线图与已知限制
 
-`deploy` 和 `flash-all` 尚未构建：每个都需要 `HYDRA-UMC-SERVER` 上并不存在的机群写入或空中升级端点，而 CAN 与传感器诊断套件需要可供测试的 CAN 总线（`audit` 本身已存在：它读取审计记录）。 `config apply` 是同一缺口的诚实占位，返回退出码 6。
+`deploy` 和 `flash-all` 已构建，但只针对模拟更新器和模拟服务器测试过：`flash-all` 通过现有的单板刷写路由把已签名镜像发送到槽位 0 至 7，`deploy` 经由更新器；两者都没有接触过电路板或设备。CAN 与传感器诊断套件需要可供测试的 CAN 总线（`audit` 本身已存在：它读取审计记录）。 `config apply` 是缺失的机群写入端点的诚实占位，返回退出码 6。
 
 ## 🌍 语言
 

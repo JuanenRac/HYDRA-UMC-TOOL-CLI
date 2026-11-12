@@ -18,14 +18,14 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Go-00ADD8.svg" alt="Language">
   <img src="https://img.shields.io/badge/Feature-Fleet%20DevOps-blue.svg" alt="Feature">
-  <img src="https://img.shields.io/badge/Tests-271%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-291%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.2.1-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**正直な現状確認 - 実際に今動くもの:** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`table`、`robot`、`audit`、`doctor`、`connections`、`liveness`、`ecosystem-health`、`plan-simulate`、`config validate`、`config apply --dry-run`、そして対話型の `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`observe.go`、`plansim.go`、`config.go`、`shell.go`、`exitcode.go`）は、127件のテストがすべて通過している（`go test ./...`）、実際に動く本物の Go コードであり — 偽サーバーに対する本物の `net/http`/`httptest` の往復通信と、本物の一時設定ファイルのフィクスチャを使っており、スタブではない。これらのテストは HYDRA-UMC-SERVER のインスタンスを模擬しているが、`status`、`robots`、`doctor`（ログインを含む）は本物の HYDRA-UMC-SERVER プロセスに対しても実行している。`config apply` は `--dry-run` なしで実行すると、成功を装うのではなく正直に `ExitNotImplemented` の終了コードを返す。呼び出すはずのフリート書き込みエンドポイントが HYDRA-UMC-SERVER にまだ存在しないためだ。`deploy`、`flash-all`、および CAN とセンサーの診断スイートは純粋な構想であり、下記では「planned」と記されている通り `src/` には一切存在せず、スタブ関数すらない。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を参照。
+**正直な現状確認 - 実際に今動くもの:** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`table`、`robot`、`audit`、`doctor`、`connections`、`liveness`、`ecosystem-health`、`plan-simulate`、`config validate`、`config apply --dry-run`、そして対話型の `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`observe.go`、`plansim.go`、`config.go`、`shell.go`、`exitcode.go`）は、127件のテストがすべて通過している（`go test ./...`）、実際に動く本物の Go コードであり — 偽サーバーに対する本物の `net/http`/`httptest` の往復通信と、本物の一時設定ファイルのフィクスチャを使っており、スタブではない。これらのテストは HYDRA-UMC-SERVER のインスタンスを模擬しているが、`status`、`robots`、`doctor`（ログインを含む）は本物の HYDRA-UMC-SERVER プロセスに対しても実行している。`config apply` は `--dry-run` なしで実行すると、成功を装うのではなく正直に `ExitNotImplemented` の終了コードを返す。呼び出すはずのフリート書き込みエンドポイントが HYDRA-UMC-SERVER にまだ存在しないためだ。`flash-all` と `deploy`（`flashall.go`、`deploy.go`）も本物の Go コードだが、偽サーバーと偽アップデーターに対してしか試験しておらず、これらで基板を書き込んだことも機器に展開したこともない。CAN とセンサーの診断スイートは純粋な構想であり、下記では「planned」と記されている通り `src/` には一切存在せず、スタブ関数すらない。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を参照。
 
 ---
 
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | バージョン | `0.2.1` |
 | 成熟度 | 機能する |
-| テスト | 271 (`go test ./...`) |
+| テスト | 291 (`go test ./...`) |
 | 技術 | Go / standard-library flag handling |
 | 対象 | 利用者の PC |
 | 実機での確認 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
@@ -55,7 +55,7 @@ GPL-3.0-or-later - see LICENSE
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟡 | 主な目的では動作します。足りない点は上の正直さの確認に書かれています |
-| テスト | 🟢 | 自動テスト 271 件。変更のたびに実行されます |
+| テスト | 🟢 | 自動テスト 291 件。変更のたびに実行されます |
 | 実機 | 🟠 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
 | 連携 | 🟠 | メッセージとルートは SDK の共通契約に照らして検証されていますが、実機と一緒に動かしたことはありません |
 | デプロイ | 🟠 | リリースとして公開されています。新しい環境へのインストールは文書化されていますが記録はありません |
@@ -93,8 +93,8 @@ GPL-3.0-or-later - see LICENSE
 * ✅ **`status`/`robots`/`doctor`/`shell` の `--config PATH`** — 同じ検証済みファイルの `server`/`timeoutSec` が、`config validate`/`apply` だけでなく、あらゆるライブコマンドの実際の HTTP 接続先とリクエストタイムアウトを左右するようになりました。両方指定された場合は引き続き `--server` が優先されます。*（実装済み）*
 * ✅ **`hydra-cli shell [--server URL] [--config PATH]`** — 対話型 REPL:プロセスを再起動せずに、上記のいずれのコマンドも同じサーバーに対して繰り返し実行できます。単発実行と全く同じコマンドテーブルを介して処理されるため、シェルと単発実行の挙動が食い違うことはありません。`exit`/`quit`/Ctrl-D で終了。*（実装済み）*
 * ✅ **`hydra-cli help` / `--help`** — 完全なコマンド使用方法。*（実装済み）*
-* 🚧 **`hydra-cli deploy`** — ミッションと設定を複数のロボットに同時にアップロードします。*（計画中）*
-* 🚧 **`hydra-cli flash-all`** — コントローラーと URTC ヘッド向けの並列ファームウェア更新。*（計画中）*
+* ✅ **`hydra-cli deploy`** — アップデーター（`deploy-plan`）を通して機器に必要なものを表示し、`--apply --yes` で展開します。署名の確認、ヘルスチェック、巻き戻しはアップデーターが担います。*（実装済み；偽アップデーターでのみ試験）*
+* ✅ **`hydra-cli flash-all`** — 署名済みイメージをスロット 0〜7 の基板に 1 枚ずつ送ります（`--dry-run`、確認、最初の失敗で停止）。*（実装済み；偽サーバーでのみ試験）*
 * 🚧 **CAN とセンサーの診断スイート（上の `audit` コマンドは監査記録を読むもので、これではない）** — CAN バスの健全性とセンサー検証のための自動診断スイート。*（計画中）*
 
 ## 🧩 HYDRA-UMC での役割
@@ -127,9 +127,9 @@ flowchart LR
 * **`src/` がフラットなレイアウトではなく `cmd/hydra-cli/` サブパスを持つ理由。** 標準的な Go CLI の慣例（`cmd/<binary-name>/` エントリポイント、CLI が単一コマンドを超えて成長した際の将来の `internal/`/`pkg/` パッケージのための余地）に従っています——これはこのエコシステム独自の発明ではなく、マルチコマンド CLI に対する Go コミュニティ全体の慣例です。
 * **HYDRA-UMC-SERVER 自身の REST API に直接スクリプトを書くのではなく、CLI を採用した理由。** フリート規模の操作（1 台だけでなく多数の CM5 にわたるインストール/更新）には、リトライ、並列性、一貫した UX といった、その場しのぎの curl スクリプトでは提供できない真のオーケストレーションが必要です。これは、後に HYDRA-UMC-UPDATER がエコシステムチェックアウトのレベルで適用するのと同じ理由です。
 * **エコシステムの他の部分との関係。** URTC-FLASHER と URTC-TESTER がそれぞれ 1 枚の基板に対して行っていることを、フリート規模で行います——単一基板自身のファームウェアではなく、フリート全体にわたる複数の HYDRA-UMC-SERVER インスタンスを管理します。
-* **`robots` が新しいエンドポイントではなく `GET /api/settings` を読み取る理由。** そのエンドポイントはすでにコントローラー/ロボットの完全な一覧を持っており、すでに、ログイン済みのアカウントを必要とする実際の読み取り操作です（HYDRA-UMC-SERVER 自身の `src/server.ts` を参照。CLI は `HYDRA_CLI_USER`/`HYDRA_CLI_PASSWORD` でログインするか、`HYDRA_CLI_TOKEN` を送ります）——`robots` はすでに提供されている契約に対する実際のクライアントであり、新たなサーバー側の作業ではありません。`doctor` は同じ読み取りを `/api/hydra-info` と組み合わせ、新しいエンドポイントを追加せずに不整合な公開フリート数を検出します。より大規模な、まだ計画段階のコマンド（`deploy`/`flash-all`/ハードウェア向け `audit`）は、まだ存在しない新しい書き込みエンドポイントを本当に必要とします。
+* **`robots` が新しいエンドポイントではなく `GET /api/settings` を読み取る理由。** そのエンドポイントはすでにコントローラー/ロボットの完全な一覧を持っており、すでに、ログイン済みのアカウントを必要とする実際の読み取り操作です（HYDRA-UMC-SERVER 自身の `src/server.ts` を参照。CLI は `HYDRA_CLI_USER`/`HYDRA_CLI_PASSWORD` でログインするか、`HYDRA_CLI_TOKEN` を送ります）——`robots` はすでに提供されている契約に対する実際のクライアントであり、新たなサーバー側の作業ではありません。`doctor` は同じ読み取りを `/api/hydra-info` と組み合わせ、新しいエンドポイントを追加せずに不整合な公開フリート数を検出します。`flash-all` は新しいエンドポイントを必要としません（既存の 1 枚書き込み用ルートを通して、同じ署名済みイメージをスロット 0〜7 に順に送ります）。`deploy` も新しいルートではなくアップデーター経由です。本当に新しいエンドポイントが必要になるのはハードウェア向けの `audit` だけです。
 * **`doctor` が明示的に読み取り専用である理由。** 契約チェックはハードウェアがない段階でも有用で、CI でも安全です。報告するのは HTTP/JSON/数の整合性だけであり、機器を操作したり、CAN、アクチュエータ、センサー、カメラ、Hailo、CM5、安全性の健全性を主張したりしません。
-* **`--dry-run` を指定しない `config apply` が、黙って何もしない代わりに「未実装」を返す理由。** これが呼び出すはずの HYDRA-UMC-SERVER 上のライブ書き込みエンドポイントは、実際にはまだ存在しません（`deploy`/`flash-all` が塞き止められているのと同じギャップです）——専用の `ExitNotImplemented` 終了コードは、呼び出し元に「これは本物のギャップであり、バグではない」ことを伝えます。誤解を招くような、成功したように見える無操作にはしません。
+* **`--dry-run` を指定しない `config apply` が、黙って何もしない代わりに「未実装」を返す理由。** これが呼び出すはずの HYDRA-UMC-SERVER 上のライブ書き込みエンドポイントは、実際にはまだ存在しません——専用の `ExitNotImplemented` 終了コードは、呼び出し元に「これは本物のギャップであり、バグではない」ことを伝えます。誤解を招くような、成功したように見える無操作にはしません。
 * **すべてのコマンドのエラーが、場当たり的な `os.Exit` 呼び出しではなく、単一の `CliError`/`ExitCode` 型を通じて流れるようになった理由。** 安定した、文書化された終了コード契約は、コードを割り当てる場所が一つしかない場合にのみ安定を保てます——`exitCodeFor()`（`exitcode.go`）がその場所であり、各コマンド関数は自ら `os.Exit` を呼び出す代わりに、慣用的でラップ可能な `error` 値を返し続けます。
 
 ## 🔒 セキュリティと安全
@@ -169,7 +169,7 @@ Go 1.24 以上が必要です。
 
 ## 🧪 テスト
 
-`cd src && go test ./...` で自動テスト 271 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
+`cd src && go test ./...` で自動テスト 291 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
 
 CI は `HYDRA_UMC_CI=1 python tools/ci_validate.py` を実行し、マニフェスト、文書、8 つの README、図を検査します。
 
@@ -254,7 +254,7 @@ HYDRA-UMC-TOOL-CLI/
 
 ## 🗺️ ロードマップと既知の制限
 
-`deploy` と `flash-all` はまだ作られていません。どちらも `HYDRA-UMC-SERVER` に存在しない艦隊書き込みまたは OTA のエンドポイントを必要とし、CAN とセンサーの診断スイートはテスト対象の CAN バスを必要とします（`audit` 自体は存在し、監査記録を読みます）。 `config apply` は同じ欠落に対する正直な代替で、終了コード 6 を返します。
+`deploy` と `flash-all` は作られていますが、偽アップデーターと偽サーバーに対してしか試験していません。`flash-all` は既存の 1 枚書き込み用ルートを通して署名済みイメージをスロット 0〜7 に送り、`deploy` はアップデーター経由です。どちらも基板や機器には触れていません。CAN とセンサーの診断スイートはテスト対象の CAN バスを必要とします（`audit` 自体は存在し、監査記録を読みます）。 `config apply` は存在しない艦隊書き込みエンドポイントに対する正直な代替で、終了コード 6 を返します。
 
 ## 🌍 言語
 

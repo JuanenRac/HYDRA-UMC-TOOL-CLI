@@ -1,0 +1,32 @@
+exit=0
+--stdout--
+USAGE: hydra-cli flash-all --image FILE --tier N --hardware-id N --image-version X.Y.Z [--slots 0-7] [--relay 0|1] [--signature HEX | --signature-file FILE] [--downgrade-from X.Y.Z] [--target NAME] [--min-bootloader X.Y.Z] [--dry-run | --yes] [--keep-going] [--json]
+
+Send one signed firmware image to the controller boards of slots 0 to 7 (or the ones named), one after the other, through POST /api/hardware/canota/flash
+of the server (admin role). The signature is the one made where the private key is (tools/image_header.py sign of HYDRA-UMC); the server and the
+bootloader of each board check it, and a wrong target or an older image is refused by the board. This command adds the loop, a plan and a stop at the
+first slot that fails. Nothing here has flashed a real board.
+
+OPTIONS:
+    --image FILE         the firmware image (1 byte to 64 MiB)
+    --tier N             the tier of the target (needed)
+    --hardware-id N      the hardware id of the boards (needed)
+    --image-version V    major.minor.patch of the image (needed)
+    --slots LIST         the slots, like 0-7 (the default), 0,2,5 or 1-3,6
+    --relay 0|1          1 reaches a tool head through its board (default 0)
+    --signature HEX      the Ed25519 signature of the image, 128 hexadecimal digits
+    --signature-file FILE   the same, read from the first line of a file
+    --downgrade-from V   the version installed now, when the image is older
+    --target NAME        the board the image is for (the board refuses another)
+    --min-bootloader V   the oldest bootloader that may take the image
+    --dry-run            show what would be sent and send nothing (no login needed)
+    --yes                confirm: without --dry-run or --yes nothing is sent
+    --keep-going         go on with the next slot when one fails (the default stops)
+    --controller-id ID   the controller id of this program
+    --json               print the result as one JSON object (schema_version, command, ok and the fields of the command)
+    --server URL    the server (default: HYDRA_CLI_SERVER, then a --config file's "server", then DEFAULT_SERVER)
+    --config PATH   a config file (see: hydra-cli config validate --help)
+    --timeout SECONDS   how long to wait for the server (1 to 3600; default: the config file's "timeoutSec", then HYDRA_CLI_TIMEOUT_SEC, then 5)
+
+The timeout of a slot is 10 minutes unless --timeout says otherwise.
+--stderr--

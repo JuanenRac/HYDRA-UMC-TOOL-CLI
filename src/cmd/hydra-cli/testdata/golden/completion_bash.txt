@@ -5,7 +5,7 @@ _hydra_cli_complete() {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     if [ "$COMP_CWORD" -eq 1 ]; then
-        COMPREPLY=($(compgen -W "version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest connections liveness ecosystem-health plan-simulate" -- "$cur"))
+        COMPREPLY=($(compgen -W "version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all flash-all deploy metrics manifest connections liveness ecosystem-health plan-simulate" -- "$cur"))
         return 0
     fi
     cmd="${COMP_WORDS[1]}"
@@ -46,6 +46,8 @@ _hydra_cli_complete() {
             opts="--concurrency --config --help --json --servers --timeout" ;;
         stop) opts="--config --controller-id --help --json --server --timeout" ;;
         stop-all) opts="--config --help --json --server --timeout --yes" ;;
+        flash-all) opts="--config --controller-id --downgrade-from --dry-run --hardware-id --help --image --image-version --json --keep-going --min-bootloader --relay --server --signature --signature-file --slots --target --tier --timeout --yes" ;;
+        deploy) opts="--apply --device-root --help --install-plan --json --timeout --updater --workspace --yes" ;;
         metrics) opts="--all --config --help --json --server --timeout" ;;
         manifest)
             if [ "$COMP_CWORD" -eq 2 ]; then COMPREPLY=($(compgen -W "validate" -- "$cur")); return 0; fi

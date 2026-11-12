@@ -268,6 +268,50 @@ OPTIONS:
     --yes           confirm (without it nothing is sent)
     --json          print the answer of the server as JSON
 ` + serverOptions,
+	"flash-all": `USAGE: hydra-cli flash-all --image FILE --tier N --hardware-id N --image-version X.Y.Z [--slots 0-7] [--relay 0|1] [--signature HEX | --signature-file FILE] [--downgrade-from X.Y.Z] [--target NAME] [--min-bootloader X.Y.Z] [--dry-run | --yes] [--keep-going] [--json]
+
+Send one signed firmware image to the controller boards of slots 0 to 7 (or the ones named), one after the other, through POST /api/hardware/canota/flash
+of the server (admin role). The signature is the one made where the private key is (tools/image_header.py sign of HYDRA-UMC); the server and the
+bootloader of each board check it, and a wrong target or an older image is refused by the board. This command adds the loop, a plan and a stop at the
+first slot that fails. Nothing here has flashed a real board.
+
+OPTIONS:
+    --image FILE         the firmware image (1 byte to 64 MiB)
+    --tier N             the tier of the target (needed)
+    --hardware-id N      the hardware id of the boards (needed)
+    --image-version V    major.minor.patch of the image (needed)
+    --slots LIST         the slots, like 0-7 (the default), 0,2,5 or 1-3,6
+    --relay 0|1          1 reaches a tool head through its board (default 0)
+    --signature HEX      the Ed25519 signature of the image, 128 hexadecimal digits
+    --signature-file FILE   the same, read from the first line of a file
+    --downgrade-from V   the version installed now, when the image is older
+    --target NAME        the board the image is for (the board refuses another)
+    --min-bootloader V   the oldest bootloader that may take the image
+    --dry-run            show what would be sent and send nothing (no login needed)
+    --yes                confirm: without --dry-run or --yes nothing is sent
+    --keep-going         go on with the next slot when one fails (the default stops)
+    --controller-id ID   the controller id of this program
+    --json               print the result as one JSON object (schema_version, command, ok and the fields of the command)
+` + serverOptions + `
+The timeout of a slot is 10 minutes unless --timeout says otherwise.
+`,
+	"deploy": `USAGE: hydra-cli deploy [--updater COMMAND] [--workspace DIR] [--device-root DIR] [--install-plan FILE] [--apply --yes] [--timeout SECONDS] [--json]
+
+Show what the device needs to run what the workspace has, and with --apply --yes put it there, through the updater (hydra-umc-updater deploy-plan).
+The updater checks the signature of each checkout, honours its own os_deploy switch, runs the health check of each unit and puts the old program back if
+it does not hold. Without --apply nothing is changed. The updater runs as the command you give: the default is hydra-umc-updater (or $HYDRA_CLI_UPDATER),
+and for a device reached over SSH, for example "ssh user@device hydra-umc-updater". The command is started without a shell.
+
+OPTIONS:
+    --updater COMMAND    the updater command (split like a shell line; default: $HYDRA_CLI_UPDATER, then hydra-umc-updater)
+    --workspace DIR      the workspace the updater reads (passed to it)
+    --device-root DIR    where the installed programs are (passed to it)
+    --install-plan FILE  the table of installers (passed to it)
+    --apply              deploy the steps (needs --yes)
+    --yes                confirm --apply
+    --timeout SECONDS    how long the updater may take (1 to 3600; default 2 minutes for the plan, 30 for --apply)
+    --json               print the result as one JSON object (schema_version, command, ok and the fields of the command)
+`,
 	"metrics": `USAGE: hydra-cli metrics [--all] [--json]
 
 Read GET /metrics of the server and show uptime, clients, commands sent, login failures, CPU load, memory and temperature.

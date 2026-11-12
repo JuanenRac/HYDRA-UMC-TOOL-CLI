@@ -2,7 +2,7 @@ exit=0
 --stdout--
 # fish completion for hydra-cli: hydra-cli completion fish | source
 complete -c hydra-cli -f
-complete -c hydra-cli -n "__fish_use_subcommand" -a "version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest connections liveness ecosystem-health plan-simulate"
+complete -c hydra-cli -n "__fish_use_subcommand" -a "version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all flash-all deploy metrics manifest connections liveness ecosystem-health plan-simulate"
 complete -c hydra-cli -n "__fish_seen_subcommand_from version" -l help
 complete -c hydra-cli -n "__fish_seen_subcommand_from version" -l json
 complete -c hydra-cli -n "__fish_seen_subcommand_from help" -l help
@@ -137,6 +137,35 @@ complete -c hydra-cli -n "__fish_seen_subcommand_from stop-all" -l json
 complete -c hydra-cli -n "__fish_seen_subcommand_from stop-all" -l server
 complete -c hydra-cli -n "__fish_seen_subcommand_from stop-all" -l timeout
 complete -c hydra-cli -n "__fish_seen_subcommand_from stop-all" -l yes
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l config
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l controller-id
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l downgrade-from
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l dry-run
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l hardware-id
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l help
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l image
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l image-version
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l json
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l keep-going
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l min-bootloader
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l relay
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l server
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l signature
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l signature-file
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l slots
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l target
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l tier
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l timeout
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l yes
+complete -c hydra-cli -n "__fish_seen_subcommand_from deploy" -l apply
+complete -c hydra-cli -n "__fish_seen_subcommand_from deploy" -l device-root
+complete -c hydra-cli -n "__fish_seen_subcommand_from deploy" -l help
+complete -c hydra-cli -n "__fish_seen_subcommand_from deploy" -l install-plan
+complete -c hydra-cli -n "__fish_seen_subcommand_from deploy" -l json
+complete -c hydra-cli -n "__fish_seen_subcommand_from deploy" -l timeout
+complete -c hydra-cli -n "__fish_seen_subcommand_from deploy" -l updater
+complete -c hydra-cli -n "__fish_seen_subcommand_from deploy" -l workspace
+complete -c hydra-cli -n "__fish_seen_subcommand_from deploy" -l yes
 complete -c hydra-cli -n "__fish_seen_subcommand_from metrics" -l all
 complete -c hydra-cli -n "__fish_seen_subcommand_from metrics" -l config
 complete -c hydra-cli -n "__fish_seen_subcommand_from metrics" -l help

@@ -4,7 +4,7 @@ exit=0
 Register-ArgumentCompleter -Native -CommandName hydra-cli -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
     $words = @($commandAst.CommandElements | ForEach-Object { $_.ToString() })
-    $top = 'version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all metrics manifest connections liveness ecosystem-health plan-simulate' -split ' '
+    $top = 'version help status robots claims claim release limits jog-arm jog table robot audit doctor config shell completion login logout scan fleet stop stop-all flash-all deploy metrics manifest connections liveness ecosystem-health plan-simulate' -split ' '
     $subs = @{
         'config' = 'validate apply' -split ' '
         'completion' = 'bash zsh fish powershell' -split ' '
@@ -36,6 +36,8 @@ Register-ArgumentCompleter -Native -CommandName hydra-cli -ScriptBlock {
         'fleet' = '--concurrency --config --help --json --servers --timeout' -split ' '
         'stop' = '--config --controller-id --help --json --server --timeout' -split ' '
         'stop-all' = '--config --help --json --server --timeout --yes' -split ' '
+        'flash-all' = '--config --controller-id --downgrade-from --dry-run --hardware-id --help --image --image-version --json --keep-going --min-bootloader --relay --server --signature --signature-file --slots --target --tier --timeout --yes' -split ' '
+        'deploy' = '--apply --device-root --help --install-plan --json --timeout --updater --workspace --yes' -split ' '
         'metrics' = '--all --config --help --json --server --timeout' -split ' '
         'manifest' = '--help --json --schema --workspace' -split ' '
         'connections' = '--action --active --before --config --help --json --kind --limit --server --timeout --user' -split ' '

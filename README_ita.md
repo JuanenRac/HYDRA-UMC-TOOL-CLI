@@ -18,14 +18,14 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Go-00ADD8.svg" alt="Language">
   <img src="https://img.shields.io/badge/Feature-Fleet%20DevOps-blue.svg" alt="Feature">
-  <img src="https://img.shields.io/badge/Tests-271%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-291%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.2.1-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**Verifica di onestà - cosa funziona davvero oggi:** `version`, `status`, `robots`, `claims`, `claim`, `release`, `limits`, `jog-arm`, `jog`, `table`, `robot`, `audit`, `doctor`, `connections`, `liveness`, `ecosystem-health`, `plan-simulate`, `config validate`, `config apply --dry-run` e la `shell` interattiva (`main.go`, `server.go`, `robots.go`, `control.go`, `doctor.go`, `observe.go`, `plansim.go`, `config.go`, `shell.go`, `exitcode.go`) sono codice Go reale e funzionante, verificato da 271 test superati (`go test ./...`) - veri round-trip `net/http`/`httptest` contro un server fittizio più vere fixture di file di configurazione temporanei, non stub. Questi test simulano un'istanza di HYDRA-UMC-SERVER; `status`, `robots` e `doctor` (login incluso) sono stati eseguiti anche contro un vero processo HYDRA-UMC-SERVER. `config apply` senza `--dry-run` restituisce onestamente il codice di uscita `ExitNotImplemented` invece di simulare un successo, perché l'endpoint di scrittura per la flotta che chiamerebbe non esiste ancora su HYDRA-UMC-SERVER. `deploy`, `flash-all` e una suite diagnostica per CAN e sensori sono pura aspirazione - segnati come "planned" più sotto e completamente assenti da `src/`, nemmeno come funzione stub. Vedi `CHANGELOG.md` per sapere esattamente cosa è stato consegnato finora.
+**Verifica di onestà - cosa funziona davvero oggi:** `version`, `status`, `robots`, `claims`, `claim`, `release`, `limits`, `jog-arm`, `jog`, `table`, `robot`, `audit`, `doctor`, `connections`, `liveness`, `ecosystem-health`, `plan-simulate`, `config validate`, `config apply --dry-run` e la `shell` interattiva (`main.go`, `server.go`, `robots.go`, `control.go`, `doctor.go`, `observe.go`, `plansim.go`, `config.go`, `shell.go`, `exitcode.go`) sono codice Go reale e funzionante, verificato da 291 test superati (`go test ./...`) - veri round-trip `net/http`/`httptest` contro un server fittizio più vere fixture di file di configurazione temporanei, non stub. Questi test simulano un'istanza di HYDRA-UMC-SERVER; `status`, `robots` e `doctor` (login incluso) sono stati eseguiti anche contro un vero processo HYDRA-UMC-SERVER. `config apply` senza `--dry-run` restituisce onestamente il codice di uscita `ExitNotImplemented` invece di simulare un successo, perché l'endpoint di scrittura per la flotta che chiamerebbe non esiste ancora su HYDRA-UMC-SERVER. Anche `flash-all` e `deploy` (`flashall.go`, `deploy.go`) sono codice Go reale, ma sono stati provati solo contro un server fittizio e un updater fittizio: con loro non è stata flashata alcuna scheda né distribuito alcun dispositivo. Una suite diagnostica per CAN e sensori è pura aspirazione - segnata come "planned" più sotto e completamente assente da `src/`, nemmeno come funzione stub. Vedi `CHANGELOG.md` per sapere esattamente cosa è stato consegnato finora.
 
 ---
 
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versione | `0.2.1` |
 | Maturità | Funzionale |
-| Test | 271 (`go test ./...`) |
+| Test | 291 (`go test ./...`) |
 | Tecnologia | Go / standard-library flag handling |
 | Destinazione | Il PC di chi lo usa |
 | Su hardware reale | Solo simulato: provato con emulatori, test double o simulatori; per questa versione non risulta alcuna esecuzione su hardware reale |
@@ -55,7 +55,7 @@ Ogni riga è una parte di questo repository e il semaforo dice a che punto è og
 | Area | Stato | Cosa significa qui |
 |---|---|---|
 | Software | 🟡 | Funziona per il suo scopo principale; la verifica di onestà qui sopra elenca ciò che manca ancora |
-| Test | 🟢 | 271 test automatici, eseguiti a ogni modifica |
+| Test | 🟢 | 291 test automatici, eseguiti a ogni modifica |
 | Hardware reale | 🟠 | Solo simulato: provato con emulatori, test double o simulatori; per questa versione non risulta alcuna esecuzione su hardware reale |
 | Integrazione | 🟠 | I suoi messaggi e le sue rotte sono verificati rispetto ai contratti condivisi dell'SDK; non ha ancora funzionato insieme all'apparecchiatura reale |
 | Distribuzione | 🟠 | Pubblicato come release; l'installazione su una macchina pulita è documentata ma non registrata |
@@ -86,8 +86,8 @@ L'obiettivo a lungo termine sono deployment massivi di missioni, aggiornamenti f
 * ✅ **`--config PATH` su `status`/`robots`/`doctor`/`shell`** — lo stesso file validato, con il suo `server`/`timeoutSec`, ora determina realmente l'endpoint HTTP e il timeout di richiesta di ogni comando live, non solo `config validate`/`apply`; `--server` prevale comunque se entrambi sono forniti. *(implementato)*
 * ✅ **`hydra-cli shell [--server URL] [--config PATH]`** — una REPL interattiva: esegue ripetutamente uno qualsiasi dei comandi sopra contro lo stesso server senza riavviare il processo. Instrada attraverso la stessa tabella dei comandi usata dalle invocazioni singole, quindi il comportamento della shell e quello singolo non possono mai divergere. `exit`/`quit`/Ctrl-D per uscire. *(implementato)*
 * ✅ **`hydra-cli help` / `--help`** — utilizzo completo dei comandi. *(implementato)*
-* 🚧 **`hydra-cli deploy`** — carica missioni e configurazioni su una flotta di robot simultaneamente. *(pianificato)*
-* 🚧 **`hydra-cli flash-all`** — aggiornamenti firmware in parallelo per controller e teste URTC. *(pianificato)*
+* ✅ **`hydra-cli deploy`** — mostra ciò di cui il dispositivo ha bisogno tramite l'updater (`deploy-plan`) e, con `--apply --yes`, lo distribuisce; l'updater controlla le firme e mantiene il suo controllo di salute e il ritorno indietro. *(implementato; provato solo contro un updater fittizio)*
+* ✅ **`hydra-cli flash-all`** — invia un'immagine firmata alle schede degli slot da 0 a 7, una alla volta, con `--dry-run`, una conferma e arresto al primo errore. *(implementato; provato solo contro server fittizi)*
 * 🚧 **Una suite diagnostica per CAN e sensori (non il comando `audit` qui sopra, che legge il registro di audit)** — suite diagnostica automatizzata per la salute del bus CAN e la validazione dei sensori. *(pianificato)*
 
 ## 🧩 Ruolo in HYDRA-UMC
@@ -120,9 +120,9 @@ flowchart LR
 * **Perché `src/` contiene un sotto-percorso `cmd/hydra-cli/`, non un layout piatto.** Segue la convenzione standard Go per le CLI (un entry point `cmd/<nome-binario>/`, con spazio per futuri pacchetti `internal/`/`pkg/` man mano che la CLI cresce oltre un singolo comando) - non un'invenzione di questo ecosistema, la convenzione propria della più ampia comunità Go per le CLI multi-comando.
 * **Perché una CLI, e non semplicemente scriptare direttamente l'API REST propria di HYDRA-UMC-SERVER.** Le operazioni su scala flotta (installare/aggiornare su molti CM5, non solo uno) richiedono una vera orchestrazione - retry, parallelismo, una UX coerente - che uno script curl estemporaneo non offre, lo stesso motivo che HYDRA-UMC-UPDATER applica più avanti a livello dell'intero checkout dell'ecosistema.
 * **Come si inserisce nel resto dell'ecosistema.** Fa su scala flotta ciò che URTC-FLASHER e URTC-TESTER fanno ciascuno per una singola scheda - gestisce istanze di HYDRA-UMC-SERVER attraverso una flotta invece del firmware proprio di una singola scheda.
-* **Perché `robots` legge `GET /api/settings` invece di un nuovo endpoint.** Quell'endpoint porta già l'elenco completo di controller/robot ed è già una lettura reale che richiede un account con accesso effettuato (vedi il proprio `src/server.ts` di HYDRA-UMC-SERVER; la CLI esegue il login con `HYDRA_CLI_USER`/`HYDRA_CLI_PASSWORD` oppure invia `HYDRA_CLI_TOKEN`) - `robots` è un vero client di un contratto già pubblicato, non nuovo lavoro lato server. `doctor` usa questa stessa lettura con `/api/hydra-info` per rilevare totali pubblici incompatibili senza aggiungere un endpoint. I comandi più grandi, ancora pianificati (`deploy`/`flash-all`/`audit` orientato all'hardware), necessitano davvero di nuovi endpoint di scrittura che non esistono ancora.
+* **Perché `robots` legge `GET /api/settings` invece di un nuovo endpoint.** Quell'endpoint porta già l'elenco completo di controller/robot ed è già una lettura reale che richiede un account con accesso effettuato (vedi il proprio `src/server.ts` di HYDRA-UMC-SERVER; la CLI esegue il login con `HYDRA_CLI_USER`/`HYDRA_CLI_PASSWORD` oppure invia `HYDRA_CLI_TOKEN`) - `robots` è un vero client di un contratto già pubblicato, non nuovo lavoro lato server. `doctor` usa questa stessa lettura con `/api/hydra-info` per rilevare totali pubblici incompatibili senza aggiungere un endpoint. `flash-all` non ha bisogno di un nuovo endpoint (invia la stessa immagine firmata agli slot da 0 a 7, uno dopo l'altro, attraverso la rotta esistente di flash di una scheda) e `deploy` passa dall'updater invece che da una nuova rotta; solo l'`audit` orientato all'hardware avrebbe davvero bisogno di nuovi endpoint.
 * **Perché `doctor` è esplicitamente in sola lettura.** Un controllo del contratto è utile prima di disporre dell'hardware e sicuro in CI. Riporta solo coerenza HTTP/JSON/contatori; non comanda apparecchiature né dichiara salute di CAN, attuatori, sensori, camere, Hailo, CM5 o sicurezza.
-* **Perché `config apply` senza `--dry-run` restituisce "non implementato" invece di non fare nulla silenziosamente.** L'endpoint di scrittura live su HYDRA-UMC-SERVER che verrebbe chiamato in questo caso davvero non esiste ancora (lo stesso gap su cui sono bloccati `deploy`/`flash-all`) - un exit code distinto, `ExitNotImplemented`, dice a chi chiama "questo è un gap reale, non un bug", invece di un no-op ingannevolmente riuscito.
+* **Perché `config apply` senza `--dry-run` restituisce "non implementato" invece di non fare nulla silenziosamente.** L'endpoint di scrittura live su HYDRA-UMC-SERVER che verrebbe chiamato in questo caso davvero non esiste ancora - un exit code distinto, `ExitNotImplemented`, dice a chi chiama "questo è un gap reale, non un bug", invece di un no-op ingannevolmente riuscito.
 * **Perché gli errori di ogni comando ora passano attraverso un unico tipo `CliError`/`ExitCode` invece di chiamate ad-hoc a `os.Exit`.** Un contratto di exit code stabile e documentato resta tale solo se esiste un unico punto che assegna i codici - `exitCodeFor()` (`exitcode.go`) è quel punto, e le funzioni dei comandi continuano a restituire valori `error` idiomatici e concatenabili invece di chiamare `os.Exit` da sole.
 
 ## 🔒 Sicurezza e protezione
@@ -162,7 +162,7 @@ Richiede Go 1.24 o successivo.
 
 ## 🧪 Test
 
-271 test automatici si eseguono con `cd src && go test ./...`. Non richiedono hardware né nulla al di fuori di questa macchina.
+291 test automatici si eseguono con `cd src && go test ./...`. Non richiedono hardware né nulla al di fuori di questa macchina.
 
 La CI esegue `HYDRA_UMC_CI=1 python tools/ci_validate.py`, che controlla il manifesto, i documenti, gli otto README e le immagini.
 
@@ -238,7 +238,7 @@ HYDRA-UMC-TOOL-CLI/
 
 ## 🗺️ Roadmap e limiti noti
 
-`deploy` e `flash-all` non sono ancora realizzati: ciascuno richiede su `HYDRA-UMC-SERVER` un endpoint di scrittura di flotta o over-the-air che non esiste, e la suite diagnostica per CAN e sensori richiede un bus CAN su cui provare (`audit` stesso esiste: legge il registro di audit). `config apply` senza `--dry-run` è il segnaposto onesto della stessa lacuna e risponde con il codice di uscita 6.
+`deploy` e `flash-all` sono realizzati e provati solo contro un updater e server fittizi: `flash-all` invia un'immagine firmata agli slot da 0 a 7 attraverso la rotta esistente di flash di una scheda, e `deploy` passa dall'updater; nessuno ha toccato una scheda o un dispositivo. La suite diagnostica per CAN e sensori richiede un bus CAN su cui provare (`audit` stesso esiste: legge il registro di audit). `config apply` senza `--dry-run` è il segnaposto onesto dell'endpoint di scrittura di flotta che manca e risponde con il codice di uscita 6.
 
 ## 🌍 Lingue
 

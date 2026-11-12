@@ -182,16 +182,23 @@ func sendAuthenticated(client *http.Client, server, method, path string, payload
 // robot the caller read, so the server refuses (412) a write to a robot that
 // changed in between.
 func sendConditional(client *http.Client, server, method, path string, payload any, controllerID, ifMatch string) (controlResponse, error) {
-	cred, err := resolveCredential(client, server)
-	if err != nil {
-		return controlResponse{}, err
-	}
 	var encoded []byte
 	if payload != nil {
+		var err error
 		encoded, err = json.Marshal(payload)
 		if err != nil {
 			return controlResponse{}, newCliError(ExitGeneralError, err)
 		}
+	}
+	return sendBody(client, server, method, path, encoded, "application/json", controllerID, ifMatch)
+}
+
+// sendBody is sendConditional with a body that is already bytes and its content type (nil bytes: no body and no content type). The credential is
+// resolved and renewed exactly as for every other request.
+func sendBody(client *http.Client, server, method, path string, encoded []byte, contentType, controllerID, ifMatch string) (controlResponse, error) {
+	cred, err := resolveCredential(client, server)
+	if err != nil {
+		return controlResponse{}, err
 	}
 	send := func(token string) (controlResponse, error) {
 		var reader io.Reader
@@ -202,8 +209,8 @@ func sendConditional(client *http.Client, server, method, path string, payload a
 		if err != nil {
 			return controlResponse{}, newCliError(ExitConfigError, fmt.Errorf("invalid server %q: %w", server, err))
 		}
-		if payload != nil {
-			req.Header.Set("Content-Type", "application/json")
+		if encoded != nil {
+			req.Header.Set("Content-Type", contentType)
 		}
 		if controllerID != "" {
 			req.Header.Set("X-Controller-Id", controllerID)
