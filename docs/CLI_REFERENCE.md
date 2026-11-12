@@ -407,9 +407,12 @@ $ echo $?
 
 ## Planned, not yet implemented
 
-`deploy`, `flash-all`, and `audit` are described in the project README's
-roadmap but are not built yet — each needs a fleet write/CAN-OTA/write
-endpoint on HYDRA-UMC-SERVER that doesn't exist. `config apply` without
+`deploy` and `flash-all` are described in the project README's roadmap but
+are not built yet — each needs a fleet write/CAN-OTA endpoint on
+HYDRA-UMC-SERVER that doesn't exist for a whole fleet (the Server only has a
+single-board relay to the STM32H757), and a CAN and sensor diagnostic suite needs a CAN bus to test against.
+`audit` is built: it reads the audit record (see above), and is not that
+diagnostic suite. `config apply` without
 `--dry-run` (above) is the current, honest placeholder for the same gap.
 
 ## Sessions, credentials and the newer commands

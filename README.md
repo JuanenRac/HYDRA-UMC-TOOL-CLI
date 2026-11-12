@@ -25,7 +25,7 @@ GPL-3.0-or-later - see LICENSE
 
 ---
 
-**Honesty check - what actually runs today:** `version`, `status`, `robots`, `claims`, `claim`, `release`, `limits`, `jog-arm`, `jog`, `table`, `robot`, `audit`, `doctor`, `connections`, `liveness`, `ecosystem-health`, `plan-simulate`, `config validate`, `config apply --dry-run`, and the interactive `shell` (`main.go`, `server.go`, `robots.go`, `control.go`, `doctor.go`, `observe.go`, `plansim.go`, `config.go`, `shell.go`, `exitcode.go`) are real, working Go code, exercised by 271 passing tests (`go test ./...`) - real `net/http`/`httptest` round-trips against a fake server plus real temp-file config fixtures, not stubs. Those tests simulate a HYDRA-UMC-SERVER instance; `status`, `robots` and `doctor` (login included) have also been run against a real HYDRA-UMC-SERVER process. `config apply` without `--dry-run` honestly returns the `ExitNotImplemented` exit code rather than faking success, because the fleet-write endpoint it would call doesn't exist on HYDRA-UMC-SERVER yet. `deploy`, `flash-all` and `audit` are pure aspiration - marked "planned" below and absent from `src/` entirely, not even a stub function. See `CHANGELOG.md` for exactly what has shipped so far.
+**Honesty check - what actually runs today:** `version`, `status`, `robots`, `claims`, `claim`, `release`, `limits`, `jog-arm`, `jog`, `table`, `robot`, `audit`, `doctor`, `connections`, `liveness`, `ecosystem-health`, `plan-simulate`, `config validate`, `config apply --dry-run`, and the interactive `shell` (`main.go`, `server.go`, `robots.go`, `control.go`, `doctor.go`, `observe.go`, `plansim.go`, `config.go`, `shell.go`, `exitcode.go`) are real, working Go code, exercised by 271 passing tests (`go test ./...`) - real `net/http`/`httptest` round-trips against a fake server plus real temp-file config fixtures, not stubs. Those tests simulate a HYDRA-UMC-SERVER instance; `status`, `robots` and `doctor` (login included) have also been run against a real HYDRA-UMC-SERVER process. `config apply` without `--dry-run` honestly returns the `ExitNotImplemented` exit code rather than faking success, because the fleet-write endpoint it would call doesn't exist on HYDRA-UMC-SERVER yet. `deploy`, `flash-all` and a CAN and sensor diagnostic suite are pure aspiration - marked "planned" below and absent from `src/` entirely, not even a stub function. See `CHANGELOG.md` for exactly what has shipped so far.
 
 ---
 
@@ -88,7 +88,7 @@ The long-term goal is massive deployments of missions, parallel firmware updates
 * ✅ **`hydra-cli help` / `--help`** — full command usage. *(implemented)*
 * 🚧 **`hydra-cli deploy`** — upload missions and configurations to a fleet of robots simultaneously. *(planned)*
 * 🚧 **`hydra-cli flash-all`** — parallel firmware updates for controllers and URTC heads. *(planned)*
-* 🚧 **`hydra-cli audit`** — automated diagnostic suite for CAN bus health and sensor validation. *(planned)*
+* 🚧 **A CAN and sensor diagnostic suite (not the `audit` command above, which reads the audit record)** — automated diagnostic suite for CAN bus health and sensor validation. *(planned)*
 
 ## 🧩 Role in HYDRA-UMC
 
@@ -238,7 +238,7 @@ HYDRA-UMC-TOOL-CLI/
 
 ## 🗺️ Roadmap & Known limits
 
-`deploy`, `flash-all` and `audit` are not built yet: each needs a fleet write, over-the-air or audit endpoint on `HYDRA-UMC-SERVER` that does not exist. `config apply` without `--dry-run` is the honest placeholder for the same gap and answers exit code 6.
+`deploy` and `flash-all` are not built yet: each needs a fleet write or over-the-air endpoint on `HYDRA-UMC-SERVER` that does not exist, and the CAN and sensor diagnostic suite needs a CAN bus to test against (`audit` itself exists: it reads the audit record). `config apply` without `--dry-run` is the honest placeholder for the same gap and answers exit code 6.
 
 ## 🌍 Languages
 

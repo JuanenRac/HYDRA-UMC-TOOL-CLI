@@ -25,7 +25,7 @@ GPL-3.0-or-later - see LICENSE
 
 ---
 
-**Comprobación de honestidad - lo que realmente funciona hoy:** `version`, `status`, `robots`, `claims`, `claim`, `release`, `limits`, `jog-arm`, `jog`, `table`, `robot`, `audit`, `doctor`, `connections`, `liveness`, `ecosystem-health`, `plan-simulate`, `config validate`, `config apply --dry-run`, y el `shell` interactivo (`main.go`, `server.go`, `robots.go`, `control.go`, `doctor.go`, `observe.go`, `plansim.go`, `config.go`, `shell.go`, `exitcode.go`) son código Go real y funcional, verificado por 271 tests que pasan (`go test ./...`) - peticiones reales `net/http`/`httptest` contra un servidor simulado más fixtures reales de archivos de configuración temporales, no stubs. Esos tests simulan una instancia de HYDRA-UMC-SERVER; `status`, `robots` y `doctor` (con el inicio de sesión incluido) también se han ejecutado contra un proceso real de HYDRA-UMC-SERVER. `config apply` sin `--dry-run` devuelve honestamente el código de salida `ExitNotImplemented` en vez de simular un éxito, porque el endpoint de escritura de flota que llamaría todavía no existe en HYDRA-UMC-SERVER. `deploy`, `flash-all` y `audit` son pura aspiración - marcados como "planned" más abajo y ausentes por completo de `src/`, ni siquiera como función stub. Consulta `CHANGELOG.md` para ver exactamente qué se ha entregado hasta ahora.
+**Comprobación de honestidad - lo que realmente funciona hoy:** `version`, `status`, `robots`, `claims`, `claim`, `release`, `limits`, `jog-arm`, `jog`, `table`, `robot`, `audit`, `doctor`, `connections`, `liveness`, `ecosystem-health`, `plan-simulate`, `config validate`, `config apply --dry-run`, y el `shell` interactivo (`main.go`, `server.go`, `robots.go`, `control.go`, `doctor.go`, `observe.go`, `plansim.go`, `config.go`, `shell.go`, `exitcode.go`) son código Go real y funcional, verificado por 271 tests que pasan (`go test ./...`) - peticiones reales `net/http`/`httptest` contra un servidor simulado más fixtures reales de archivos de configuración temporales, no stubs. Esos tests simulan una instancia de HYDRA-UMC-SERVER; `status`, `robots` y `doctor` (con el inicio de sesión incluido) también se han ejecutado contra un proceso real de HYDRA-UMC-SERVER. `config apply` sin `--dry-run` devuelve honestamente el código de salida `ExitNotImplemented` en vez de simular un éxito, porque el endpoint de escritura de flota que llamaría todavía no existe en HYDRA-UMC-SERVER. `deploy`, `flash-all` y una suite de diagnóstico de CAN y sensores son pura aspiración - marcados como "planned" más abajo y ausentes por completo de `src/`, ni siquiera como función stub. Consulta `CHANGELOG.md` para ver exactamente qué se ha entregado hasta ahora.
 
 ---
 
@@ -88,7 +88,7 @@ El objetivo a largo plazo son despliegues masivos de misiones, actualizaciones d
 * ✅ **`hydra-cli help` / `--help`** — uso completo de comandos. *(implementado)*
 * 🚧 **`hydra-cli deploy`** — sube misiones y configuraciones a una flota de robots simultáneamente. *(planeado)*
 * 🚧 **`hydra-cli flash-all`** — actualizaciones de firmware en paralelo para controladores y cabezales URTC. *(planeado)*
-* 🚧 **`hydra-cli audit`** — suite de diagnóstico automatizada para la salud del bus CAN y validación de sensores. *(planeado)*
+* 🚧 **Una suite de diagnóstico de CAN y sensores (no el comando `audit` de arriba, que lee el registro de auditoría)** — suite de diagnóstico automatizada para la salud del bus CAN y validación de sensores. *(planeado)*
 
 ## 🧩 Papel en HYDRA-UMC
 
@@ -238,7 +238,7 @@ HYDRA-UMC-TOOL-CLI/
 
 ## 🗺️ Hoja de ruta y límites conocidos
 
-`deploy`, `flash-all` y `audit` aún no están hechos: cada uno necesita en `HYDRA-UMC-SERVER` un punto de escritura de flota, de actualización por aire o de auditoría que no existe. `config apply` sin `--dry-run` es el marcador honesto de la misma carencia y responde con el código de salida 6.
+`deploy` y `flash-all` aún no están hechos: cada uno necesita en `HYDRA-UMC-SERVER` un punto de escritura de flota o de actualización por aire que no existe, y la suite de diagnóstico de CAN y sensores necesita un bus CAN con el que probar (`audit` en sí existe: lee el registro de auditoría). `config apply` sin `--dry-run` es el marcador honesto de la misma carencia y responde con el código de salida 6.
 
 ## 🌍 Idiomas
 

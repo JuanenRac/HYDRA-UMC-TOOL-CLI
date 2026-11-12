@@ -25,7 +25,7 @@ GPL-3.0-or-later - see LICENSE
 
 ---
 
-**诚实核查 - 今天真正能运行的部分：** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`table`、`robot`、`audit`、`doctor`、`connections`、`liveness`、`ecosystem-health`、`plan-simulate`、`config validate`、`config apply --dry-run`，以及交互式 `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`observe.go`、`plansim.go`、`config.go`、`shell.go`、`exitcode.go`）都是真实可运行的 Go 代码，由 271 个通过的测试（`go test ./...`）验证——针对一个模拟服务器的真实 `net/http`/`httptest` 往返请求，加上真实的临时配置文件测试夹具，而不是桩代码。这些测试模拟的是一个 HYDRA-UMC-SERVER 实例；`status`、`robots` 和 `doctor`（包括登录）也已针对真实的 HYDRA-UMC-SERVER 进程运行过。`config apply` 在没有 `--dry-run` 时会诚实地返回 `ExitNotImplemented` 退出码，而不是伪装成功，因为它需要调用的车队写入端点在 HYDRA-UMC-SERVER 上还不存在。`deploy`、`flash-all` 和 `audit` 完全是愿景——在下文中标记为"planned"，在 `src/` 中完全不存在，连桩函数都没有。具体已经交付了什么，请参见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`table`、`robot`、`audit`、`doctor`、`connections`、`liveness`、`ecosystem-health`、`plan-simulate`、`config validate`、`config apply --dry-run`，以及交互式 `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`observe.go`、`plansim.go`、`config.go`、`shell.go`、`exitcode.go`）都是真实可运行的 Go 代码，由 271 个通过的测试（`go test ./...`）验证——针对一个模拟服务器的真实 `net/http`/`httptest` 往返请求，加上真实的临时配置文件测试夹具，而不是桩代码。这些测试模拟的是一个 HYDRA-UMC-SERVER 实例；`status`、`robots` 和 `doctor`（包括登录）也已针对真实的 HYDRA-UMC-SERVER 进程运行过。`config apply` 在没有 `--dry-run` 时会诚实地返回 `ExitNotImplemented` 退出码，而不是伪装成功，因为它需要调用的车队写入端点在 HYDRA-UMC-SERVER 上还不存在。`deploy`、`flash-all` 和 CAN 与传感器诊断套件完全是愿景——在下文中标记为"planned"，在 `src/` 中完全不存在，连桩函数都没有。具体已经交付了什么，请参见 `CHANGELOG.md`。
 
 ---
 
@@ -92,7 +92,7 @@ HYDRA-UMC 部署的命令行工具。
 * ✅ **`hydra-cli help` / `--help`** —— 完整的命令用法。*（已实现）*
 * 🚧 **`hydra-cli deploy`** —— 同时向一批机器人上传任务和配置。*（计划中）*
 * 🚧 **`hydra-cli flash-all`** —— 面向控制器和 URTC 刀头的并行固件更新。*（计划中）*
-* 🚧 **`hydra-cli audit`** —— 用于 CAN 总线健康状况和传感器验证的自动化诊断套件。*（计划中）*
+* 🚧 **CAN 与传感器诊断套件（不是上面读取审计记录的 `audit` 命令）** —— 用于 CAN 总线健康状况和传感器验证的自动化诊断套件。*（计划中）*
 
 ## 🧩 在 HYDRA-UMC 中的角色
 
@@ -249,7 +249,7 @@ HYDRA-UMC-TOOL-CLI/
 
 ## 🗺️ 路线图与已知限制
 
-`deploy`、`flash-all` 和 `audit` 尚未实现：每一个都需要 `HYDRA-UMC-SERVER` 上目前不存在的机群写入、空中升级或审计端点。不带 `--dry-run` 的 `config apply` 是同一缺口的诚实占位，返回退出码 6。
+`deploy` 和 `flash-all` 尚未构建：每个都需要 `HYDRA-UMC-SERVER` 上并不存在的机群写入或空中升级端点，而 CAN 与传感器诊断套件需要可供测试的 CAN 总线（`audit` 本身已存在：它读取审计记录）。 `config apply` 是同一缺口的诚实占位，返回退出码 6。
 
 ## 🌍 语言
 

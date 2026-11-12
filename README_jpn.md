@@ -25,7 +25,7 @@ GPL-3.0-or-later - see LICENSE
 
 ---
 
-**正直な現状確認 - 実際に今動くもの:** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`table`、`robot`、`audit`、`doctor`、`connections`、`liveness`、`ecosystem-health`、`plan-simulate`、`config validate`、`config apply --dry-run`、そして対話型の `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`observe.go`、`plansim.go`、`config.go`、`shell.go`、`exitcode.go`）は、127件のテストがすべて通過している（`go test ./...`）、実際に動く本物の Go コードであり — 偽サーバーに対する本物の `net/http`/`httptest` の往復通信と、本物の一時設定ファイルのフィクスチャを使っており、スタブではない。これらのテストは HYDRA-UMC-SERVER のインスタンスを模擬しているが、`status`、`robots`、`doctor`（ログインを含む）は本物の HYDRA-UMC-SERVER プロセスに対しても実行している。`config apply` は `--dry-run` なしで実行すると、成功を装うのではなく正直に `ExitNotImplemented` の終了コードを返す。呼び出すはずのフリート書き込みエンドポイントが HYDRA-UMC-SERVER にまだ存在しないためだ。`deploy`、`flash-all`、`audit` は純粋な構想であり、下記では「planned」と記されている通り `src/` には一切存在せず、スタブ関数すらない。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を参照。
+**正直な現状確認 - 実際に今動くもの:** `version`、`status`、`robots`、`claims`、`claim`、`release`、`limits`、`jog-arm`、`jog`、`table`、`robot`、`audit`、`doctor`、`connections`、`liveness`、`ecosystem-health`、`plan-simulate`、`config validate`、`config apply --dry-run`、そして対話型の `shell`（`main.go`、`server.go`、`robots.go`、`control.go`、`doctor.go`、`observe.go`、`plansim.go`、`config.go`、`shell.go`、`exitcode.go`）は、127件のテストがすべて通過している（`go test ./...`）、実際に動く本物の Go コードであり — 偽サーバーに対する本物の `net/http`/`httptest` の往復通信と、本物の一時設定ファイルのフィクスチャを使っており、スタブではない。これらのテストは HYDRA-UMC-SERVER のインスタンスを模擬しているが、`status`、`robots`、`doctor`（ログインを含む）は本物の HYDRA-UMC-SERVER プロセスに対しても実行している。`config apply` は `--dry-run` なしで実行すると、成功を装うのではなく正直に `ExitNotImplemented` の終了コードを返す。呼び出すはずのフリート書き込みエンドポイントが HYDRA-UMC-SERVER にまだ存在しないためだ。`deploy`、`flash-all`、および CAN とセンサーの診断スイートは純粋な構想であり、下記では「planned」と記されている通り `src/` には一切存在せず、スタブ関数すらない。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を参照。
 
 ---
 
@@ -95,7 +95,7 @@ GPL-3.0-or-later - see LICENSE
 * ✅ **`hydra-cli help` / `--help`** — 完全なコマンド使用方法。*（実装済み）*
 * 🚧 **`hydra-cli deploy`** — ミッションと設定を複数のロボットに同時にアップロードします。*（計画中）*
 * 🚧 **`hydra-cli flash-all`** — コントローラーと URTC ヘッド向けの並列ファームウェア更新。*（計画中）*
-* 🚧 **`hydra-cli audit`** — CAN バスの健全性とセンサー検証のための自動診断スイート。*（計画中）*
+* 🚧 **CAN とセンサーの診断スイート（上の `audit` コマンドは監査記録を読むもので、これではない）** — CAN バスの健全性とセンサー検証のための自動診断スイート。*（計画中）*
 
 ## 🧩 HYDRA-UMC での役割
 
@@ -254,7 +254,7 @@ HYDRA-UMC-TOOL-CLI/
 
 ## 🗺️ ロードマップと既知の制限
 
-`deploy`、`flash-all`、`audit` はまだ作られていません。いずれも `HYDRA-UMC-SERVER` に存在しないフリート書き込み、OTA、監査のエンドポイントを必要とします。`--dry-run` なしの `config apply` は同じ欠落に対する正直な代替で、終了コード 6 を返します。
+`deploy` と `flash-all` はまだ作られていません。どちらも `HYDRA-UMC-SERVER` に存在しない艦隊書き込みまたは OTA のエンドポイントを必要とし、CAN とセンサーの診断スイートはテスト対象の CAN バスを必要とします（`audit` 自体は存在し、監査記録を読みます）。 `config apply` は同じ欠落に対する正直な代替で、終了コード 6 を返します。
 
 ## 🌍 言語
 
