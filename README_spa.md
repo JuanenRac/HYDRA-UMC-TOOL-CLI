@@ -94,6 +94,8 @@ El objetivo a largo plazo son despliegues masivos de misiones, actualizaciones d
 
 **HYDRA-UMC-TOOL-CLI** es `hydra-cli`, un único binario de Go sin dependencias de bibliotecas compartidas que habla con `HYDRA-UMC-SERVER`: estado, robots, límites, un doctor que revisa un servidor, jog y paradas por software, un barrido de redes privadas, comprobaciones de flota, validación de manifiestos y ficheros de configuración, y una consola interactiva. Incluye también `hydra-sign`, que firma y verifica binarios de versión.
 
+> **Plataforma:** donde este README dice CM5, se refiere al banco piloto que funciona hoy; la plataforma objetivo de HYDRA-UMC es una NVIDIA Jetson Orin NX de 16 GB, un diseño que no se ha construido ni probado.
+
 ## 🏛️ Arquitectura
 
 <p align="center">

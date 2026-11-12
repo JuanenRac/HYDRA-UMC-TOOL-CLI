@@ -101,6 +101,8 @@ GPL-3.0-or-later - see LICENSE
 
 **HYDRA-UMC-TOOL-CLI** は `hydra-cli` です。共有ライブラリに依存しない 1 つの Go バイナリで、`HYDRA-UMC-SERVER` と通信します。状態、ロボット、制限、サーバーを診断する doctor、ジョグとソフトウェア停止、プライベートネットワークのスキャン、フリート確認、マニフェストと設定ファイルの検証、対話シェルを備えます。リリースバイナリに署名して検証する `hydra-sign` も含みます。
 
+> **プラットフォーム：** この README の「CM5」は、現在動作している試験用ベンチを指します。HYDRA-UMC の目標プラットフォームは NVIDIA Jetson Orin NX 16 GB ですが、これは製作も試験もされていない設計です。
+
 ## 🏛️ アーキテクチャ
 
 <p align="center">

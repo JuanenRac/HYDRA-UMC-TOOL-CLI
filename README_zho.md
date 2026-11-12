@@ -98,6 +98,8 @@ HYDRA-UMC 部署的命令行工具。
 
 **HYDRA-UMC-TOOL-CLI** 即 `hydra-cli`，一个不依赖共享库的 Go 可执行文件，与 `HYDRA-UMC-SERVER` 通信：状态、机器人、限制、检查服务器的 doctor、点动和软件停止、私有网络扫描、机群检查、清单与配置文件校验，以及交互式 shell。它还包含为发布的二进制文件签名和验证的 `hydra-sign`。
 
+> **平台：** 本 README 中的 CM5 指的是目前正在运行的试验台；HYDRA-UMC 的目标平台是 NVIDIA Jetson Orin NX 16 GB，这是尚未制造或测试的设计。
+
 ## 🏛️ 架构
 
 <p align="center">
