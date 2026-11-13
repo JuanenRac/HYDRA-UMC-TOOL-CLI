@@ -1,0 +1,48 @@
+# =============================================================================
+# HYDRA-UMC-TOOL-CLI - Test coverage
+# Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+# GPL-3.0-or-later - see LICENSE
+#
+# Runs the Go tests with their coverage and prints the table by function and the total, so the floor of the suite is a measured
+# number that can only go up.
+# =============================================================================
+name: Test coverage
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    name: Measure coverage and keep the floor
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: stable
+          cache-dependency-path: src/go.sum
+      - name: Run the tests with coverage
+        working-directory: src
+        run: go test -coverprofile="$RUNNER_TEMP/cover.out" ./...
+      - name: Report the coverage by function and the total
+        working-directory: src
+        run: |
+          go tool cover -func="$RUNNER_TEMP/cover.out" | sort -t$'\t' -k3 -n | head -60
+          TOTAL=$(go tool cover -func="$RUNNER_TEMP/cover.out" | awk '/^total:/ {gsub(/%/,"",$3); print $3}')
+          {
+            echo "### Test coverage"
+            echo "Total statements covered: ${TOTAL}%"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "total ${TOTAL}"
+          # The floor is the measured value, rounded down: it may rise, never fall.
+          awk -v total="${TOTAL}" 'BEGIN { if (total + 0 < 89.0) { print "coverage is under the floor (89.0 %)"; exit 1 } }'

@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The CI measures the coverage of the Go tests:** a workflow runs the tests with coverage and prints the functions with the least coverage and the total and fails under a floor of 89.0 % of the statements, the measured value rounded down.
 - **README: the platform statement:** a note says that where the README speaks of the CM5 it means the pilot bench that runs today, and that the target platform of HYDRA-UMC, an NVIDIA Jetson Orin NX 16 GB, is a design that has not been built or tested.
 - **`flash-all` sends one signed image to the boards of the slots, with a plan and a stop:** `hydra-cli flash-all --image FILE --tier N --hardware-id N --image-version X.Y.Z` goes through slots 0 to 7 (or `--slots 0,2,5`) one after the other with `POST /api/hardware/canota/flash`, carrying the signature (`--signature` or `--signature-file`), `--downgrade-from`, `--target` and `--min-bootloader` the way the server checks them. `--dry-run` prints the plan with the size and sha256 of the image and sends nothing (no login needed); without it `--yes` is needed; every option is checked before the first request; the first slot that fails stops the rest (`--keep-going` goes on); a slot may take 10 minutes. Tested against a stand-in of the server; no board has been flashed with it. 11 tests.
 
