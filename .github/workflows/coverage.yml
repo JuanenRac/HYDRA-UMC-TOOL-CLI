@@ -44,3 +44,5 @@ jobs:
             echo "Total statements covered: ${TOTAL}%"
           } >> "$GITHUB_STEP_SUMMARY"
           echo "total ${TOTAL}"
+          # The floor is the measured value, rounded down: it may rise, never fall.
+          awk -v total="${TOTAL}" 'BEGIN { if (total + 0 < 89.0) { print "coverage is under the floor (89.0 %)"; exit 1 } }'
