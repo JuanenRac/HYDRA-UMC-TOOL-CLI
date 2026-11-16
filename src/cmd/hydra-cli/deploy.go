@@ -226,19 +226,19 @@ func cmdDeploy(w io.Writer, args []string) error {
 		return err
 	}
 	if !apply {
-		return printDeployPlan(w, jsonOutput, plan, false, nil)
+		return printDeployPlan(w, jsonOutput, plan, false, false, nil)
 	}
 	if plan.Steps == 0 {
-		return printDeployPlan(w, jsonOutput, plan, true, []string{"nothing to deploy: the device runs what the workspace has"})
+		return printDeployPlan(w, jsonOutput, plan, true, false, []string{"nothing to deploy: the device runs what the workspace has"})
 	}
 	// then the same command with --apply --yes: the updater decides (switch, signature, health check, way back)
 	_, applyErr, runErr := runUpdater(command, append(extra, "--apply", "--yes"), runTimeout)
 	messages := strings.Split(strings.TrimSpace(string(applyErr)), "\n")
 	if runErr != nil {
-		_ = printDeployPlan(w, jsonOutput, plan, true, messages)
+		_ = printDeployPlan(w, jsonOutput, plan, true, true, messages)
 		return updaterFailure("deploying", runErr, applyErr)
 	}
-	return printDeployPlan(w, jsonOutput, plan, true, messages)
+	return printDeployPlan(w, jsonOutput, plan, true, false, messages)
 }
 
 // updaterFailure turns a failed run into an error that carries the first line the updater said.
@@ -254,13 +254,15 @@ func updaterFailure(what string, runErr error, stderr []byte) error {
 	return newCliError(ExitServerError, fmt.Errorf("the updater failed while %s: %s", what, reason))
 }
 
-func printDeployPlan(w io.Writer, jsonOutput bool, plan updaterPlan, applied bool, messages []string) error {
+// printDeployPlan shows the plan. `failed` is a deployment that the updater did not finish: the JSON says ok false and applied false (what state the device is in is
+// for the updater's own messages and its way back to say), and the text still shows what the updater said.
+func printDeployPlan(w io.Writer, jsonOutput bool, plan updaterPlan, applied bool, failed bool, messages []string) error {
 	if jsonOutput {
 		rows := make([]map[string]any, 0, len(plan.Projects))
 		for _, row := range plan.Projects {
 			rows = append(rows, map[string]any{"project": row.Project, "state": row.State, "checkout_version": versionOrNil(row.CheckoutVersion), "device_version": versionOrNil(row.DeviceVersion), "unit": versionOrNil(row.Unit)})
 		}
-		return writeJSONResult(w, "deploy", true, map[string]any{"applied": applied, "steps": plan.Steps, "projects": rows, "messages": cleanMessages(messages)})
+		return writeJSONResult(w, "deploy", !failed, map[string]any{"applied": applied && !failed, "steps": plan.Steps, "projects": rows, "messages": cleanMessages(messages)})
 	}
 	table := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(table, "PROJECT\tSTATE\tDEVICE\tWORKSPACE\tUNIT")
@@ -270,7 +272,7 @@ func printDeployPlan(w io.Writer, jsonOutput bool, plan updaterPlan, applied boo
 	if err := table.Flush(); err != nil {
 		return err
 	}
-	if applied {
+	if applied || failed {
 		for _, message := range cleanMessages(messages) {
 			fmt.Fprintln(w, message)
 		}
