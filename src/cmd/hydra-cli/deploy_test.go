@@ -231,6 +231,25 @@ func TestDeploy_JSONHasAStableShape(t *testing.T) {
 	}
 }
 
+func TestDeploy_AFailedDeploymentIsNotReportedAsAppliedInJSON(t *testing.T) {
+	var out bytes.Buffer
+	err := cmdDeploy(&out, []string{"--updater", updaterCommand(t, "applyfails"), "--apply", "--yes", "--json"})
+	if exitCodeFor(err) != ExitServerError {
+		t.Fatalf("%v", err)
+	}
+	var doc struct {
+		OK       bool     `json:"ok"`
+		Applied  bool     `json:"applied"`
+		Messages []string `json:"messages"`
+	}
+	if err := json.Unmarshal(out.Bytes(), &doc); err != nil {
+		t.Fatalf("%v\n%s", err, out.String())
+	}
+	if doc.OK || doc.Applied || len(doc.Messages) == 0 {
+		t.Fatalf("a failed deployment claims success or says nothing: %+v", doc)
+	}
+}
+
 func TestDeploy_TheUpdaterCommandComesFromTheOptionOrTheEnvironment(t *testing.T) {
 	log := t.TempDir() + "/calls.log"
 	t.Setenv("HYDRA_TEST_UPDATER_LOG", log)

@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **`deploy --apply --json` no longer says it succeeded when the deployment failed:** the result carries `ok: false` and `applied: false` together with the messages of the updater, and the exit code stays 5. A test covers the failed run in JSON.
 
 ## [0.2.2]
 
