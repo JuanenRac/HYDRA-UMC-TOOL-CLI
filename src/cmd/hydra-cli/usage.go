@@ -268,7 +268,7 @@ OPTIONS:
     --yes           confirm (without it nothing is sent)
     --json          print the answer of the server as JSON
 ` + serverOptions,
-	"flash-all": `USAGE: hydra-cli flash-all --image FILE --tier N --hardware-id N --image-version X.Y.Z [--slots 0-7] [--relay 0|1] [--signature HEX | --signature-file FILE] [--downgrade-from X.Y.Z] [--target NAME] [--min-bootloader X.Y.Z] [--dry-run | --yes] [--keep-going] [--json]
+	"flash-all": `USAGE: hydra-cli flash-all --image FILE --tier N --hardware-id N --image-version X.Y.Z [--slots 0-7] [--relay 0|1] [--signature HEX | --signature-file FILE] [--downgrade-from X.Y.Z] [--target NAME] [--min-bootloader X.Y.Z] [--dry-run | --yes] [--keep-going [--keep-going-after-timeout]] [--report FILE] [--json]
 
 Send one signed firmware image to the controller boards of slots 0 to 7 (or the ones named), one after the other, through POST /api/hardware/canota/flash
 of the server (admin role). The signature is the one made where the private key is (tools/image_header.py sign of HYDRA-UMC); the server and the
@@ -289,7 +289,9 @@ OPTIONS:
     --min-bootloader V   the oldest bootloader that may take the image
     --dry-run            show what would be sent and send nothing (no login needed)
     --yes                confirm: without --dry-run or --yes nothing is sent
-    --keep-going         go on with the next slot when one fails (the default stops)
+    --keep-going         go on with the next slot when one fails (the default stops); a slot that did not answer (status unknown) still stops the loop
+    --keep-going-after-timeout   with --keep-going, go on even after a slot that did not answer (its board may be flashing: only when a person has checked the bus)
+    --report FILE        also write the result as JSON (image print, slots and states) to FILE, whatever the output is
     --controller-id ID   the controller id of this program
     --json               print the result as one JSON object (schema_version, command, ok and the fields of the command)
 ` + serverOptions + `
