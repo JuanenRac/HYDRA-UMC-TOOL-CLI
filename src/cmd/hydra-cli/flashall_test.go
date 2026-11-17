@@ -360,7 +360,7 @@ func TestFlashAll_TheHelpIsReadFromTheUsageAndTheServerIsNotNeeded(t *testing.T)
 }
 
 // silentFlashServer answers every slot at once except the one named, which is read and then left without an answer for longer than the client waits.
-func silentFlashServer(t *testing.T, silentSlot string) (*httptest.Server, *[]string) {
+func silentFlashServer(t *testing.T, silentSlot string) (*httptest.Server, func() []string) {
 	t.Helper()
 	var mu sync.Mutex
 	var slots []string
@@ -382,13 +382,17 @@ func silentFlashServer(t *testing.T, silentSlot string) (*httptest.Server, *[]st
 		_ = json.NewEncoder(w).Encode(map[string]any{"success": true, "finalPhase": "done"})
 	}))
 	t.Cleanup(func() { close(done); srv.Close() })
-	return srv, &slots
+	return srv, func() []string {
+		mu.Lock()
+		defer mu.Unlock()
+		return append([]string(nil), slots...)
+	}
 }
 
 func TestFlashAll_ASlotThatDoesNotAnswerStopsTheLoopEvenWithKeepGoing(t *testing.T) {
 	clearCredentials(t)
 	t.Setenv(tokenEnv, "t")
-	srv, slots := silentFlashServer(t, "1")
+	srv, slotsSeen := silentFlashServer(t, "1")
 	image := writeImage(t, []byte("x"))
 	report := filepath.Join(t.TempDir(), "report.json")
 	var out bytes.Buffer
@@ -396,7 +400,7 @@ func TestFlashAll_ASlotThatDoesNotAnswerStopsTheLoopEvenWithKeepGoing(t *testing
 	if exitCodeFor(err) != ExitNetworkError {
 		t.Fatalf("%v", err)
 	}
-	if got := strings.Join(*slots, ","); got != "0,1" {
+	if got := strings.Join(slotsSeen(), ","); got != "0,1" {
 		t.Fatalf("it went on after a slot that did not answer: %s", got)
 	}
 	for _, want := range []string{"unknown", "no answer", "not-tried", "may be flashing", "1 of 4 slot(s) flashed."} {
@@ -433,12 +437,12 @@ func TestFlashAll_ASlotThatDoesNotAnswerStopsTheLoopEvenWithKeepGoing(t *testing
 func TestFlashAll_KeepGoingAfterTimeoutGoesOnWhenAskedTo(t *testing.T) {
 	clearCredentials(t)
 	t.Setenv(tokenEnv, "t")
-	srv, slots := silentFlashServer(t, "1")
+	srv, slotsSeen := silentFlashServer(t, "1")
 	image := writeImage(t, []byte("x"))
 	var out bytes.Buffer
 	err := cmdFlashAll(&out, flashArgs(srv.URL, image, "--yes", "--slots", "0-2", "--keep-going", "--keep-going-after-timeout", "--timeout", "1"))
-	if exitCodeFor(err) != ExitNetworkError || strings.Join(*slots, ",") != "0,1,2" || !strings.Contains(out.String(), "2 of 3 slot(s) flashed.") {
-		t.Fatalf("%v %v\n%s", err, *slots, out.String())
+	if exitCodeFor(err) != ExitNetworkError || strings.Join(slotsSeen(), ",") != "0,1,2" || !strings.Contains(out.String(), "2 of 3 slot(s) flashed.") {
+		t.Fatalf("%v %v\n%s", err, slotsSeen(), out.String())
 	}
 	if err := cmdFlashAll(&bytes.Buffer{}, flashArgs(srv.URL, image, "--yes", "--keep-going-after-timeout")); exitCodeFor(err) != ExitUsageError {
 		t.Fatalf("the option without --keep-going must be refused: %v", err)
