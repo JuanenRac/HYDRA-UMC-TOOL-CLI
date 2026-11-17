@@ -87,7 +87,7 @@ Das langfristige Ziel sind massive Missionsausrollungen, parallele Firmware-Upda
 * ✅ **`hydra-cli shell [--server URL] [--config PATH]`** — eine interaktive REPL: führt jeden der obigen Befehle wiederholt gegen denselben Server aus, ohne den Prozess neu zu starten. Leitet über dieselbe Befehlstabelle weiter, die auch Einzelaufrufe nutzen, sodass Shell- und Einzelaufruf-Verhalten niemals auseinanderdriften können. `exit`/`quit`/Strg+D zum Verlassen. *(implementiert)*
 * ✅ **`hydra-cli help` / `--help`** — vollständige Befehlsübersicht. *(implementiert)*
 * ✅ **`hydra-cli deploy`** — zeigt über den Updater (`deploy-plan`), was das Gerät braucht, und rollt es mit `--apply --yes` aus; der Updater prüft die Signaturen und behält Gesundheitsprüfung und Rückweg. *(implementiert; nur gegen einen simulierten Updater geprüft)*
-* ✅ **`hydra-cli flash-all`** — sendet ein signiertes Image nacheinander an die Platinen der Slots 0 bis 7, mit `--dry-run`, einer Bestätigung und Halt beim ersten Fehler. *(implementiert; nur gegen simulierte Server geprüft)*
+* ✅ **`hydra-cli flash-all`** — sendet ein signiertes Image nacheinander an die Platinen der Slots 0 bis 7, mit `--dry-run`, einer Bestätigung und Halt beim ersten Fehler. *(implementiert; nur gegen simulierte Server geprüft)* Mit `--keep-going` hält es trotzdem nach einer Platine an, die nicht geantwortet hat (Status `unknown`, die Platine flasht womöglich), außer `--keep-going-after-timeout` ist ebenfalls gesetzt.
 * 🚧 **Eine Diagnosesuite für CAN und Sensoren (nicht der Befehl `audit` oben, der das Audit-Protokoll liest)** — automatisierte Diagnosesuite für CAN-Bus-Gesundheit und Sensorvalidierung. *(geplant)*
 
 ## 🧩 Rolle in HYDRA-UMC
