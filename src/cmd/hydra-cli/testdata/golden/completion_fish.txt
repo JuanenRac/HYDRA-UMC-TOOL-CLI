@@ -147,8 +147,10 @@ complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l image
 complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l image-version
 complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l json
 complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l keep-going
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l keep-going-after-timeout
 complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l min-bootloader
 complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l relay
+complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l report
 complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l server
 complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l signature
 complete -c hydra-cli -n "__fish_seen_subcommand_from flash-all" -l signature-file

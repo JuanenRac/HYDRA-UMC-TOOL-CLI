@@ -20,6 +20,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 type flashCall struct {
@@ -355,5 +356,124 @@ func TestFlashAll_TheHelpIsReadFromTheUsageAndTheServerIsNotNeeded(t *testing.T)
 	out := captureStdout(t, func() { code = run([]string{"flash-all", "--help"}) })
 	if code != ExitOK || !strings.HasPrefix(out, "USAGE: hydra-cli flash-all ") || !strings.Contains(out, "--dry-run") {
 		t.Fatalf("exit %d %q", code, out)
+	}
+}
+
+// silentFlashServer answers every slot at once except the one named, which is read and then left without an answer for longer than the client waits.
+func silentFlashServer(t *testing.T, silentSlot string) (*httptest.Server, func() []string) {
+	t.Helper()
+	var mu sync.Mutex
+	var slots []string
+	done := make(chan struct{})
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.ReadAll(r.Body)
+		slot := r.URL.Query().Get("slot")
+		mu.Lock()
+		slots = append(slots, slot)
+		mu.Unlock()
+		if slot == silentSlot {
+			select {
+			case <-done:
+			case <-time.After(5 * time.Second):
+			}
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"success": true, "finalPhase": "done"})
+	}))
+	t.Cleanup(func() { close(done); srv.Close() })
+	return srv, func() []string {
+		mu.Lock()
+		defer mu.Unlock()
+		return append([]string(nil), slots...)
+	}
+}
+
+func TestFlashAll_ASlotThatDoesNotAnswerStopsTheLoopEvenWithKeepGoing(t *testing.T) {
+	clearCredentials(t)
+	t.Setenv(tokenEnv, "t")
+	srv, slotsSeen := silentFlashServer(t, "1")
+	image := writeImage(t, []byte("x"))
+	report := filepath.Join(t.TempDir(), "report.json")
+	var out bytes.Buffer
+	err := cmdFlashAll(&out, flashArgs(srv.URL, image, "--yes", "--slots", "0-3", "--keep-going", "--timeout", "1", "--report", report))
+	if exitCodeFor(err) != ExitNetworkError {
+		t.Fatalf("%v", err)
+	}
+	if got := strings.Join(slotsSeen(), ","); got != "0,1" {
+		t.Fatalf("it went on after a slot that did not answer: %s", got)
+	}
+	for _, want := range []string{"unknown", "no answer", "not-tried", "may be flashing", "1 of 4 slot(s) flashed."} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("missing %q in\n%s", want, out.String())
+		}
+	}
+	raw, readErr := os.ReadFile(report)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	var doc struct {
+		ImageSHA256 string `json:"image_sha256"`
+		Slots       []struct {
+			Slot   int    `json:"slot"`
+			Status string `json:"status"`
+		} `json:"slots"`
+	}
+	if err := json.Unmarshal(raw, &doc); err != nil || len(doc.ImageSHA256) != 64 || len(doc.Slots) != 4 {
+		t.Fatalf("%v\n%s", err, raw)
+	}
+	statuses := []string{}
+	for _, s := range doc.Slots {
+		statuses = append(statuses, s.Status)
+	}
+	if strings.Join(statuses, ",") != "flashed,unknown,not-tried,not-tried" {
+		t.Fatalf("%v", statuses)
+	}
+	if strings.Contains(string(raw), "secret") || strings.Contains(string(raw), "Bearer") {
+		t.Fatalf("the report holds a credential:\n%s", raw)
+	}
+}
+
+func TestFlashAll_KeepGoingAfterTimeoutGoesOnWhenAskedTo(t *testing.T) {
+	clearCredentials(t)
+	t.Setenv(tokenEnv, "t")
+	srv, slotsSeen := silentFlashServer(t, "1")
+	image := writeImage(t, []byte("x"))
+	var out bytes.Buffer
+	err := cmdFlashAll(&out, flashArgs(srv.URL, image, "--yes", "--slots", "0-2", "--keep-going", "--keep-going-after-timeout", "--timeout", "1"))
+	if exitCodeFor(err) != ExitNetworkError || strings.Join(slotsSeen(), ",") != "0,1,2" || !strings.Contains(out.String(), "2 of 3 slot(s) flashed.") {
+		t.Fatalf("%v %v\n%s", err, slotsSeen(), out.String())
+	}
+	if err := cmdFlashAll(&bytes.Buffer{}, flashArgs(srv.URL, image, "--yes", "--keep-going-after-timeout")); exitCodeFor(err) != ExitUsageError {
+		t.Fatalf("the option without --keep-going must be refused: %v", err)
+	}
+}
+
+func TestFlashAll_AServerThatIsNotThereIsAFailureAndNotUnknown(t *testing.T) {
+	clearCredentials(t)
+	t.Setenv(tokenEnv, "t")
+	srv := newFakeFlashServer(t)
+	url := srv.URL
+	srv.Close()
+	image := writeImage(t, []byte("x"))
+	var out bytes.Buffer
+	if err := cmdFlashAll(&out, flashArgs(url, image, "--yes", "--slots", "0-1", "--keep-going", "--timeout", "1")); err == nil {
+		t.Fatal("expected a failure")
+	}
+	if strings.Contains(out.String(), "unknown") || !strings.Contains(out.String(), "failed") {
+		t.Fatalf("a request that never connected sent nothing, so it is a plain failure:\n%s", out.String())
+	}
+}
+
+func TestFlashAll_TheReportIsWrittenForADryRunToo(t *testing.T) {
+	clearCredentials(t)
+	image := writeImage(t, []byte("x"))
+	report := filepath.Join(t.TempDir(), "plan.json")
+	if err := cmdFlashAll(&bytes.Buffer{}, flashArgs("http://127.0.0.1:1", image, "--dry-run", "--slots", "0-1", "--report", report)); err != nil {
+		t.Fatal(err)
+	}
+	raw, err := os.ReadFile(report)
+	if err != nil || !strings.Contains(string(raw), `"dry_run": true`) || !strings.Contains(string(raw), "planned") {
+		t.Fatalf("%v\n%s", err, raw)
 	}
 }

@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **`flash-all` tells a slot that did not answer from one that was refused, and can keep a report:** a timeout or a connection cut after the connection was made, or an answer that cannot be read, is the status `unknown` (the board may be flashing); the loop then stops even with `--keep-going`, and the remaining slots are `not-tried`, unless `--keep-going-after-timeout` is given too. `--report FILE` also writes the result as JSON (the print of the image, the slots and their states) to a file whatever the output is. Tests use a server that does not answer.
+
 - **`deploy --apply --json` no longer says it succeeded when the deployment failed:** the result carries `ok: false` and `applied: false` together with the messages of the updater, and the exit code stays 5. A test covers the failed run in JSON.
 
 ## [0.2.2]

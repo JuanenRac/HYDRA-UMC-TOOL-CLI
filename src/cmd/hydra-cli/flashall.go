@@ -20,12 +20,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+	"syscall"
 	"text/tabwriter"
 	"time"
 )
@@ -197,7 +199,7 @@ func (plan flashPlan) pathFor(slot int) string {
 // flashSlotResult is the outcome of one slot as the command reports it.
 type flashSlotResult struct {
 	Slot   int    `json:"slot"`
-	Status string `json:"status"` // "flashed", "failed", "refused", "not-tried" or "planned"
+	Status string `json:"status"` // "flashed", "failed", "refused", "unknown", "not-tried" or "planned"
 	Phase  string `json:"phase,omitempty"`
 	Detail string `json:"detail,omitempty"`
 }
@@ -212,12 +214,34 @@ func explicitTimeout(args []string) bool {
 	return false
 }
 
+// answerUnknown says whether a failed request leaves it unknown what happened to the board: the connection was made and the answer never
+// came (a timeout, a connection cut). A request that never connected (the server is not there, the name does not resolve) sent nothing, so it is a plain failure.
+func answerUnknown(err error) bool {
+	if exitCodeFor(err) != ExitNetworkError {
+		return false
+	}
+	var opErr *net.OpError
+	if errors.As(err, &opErr) && opErr.Op == "dial" {
+		return false
+	}
+	var dnsErr *net.DNSError
+	if errors.As(err, &dnsErr) || errors.Is(err, syscall.ECONNREFUSED) {
+		return false
+	}
+	return true
+}
+
 // flashOne sends the image to one slot and reads the final answer of the server.
 func flashOne(client *http.Client, server, controllerID string, plan flashPlan, slot int) (flashSlotResult, error) {
 	result := flashSlotResult{Slot: slot, Status: "failed"}
 	resp, err := sendBody(client, server, http.MethodPost, plan.pathFor(slot), plan.image, "application/octet-stream", controllerID, "")
 	if err != nil {
 		result.Detail = printable(err.Error())
+		if answerUnknown(err) {
+			// the image may have gone in: the board could be flashing now, so nothing else is sent to the bus until a person has looked
+			result.Status = "unknown"
+			result.Detail = "no answer: " + result.Detail
+		}
 		return result, err
 	}
 	if !okStatus(resp.Status) {
@@ -233,6 +257,7 @@ func flashOne(client *http.Client, server, controllerID string, plan flashPlan, 
 		FinalPhase string `json:"finalPhase"`
 	}
 	if err := json.Unmarshal(resp.Body, &answer); err != nil {
+		result.Status = "unknown" // the server took the image and its answer is not one: what happened to the board is not known
 		result.Detail = "the answer of the server could not be read"
 		return result, newCliError(ExitServerError, fmt.Errorf("flashing slot %d: unexpected answer of the server: %w", slot, err))
 	}
@@ -258,8 +283,8 @@ func cmdFlashAll(w io.Writer, args []string) error {
 		timeout = defaultFlashTimeout
 	}
 	parsed, err := parseFlagSet("flash-all", rest,
-		[]string{"--image", "--slots", "--tier", "--relay", "--hardware-id", "--image-version", "--signature", "--signature-file", "--downgrade-from", "--target", "--min-bootloader"},
-		[]string{"--dry-run", "--yes", "--keep-going", "--json"})
+		[]string{"--image", "--report", "--slots", "--tier", "--relay", "--hardware-id", "--image-version", "--signature", "--signature-file", "--downgrade-from", "--target", "--min-bootloader"},
+		[]string{"--dry-run", "--yes", "--keep-going", "--keep-going-after-timeout", "--json"})
 	if err != nil {
 		return err
 	}
@@ -267,6 +292,11 @@ func cmdFlashAll(w io.Writer, args []string) error {
 		return err
 	}
 	jsonOutput, dryRun, confirmed, keepGoing := parsed.Bool("--json"), parsed.Bool("--dry-run"), parsed.Bool("--yes"), parsed.Bool("--keep-going")
+	keepGoingAfterTimeout := parsed.Bool("--keep-going-after-timeout")
+	if keepGoingAfterTimeout && !keepGoing {
+		return newCliError(ExitUsageError, errors.New("--keep-going-after-timeout goes with --keep-going"))
+	}
+	reportPath := parsed.String("--report")
 	plan, err := buildFlashPlan(parsed)
 	if err != nil {
 		return err
@@ -282,14 +312,22 @@ func cmdFlashAll(w io.Writer, args []string) error {
 		for _, slot := range plan.slots {
 			results = append(results, flashSlotResult{Slot: slot, Status: "planned", Detail: "POST " + plan.pathFor(slot)})
 		}
+		if err := writeFlashReport(reportPath, true, plan, results); err != nil {
+			return err
+		}
 		return printFlashAll(w, jsonOutput, true, server, plan, results, nil)
 	}
 	client := newClient(timeout)
 	var firstFailure error
 	stopped := false
+	stoppedAfterUnknown := false
 	for _, slot := range plan.slots {
 		if stopped {
-			results = append(results, flashSlotResult{Slot: slot, Status: "not-tried", Detail: "an earlier slot failed"})
+			why := "an earlier slot failed"
+			if stoppedAfterUnknown {
+				why = "an earlier slot did not answer: its board may be flashing"
+			}
+			results = append(results, flashSlotResult{Slot: slot, Status: "not-tried", Detail: why})
 			continue
 		}
 		result, flashErr := flashOne(&client, server, controllerID, plan, slot)
@@ -298,12 +336,43 @@ func cmdFlashAll(w io.Writer, args []string) error {
 			if firstFailure == nil {
 				firstFailure = flashErr
 			}
-			if !keepGoing {
+			// a slot that did not answer is not a failure that can be skipped: with --keep-going the loop still stops there unless --keep-going-after-timeout says otherwise
+			if result.Status == "unknown" && !keepGoingAfterTimeout {
+				stopped, stoppedAfterUnknown = true, true
+			} else if !keepGoing {
 				stopped = true
 			}
 		}
 	}
+	if err := writeFlashReport(reportPath, false, plan, results); err != nil {
+		return err
+	}
 	return printFlashAll(w, jsonOutput, false, server, plan, results, firstFailure)
+}
+
+// writeFlashReport writes the result as JSON (the print of the image, the slots and their states) to a file, whatever the output of the command is. The file is
+// written whole or not at all.
+func writeFlashReport(path string, dryRun bool, plan flashPlan, results []flashSlotResult) error {
+	if path == "" {
+		return nil
+	}
+	rows := make([]map[string]any, 0, len(results))
+	for _, r := range results {
+		rows = append(rows, map[string]any{"slot": r.Slot, "status": r.Status, "phase": r.Phase, "detail": printable(r.Detail)})
+	}
+	raw, err := json.MarshalIndent(map[string]any{"dry_run": dryRun, "image_bytes": len(plan.image), "image_sha256": plan.imageSHA256, "slots": rows}, "", "  ")
+	if err != nil {
+		return newCliError(ExitGeneralError, err)
+	}
+	temporary := path + ".part"
+	if err := os.WriteFile(temporary, append(raw, '\n'), 0o600); err != nil {
+		return newCliError(ExitConfigError, fmt.Errorf("cannot write the report: %w", err))
+	}
+	if err := os.Rename(temporary, path); err != nil {
+		_ = os.Remove(temporary)
+		return newCliError(ExitConfigError, fmt.Errorf("cannot write the report: %w", err))
+	}
+	return nil
 }
 
 // printFlashAll writes the plan or the outcome and returns the failure that decides the exit code.
