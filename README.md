@@ -87,7 +87,7 @@ The long-term goal is massive deployments of missions, parallel firmware updates
 * ✅ **`hydra-cli shell [--server URL] [--config PATH]`** — an interactive REPL: run any command above repeatedly against the same server without restarting the process. Dispatches through the exact same command table one-shot invocations use, so shell and one-shot behavior never drift apart. `exit`/`quit`/Ctrl-D to leave. *(implemented)*
 * ✅ **`hydra-cli help` / `--help`** — full command usage. *(implemented)*
 * ✅ **`hydra-cli deploy`** — shows what the device needs through the updater (`deploy-plan`) and, with `--apply --yes`, deploys it there; the updater checks signatures and keeps its health check and way back. *(implemented; tested against a stand-in updater only)*
-* ✅ **`hydra-cli flash-all`** — sends one signed image to the boards of slots 0 to 7, one by one, with `--dry-run`, a confirmation and a stop at the first failure. *(implemented; tested against stand-in servers only)*
+* ✅ **`hydra-cli flash-all`** — sends one signed image to the boards of slots 0 to 7, one by one, with `--dry-run`, a confirmation and a stop at the first failure. *(implemented; tested against stand-in servers only)* With `--keep-going` it still stops after a board that did not answer (status `unknown`, the board may be flashing) unless `--keep-going-after-timeout` is given too.
 * 🚧 **A CAN and sensor diagnostic suite (not the `audit` command above, which reads the audit record)** — automated diagnostic suite for CAN bus health and sensor validation. *(planned)*
 
 ## 🧩 Role in HYDRA-UMC

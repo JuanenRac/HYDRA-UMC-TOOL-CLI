@@ -87,7 +87,7 @@ L'obiettivo a lungo termine sono deployment massivi di missioni, aggiornamenti f
 * ✅ **`hydra-cli shell [--server URL] [--config PATH]`** — una REPL interattiva: esegue ripetutamente uno qualsiasi dei comandi sopra contro lo stesso server senza riavviare il processo. Instrada attraverso la stessa tabella dei comandi usata dalle invocazioni singole, quindi il comportamento della shell e quello singolo non possono mai divergere. `exit`/`quit`/Ctrl-D per uscire. *(implementato)*
 * ✅ **`hydra-cli help` / `--help`** — utilizzo completo dei comandi. *(implementato)*
 * ✅ **`hydra-cli deploy`** — mostra ciò di cui il dispositivo ha bisogno tramite l'updater (`deploy-plan`) e, con `--apply --yes`, lo distribuisce; l'updater controlla le firme e mantiene il suo controllo di salute e il ritorno indietro. *(implementato; provato solo contro un updater fittizio)*
-* ✅ **`hydra-cli flash-all`** — invia un'immagine firmata alle schede degli slot da 0 a 7, una alla volta, con `--dry-run`, una conferma e arresto al primo errore. *(implementato; provato solo contro server fittizi)*
+* ✅ **`hydra-cli flash-all`** — invia un'immagine firmata alle schede degli slot da 0 a 7, una alla volta, con `--dry-run`, una conferma e arresto al primo errore. *(implementato; provato solo contro server fittizi)* Con `--keep-going` si ferma comunque dopo una scheda che non ha risposto (stato `unknown`, la scheda potrebbe essere in programmazione), a meno che non sia dato anche `--keep-going-after-timeout`.
 * 🚧 **Una suite diagnostica per CAN e sensori (non il comando `audit` qui sopra, che legge il registro di audit)** — suite diagnostica automatizzata per la salute del bus CAN e la validazione dei sensori. *(pianificato)*
 
 ## 🧩 Ruolo in HYDRA-UMC

@@ -87,7 +87,7 @@ O objetivo a longo prazo são implementações massivas de missões, atualizaç�
 * ✅ **`hydra-cli shell [--server URL] [--config PATH]`** — um REPL interativo: execute qualquer comando acima repetidamente contra o mesmo servidor sem reiniciar o processo. Despacha pela mesma tabela de comandos que as invocações de uma só vez usam, pelo que o comportamento do shell e o de uma só vez nunca divergem. `exit`/`quit`/Ctrl-D para sair. *(implementado)*
 * ✅ **`hydra-cli help` / `--help`** — utilização completa dos comandos. *(implementado)*
 * ✅ **`hydra-cli deploy`** — mostra o que o dispositivo precisa através do atualizador (`deploy-plan`) e, com `--apply --yes`, implanta-o; o atualizador verifica as assinaturas e mantém a sua verificação de saúde e o caminho de volta. *(implementado; testado só contra um atualizador simulado)*
-* ✅ **`hydra-cli flash-all`** — envia uma imagem assinada às placas dos slots 0 a 7, uma a uma, com `--dry-run`, uma confirmação e paragem à primeira falha. *(implementado; testado só contra servidores simulados)*
+* ✅ **`hydra-cli flash-all`** — envia uma imagem assinada às placas dos slots 0 a 7, uma a uma, com `--dry-run`, uma confirmação e paragem à primeira falha. *(implementado; testado só contra servidores simulados)* Com `--keep-going` pára na mesma depois de uma placa que não respondeu (estado `unknown`, a placa pode estar a ser gravada), a menos que `--keep-going-after-timeout` também seja dado.
 * 🚧 **Um conjunto de diagnóstico de CAN e sensores (não o comando `audit` acima, que lê o registo de auditoria)** — conjunto de diagnóstico automatizado para a saúde do barramento CAN e a validação de sensores. *(planeado)*
 
 ## 🧩 Papel no HYDRA-UMC
