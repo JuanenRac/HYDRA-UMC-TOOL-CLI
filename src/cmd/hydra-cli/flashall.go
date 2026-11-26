@@ -342,7 +342,7 @@ func cmdFlashAll(w io.Writer, args []string) error {
 		timeout = defaultFlashTimeout
 	}
 	parsed, err := parseFlagSet("flash-all", rest,
-		[]string{"--image", "--report", "--slots", "--tier", "--relay", "--hardware-id", "--image-version", "--signature", "--signature-file", "--downgrade-from", "--target", "--min-bootloader"},
+		[]string{"--image", "--report", "--slots", "--tier", "--relay", "--hardware-id", "--image-version", "--signature", "--signature-file", "--header", "--header-file", "--rollback-counter", "--key-id", "--downgrade-from", "--target", "--min-bootloader"},
 		[]string{"--dry-run", "--yes", "--keep-going", "--keep-going-after-timeout", "--json"})
 	if err != nil {
 		return err
