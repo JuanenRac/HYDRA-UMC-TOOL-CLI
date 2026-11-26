@@ -1,6 +1,6 @@
 exit=0
 --stdout--
-USAGE: hydra-cli flash-all --image FILE --tier N --hardware-id N --image-version X.Y.Z [--slots 0-7] [--relay 0|1] [--signature HEX | --signature-file FILE] [--downgrade-from X.Y.Z] [--target NAME] [--min-bootloader X.Y.Z] [--dry-run | --yes] [--keep-going [--keep-going-after-timeout]] [--report FILE] [--json]
+USAGE: hydra-cli flash-all --image FILE --tier N --hardware-id N --image-version X.Y.Z [--slots 0-7] [--relay 0|1] [--signature HEX | --signature-file FILE] [--header HEX | --header-file FILE | --rollback-counter N --key-id HEX] [--downgrade-from X.Y.Z] [--target NAME] [--min-bootloader X.Y.Z] [--dry-run | --yes] [--keep-going [--keep-going-after-timeout]] [--report FILE] [--json]
 
 Send one signed firmware image to the controller boards of slots 0 to 7 (or the ones named), one after the other, through POST /api/hardware/canota/flash
 of the server (admin role). The signature is the one made where the private key is (tools/image_header.py sign of HYDRA-UMC); the server and the
@@ -15,7 +15,11 @@ OPTIONS:
     --slots LIST         the slots, like 0-7 (the default), 0,2,5 or 1-3,6
     --relay 0|1          1 reaches a tool head through its board (default 0)
     --signature HEX      the Ed25519 signature of the image, 128 hexadecimal digits
-    --signature-file FILE   the same, read from the first line of a file
+    --signature-file FILE   the same, from <image>.sig2 (64 bytes) or the first line of a file
+    --header HEX         the header of format 2 the image was signed with, 128 hexadecimal digits
+    --header-file FILE   the same, from <image>.hdr2 (64 bytes) or the first line of a file
+    --rollback-counter N   without the header: the rollback counter it was signed with (with --key-id)
+    --key-id HEX         without the header: the id of the signing key, 16 hexadecimal digits
     --downgrade-from V   the version installed now, when the image is older
     --target NAME        the board the image is for (the board refuses another)
     --min-bootloader V   the oldest bootloader that may take the image

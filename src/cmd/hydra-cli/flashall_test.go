@@ -477,3 +477,39 @@ func TestFlashAll_TheReportIsWrittenForADryRunToo(t *testing.T) {
 		t.Fatalf("%v\n%s", err, raw)
 	}
 }
+
+func TestFlashAll_SendsWhatTheImageWasSignedWith(t *testing.T) {
+	clearCredentials(t)
+	t.Setenv(tokenEnv, "tok")
+	srv := newFakeFlashServer(t)
+	image := writeImage(t, []byte("signed firmware image"))
+	records := t.TempDir()
+	header, signature := filepath.Join(records, "app.hdr2"), filepath.Join(records, "app.sig2")
+	if err := os.WriteFile(header, bytes.Repeat([]byte{0xcd}, 64), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(signature, bytes.Repeat([]byte{0xab}, 64), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := cmdFlashAll(&out, flashArgs(srv.URL, image, "--yes", "--slots", "0", "--header-file", header, "--signature-file", signature)); err != nil {
+		t.Fatalf("%v\n%s", err, out.String())
+	}
+	query := srv.recorded()[0].Query
+	if query["header"] != strings.Repeat("cd", 64) || query["signature"] != testSignature {
+		t.Fatalf("%v", query)
+	}
+	for name, extra := range map[string][]string{
+		"counter alone": {"--rollback-counter", "1"},
+		"bad key id":    {"--rollback-counter", "1", "--key-id", "xyz"},
+		"both forms":    {"--header", strings.Repeat("cd", 64), "--rollback-counter", "1", "--key-id", strings.Repeat("a", 16)},
+		"short header":  {"--header", "cd"},
+	} {
+		if err := cmdFlashAll(&bytes.Buffer{}, flashArgs(srv.URL, image, append(extra, "--yes")...)); err == nil {
+			t.Fatalf("%s was accepted", name)
+		}
+	}
+	if len(srv.recorded()) != 1 {
+		t.Fatal("a refused plan sent something")
+	}
+}

@@ -36,7 +36,7 @@ Register-ArgumentCompleter -Native -CommandName hydra-cli -ScriptBlock {
         'fleet' = '--concurrency --config --help --json --servers --timeout' -split ' '
         'stop' = '--config --controller-id --help --json --server --timeout' -split ' '
         'stop-all' = '--config --help --json --server --timeout --yes' -split ' '
-        'flash-all' = '--config --controller-id --downgrade-from --dry-run --hardware-id --help --image --image-version --json --keep-going --keep-going-after-timeout --min-bootloader --relay --report --server --signature --signature-file --slots --target --tier --timeout --yes' -split ' '
+        'flash-all' = '--config --controller-id --downgrade-from --dry-run --hardware-id --header --header-file --help --image --image-version --json --keep-going --keep-going-after-timeout --key-id --min-bootloader --relay --report --rollback-counter --server --signature --signature-file --slots --target --tier --timeout --yes' -split ' '
         'deploy' = '--apply --device-root --help --install-plan --json --timeout --updater --workspace --yes' -split ' '
         'metrics' = '--all --config --help --json --server --timeout' -split ' '
         'manifest' = '--help --json --schema --workspace' -split ' '
