@@ -46,7 +46,7 @@ _hydra_cli_complete() {
             opts="--concurrency --config --help --json --servers --timeout" ;;
         stop) opts="--config --controller-id --help --json --server --timeout" ;;
         stop-all) opts="--config --help --json --server --timeout --yes" ;;
-        flash-all) opts="--config --controller-id --downgrade-from --dry-run --hardware-id --help --image --image-version --json --keep-going --keep-going-after-timeout --min-bootloader --relay --report --server --signature --signature-file --slots --target --tier --timeout --yes" ;;
+        flash-all) opts="--config --controller-id --downgrade-from --dry-run --hardware-id --header --header-file --help --image --image-version --json --keep-going --keep-going-after-timeout --key-id --min-bootloader --relay --report --rollback-counter --server --signature --signature-file --slots --target --tier --timeout --yes" ;;
         deploy) opts="--apply --device-root --help --install-plan --json --timeout --updater --workspace --yes" ;;
         metrics) opts="--all --config --help --json --server --timeout" ;;
         manifest)

@@ -44,6 +44,7 @@ const (
 var (
 	versionTriple    = regexp.MustCompile(`^(\d{1,5})\.(\d{1,5})\.(\d{1,5})$`)
 	signatureHex     = regexp.MustCompile(`^[0-9a-fA-F]{128}$`)
+	keyIDHex         = regexp.MustCompile(`^[0-9a-fA-F]{16}$`)
 	flashTargetName  = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$`)
 	slotListItem     = regexp.MustCompile(`^(\d)(?:-(\d))?$`)
 	flashAnswerPhase = regexp.MustCompile(`^[a-z_]{1,32}$`)
@@ -85,7 +86,59 @@ func parseSlotList(text string) ([]int, error) {
 	return slots, nil
 }
 
-// readSignature returns the signature from --signature or from the first line of --signature-file (lower case).
+// recordText is the text of a record file: the 64 raw bytes of an <image>.hdr2 or <image>.sig2 of a release as hexadecimal digits, else the first line.
+func recordText(raw []byte) string {
+	if len(raw) == 64 {
+		return hex.EncodeToString(raw)
+	}
+	line, _, _ := strings.Cut(string(raw), "\n")
+	return strings.TrimSpace(line)
+}
+
+// readSigned returns what the image was signed with: the header (--header or --header-file), or the rollback counter and the key id; nothing given sends nothing.
+func readSigned(p *parsedFlags) (url.Values, error) {
+	values := url.Values{}
+	header, file := p.String("--header"), p.String("--header-file")
+	if header != "" && file != "" {
+		return nil, newCliError(ExitUsageError, errors.New("give --header or --header-file, not both"))
+	}
+	if file != "" {
+		raw, err := os.ReadFile(file)
+		if err != nil {
+			return nil, newCliError(ExitConfigError, fmt.Errorf("cannot read the header file: %w", err))
+		}
+		header = recordText(raw)
+		if header == "" {
+			return nil, newCliError(ExitUsageError, errors.New("the header file is empty"))
+		}
+	}
+	if header != "" {
+		if !signatureHex.MatchString(header) {
+			return nil, newCliError(ExitUsageError, errors.New("the header must be 128 hexadecimal digits (or the 64 bytes of <image>.hdr2)"))
+		}
+		values.Set("header", strings.ToLower(header))
+	}
+	counter, keyID := p.String("--rollback-counter"), p.String("--key-id")
+	if (counter == "") != (keyID == "") {
+		return nil, newCliError(ExitUsageError, errors.New("--rollback-counter and --key-id go together"))
+	}
+	if counter != "" {
+		if header != "" {
+			return nil, newCliError(ExitUsageError, errors.New("give the header, or --rollback-counter and --key-id, not both"))
+		}
+		if _, err := strconv.ParseUint(counter, 10, 32); err != nil {
+			return nil, newCliError(ExitUsageError, errors.New("--rollback-counter must be a whole number from 0 to 4294967295"))
+		}
+		if !keyIDHex.MatchString(keyID) {
+			return nil, newCliError(ExitUsageError, errors.New("--key-id must be 16 hexadecimal digits"))
+		}
+		values.Set("rollback_counter", counter)
+		values.Set("key_id", strings.ToLower(keyID))
+	}
+	return values, nil
+}
+
+// readSignature returns the signature from --signature or from --signature-file: the 64 bytes of <image>.sig2, or its first line (lower case).
 func readSignature(value, file string) (string, error) {
 	if value != "" && file != "" {
 		return "", newCliError(ExitUsageError, errors.New("give --signature or --signature-file, not both"))
@@ -95,8 +148,7 @@ func readSignature(value, file string) (string, error) {
 		if err != nil {
 			return "", newCliError(ExitConfigError, fmt.Errorf("cannot read the signature file: %w", err))
 		}
-		value, _, _ = strings.Cut(string(raw), "\n")
-		value = strings.TrimSpace(value)
+		value = recordText(raw)
 	}
 	if value != "" && !signatureHex.MatchString(value) {
 		return "", newCliError(ExitUsageError, errors.New("the signature must be 128 hexadecimal digits"))
@@ -167,6 +219,13 @@ func buildFlashPlan(p *parsedFlags) (flashPlan, error) {
 	}
 	if signature != "" {
 		query.Set("signature", signature)
+	}
+	signed, err := readSigned(p)
+	if err != nil {
+		return plan, err
+	}
+	for key, values := range signed {
+		query[key] = values
 	}
 	for _, option := range []string{"--downgrade-from", "--min-bootloader"} {
 		if value := p.String(option); value != "" {
