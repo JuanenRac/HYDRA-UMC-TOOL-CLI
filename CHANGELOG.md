@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Credentials are sent only where they were meant to go:** `logout` and the revocation of a refresh token now refuse plain http to another host like the login does (`HYDRA_CLI_ALLOW_INSECURE=1` is still the way out), and a request that carries a token or a body no longer follows a redirect.
 - **`flash-all` sends what the image was signed with:** `--header` or `--header-file` (the `<image>.hdr2` of a release), or `--rollback-counter` and `--key-id`; `--signature-file` also takes the 64 bytes of `<image>.sig2`. The boards of format 2 refuse an update without them.
 - **`flash-all` tells a slot that did not answer from one that was refused, and can keep a report:** a timeout or a connection cut after the connection was made, or an answer that cannot be read, is the status `unknown` (the board may be flashing); the loop then stops even with `--keep-going`, and the remaining slots are `not-tried`, unless `--keep-going-after-timeout` is given too. `--report FILE` also writes the result as JSON (the print of the image, the slots and their states) to a file whatever the output is. Tests use a server that does not answer.
 

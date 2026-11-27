@@ -154,8 +154,12 @@ func writeSession(saved savedSession) error {
 
 func isWindows() bool { return os.PathSeparator == '\\' }
 
-// postJSON is a POST with a JSON body and no credential, with a bounded read.
+// postJSON is a POST with a JSON body and no Authorization header, with a bounded read. Every body it sends carries a
+// secret (a password or a refresh token), so it refuses a channel requireSecureCredentials does not accept.
 func postJSON(client *http.Client, server, path string, payload any) (int, []byte, error) {
+	if err := requireSecureCredentials(server); err != nil {
+		return 0, nil, err
+	}
 	encoded, err := json.Marshal(payload)
 	if err != nil {
 		return 0, nil, newCliError(ExitGeneralError, err)
@@ -181,9 +185,6 @@ type loginResult struct {
 
 // signIn is POST /api/login with the error mapping every login uses.
 func signIn(client *http.Client, server, user, password string) (loginResult, error) {
-	if err := requireSecureCredentials(server); err != nil {
-		return loginResult{}, err
-	}
 	status, body, err := postJSON(client, server, "/api/login", map[string]string{"username": user, "password": password})
 	if err != nil {
 		return loginResult{}, err
@@ -256,9 +257,6 @@ func recoverCredential(client *http.Client, server string, used credential) (cre
 	case sourceSavedSession:
 		saved, ok := readSession(server)
 		if !ok || saved.RefreshToken == "" {
-			return credential{}, false
-		}
-		if requireSecureCredentials(server) != nil {
 			return credential{}, false
 		}
 		status, body, err := postJSON(client, server, "/api/refresh", map[string]string{"refreshToken": saved.RefreshToken})
@@ -398,6 +396,9 @@ func cmdLogout(w io.Writer, args []string) error {
 		client := newClient(timeout)
 		if status, _, postErr := postJSON(&client, server, "/api/logout", map[string]string{"refreshToken": saved.RefreshToken}); postErr != nil || status != http.StatusOK {
 			revoked = "the server could not be told to revoke the refresh token (it expires by itself)"
+			if postErr != nil {
+				revoked += ": " + printable(postErr.Error())
+			}
 		} else {
 			revoked = "the refresh token was revoked on the server"
 			revokedOnServer = true

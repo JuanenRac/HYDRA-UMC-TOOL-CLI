@@ -119,7 +119,21 @@ func newClient(timeout time.Duration) http.Client {
 			transport.TLSClientConfig = &tls.Config{RootCAs: pool, MinVersion: tls.VersionTLS12}
 		}
 	}
-	return http.Client{Timeout: timeout, Transport: identifyingTransport{base: transport}}
+	return http.Client{Timeout: timeout, Transport: identifyingTransport{base: transport}, CheckRedirect: noRedirectWithSecrets}
+}
+
+// noRedirectWithSecrets keeps a request that carries a credential or a body where it was sent: the redirect is answered
+// as it came (the caller sees the 3xx), so a token is never repeated to an address the operator did not give. A read
+// without either follows redirects as before, up to the usual limit.
+func noRedirectWithSecrets(_ *http.Request, via []*http.Request) error {
+	first := via[0]
+	if first.Header.Get("Authorization") != "" || (first.Method != http.MethodGet && first.Method != http.MethodHead) {
+		return http.ErrUseLastResponse
+	}
+	if len(via) >= 10 {
+		return errors.New("stopped after 10 redirects")
+	}
+	return nil
 }
 
 // isLocalHost reports whether a host name or address is this machine.
